@@ -25,7 +25,7 @@
         "coffee-script":   ">= 1.2.0",
         "cookies":         ">= 0.3.0",
         "dateformatjs":    ">= 0.0.7",
-        "dnode":           ">= 0.9.10",
+        "dnode":           "0.9.12",
         "htmlparser":      ">= 1.7.6",
         "jsdom":           ">= 0.2.14",
         "markdown":        ">= 0.3.1",    
