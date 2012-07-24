@@ -1,0 +1,59 @@
+{
+    "name":                "floyd",
+    "author":              "Roman De Meo",
+    "description":         "floyd - a hierarchical app container",
+    "version":             "0.2.3",
+
+    "main":                "./index",
+
+    "maintainer": {
+        "name":            "Roman De Meo",
+        "email":           "nero-networks@molkex.org"
+    },
+
+    "repository": {
+        "type":            "http",
+        "url":             "https://github.com/nero-networks/floyd.git"
+    },
+
+    "engines": {
+        "node":            ">= 0.8.0"
+    },
+
+    "dependencies": {
+        "browserify":      ">= 1.12.1",
+        "coffee-script":   ">= 1.2.0",
+        "cookies":         ">= 0.3.0",
+        "dateformatjs":    ">= 0.0.7",
+        "dnode":           ">= 0.9.10",
+        "htmlparser":      ">= 1.7.6",
+        "jsdom":           ">= 0.2.14",
+        "markdown":        ">= 0.3.1",    
+        "mime":            ">= 1.2.5",
+        "nodemailer":      ">= 0.3.21",
+        "sprintf":         ">= 0.1.1",
+        "uglify-js":       ">= 1.2.6"
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+
+examples/*/.floyd/logs/*
+examples/*/.floyd/tmp/*
+
+examples/*/*/.floyd/logs/*
+examples/*/*/.floyd/tmp/*
+
+.project
+
+node_modules/
+
+tmp/
+
+.nide

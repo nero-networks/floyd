@@ -1,0 +1,210 @@
+
+
+module.exports =
+
+    ##
+    ## Node Platform
+    ##
+    class NodePlatform extends floyd.AbstractPlatform
+        
+        ##
+        ##
+        constructor: (settings)->
+            
+            ## platform type
+            settings.platform ?= 'node'
+            settings.version = require('package.json').version
+            
+            ## platform ident string
+            settings.ident ?= 'NodeJS'
+            settings.ident += ' ('+(p+'-'+v for p, v of process.versions).join(', ')+')'
+            
+            super settings			
+            
+            
+        ##
+        ##
+        ##
+        boot: ()->
+            
+            _dirs = [@system.libdir]
+            
+            if @system.appdir isnt @system.libdir
+                _dirs.push @system.appdir 
+                
+                files = floyd.tools.files			
+                ## create tmp folder and remove on exit
+                @system.tmpdir ?= files.path.join '.floyd', 'tmp'
+                
+                files.mkdir @system.tmpdir
+                
+                ##
+                process.on 'exit', ()=>
+                    
+                    for file in files.list @system.tmpdir
+                    
+                        files.rm files.path.join(@system.tmpdir, file), true
+            
+        
+            
+            ## load lib
+            
+            #console.log 'loading lib', _dirs, @
+            floyd.tools.libloader _dirs, @, 
+                
+                ##
+                platform: @system.platform
+                
+                
+                ##
+                package: (target, name, path)->
+                    try
+                        target[name] ?= require path
+                    catch e
+                        #if e.code isnt 'MODULE_NOT_FOUND' ## > node 0.7
+                        if !e.message.match 'Cannot find module'
+                            console.error 'Packaging FATAL', e.stack||e
+
+                        
+                ##
+                module: (target, name, path)=>
+                
+                    target[name] ?= null					
+
+                    #console.log name, path
+                                        
+                    ## getter delegation delays the require 'till its really needed
+                    Object.defineProperty target, name,
+                        get: ()->							
+                            require path
+                        set: ()->
+                            console.log 'reset', path
+                        
+            ##
+            return @
+            
+                                        
+        ##
+        ##
+        init: (config, fn)->
+        
+            ##
+            ## prepare a simple error logger if fn isn't present
+            fn ?= (err)=>
+                if err
+                    if config?.error
+                        config.error err
+                        
+                    else 
+                        console.error err.stack||err.message||err 
+            
+            ##
+            ## resolve config if config is a named reference
+            if typeof config is 'string' 
+                if config.match /[\/\\]/
+                
+                    config = require floyd.tools.files.path.join @system.appdir, config
+                    
+                else
+                    config = objects.resolve config
+            
+            
+            ##
+            ## read app config from file if found
+            if !config
+                try
+                    
+                    config = require floyd.tools.files.path.join @system.appdir, './app'
+                                        
+                catch e
+                    if e.code isnt 'MODULE_NOT_FOUND'
+                        fn e
+            
+            ##
+            ## create an empty object if config is still absent
+            config ?= {}
+
+            ##
+            ## set the default ip to appname
+            if !config.id
+                config.id = @system.appdir.split('/').pop()
+            
+            ##
+            ## create and start Context instance
+            ctx = super config, fn
+            
+            ## never run the floyd with UID == 0 exept you know (and understand) why
+            ##
+            ## If started as root or with sudo the user and group IDs
+            ## of the process are resetted to the configured UID/GID.
+            ##
+            ## If either UID or GID or both are not set the UID/GID
+            ## which own the app directory are used. 
+            ##
+            ## CAVEAT: The process will continue to run privileged 
+            ##         if the app directory belongs to root(:root)
+            ##         and nothing else is configured!
+            ##
+            ctx.on 'after:booted', ()=>
+
+                if !config.UID || !config.GID
+                    stat = floyd.tools.files.stat '.'
+                    config.UID ?= stat.uid
+                    config.GID ?= stat.gid 							
+                    
+                if process.getuid() is 0
+                    
+                    ## chown tmpdir
+                    floyd.tools.files.chown @system.tmpdir, config.UID, config.GID
+                    
+                    ## chown process
+                    process.setgid(config.GID) # GID first ;-)
+                    process.setuid(config.UID)
+                    
+                    ## EXPERIMENTAL! --> delete the require cache to prevent
+                    ## unprivileged users from reading sensitive data
+                    ## out of previously required module exports.
+                    
+                    ## I decided to delete everything to be sure at all.
+                    ## I did mesured the startup time with and without the cache 
+                    ## the overhead is about 55 to 60 milliseconds, tollerable in my oppinion
+                    
+                    #___start = +new Date()
+                    
+                    for id, mod of require.cache										
+                        delete require.cache[id]
+                    
+                    #ctx.on 'after:running', ->
+                    #	console.log (+new Date()) - ___start, 'millis'
+                    
+                    ## <-- EXPERIMENTAL
+                    
+                else if (config.UID && config.UID isnt process.getuid()) || (config.GID && config.GID isnt process.getgid())
+                    ctx.logger.warning 'WARNING: running unprivileged!'
+                    ctx.logger.warning '         changing UID/GID to %s/%s is impossible', (config.UID || config.GID), (config.GID || config.UID)
+                    ctx.logger.warning '         current UID/GID settings: %s/%s', process.getuid(), process.getgid()
+                    
+                         
+            ##
+            ## prepare shutdown
+            stopped = !ctx.stop
+            destroyed = !ctx.destroy
+            
+            ## shutdown recursive on exit
+            process.once 'exit', shutdown = (err)=>
+                fn(err) if err
+                
+                ##
+                if !stopped && stopped = true
+                    ctx.stop shutdown
+                
+                ##
+                else if !destroyed && destroyed = true
+                    ctx.destroy shutdown
+            
+            ##
+            ## async return! ctx is not booted yet...
+            ##	
+            return ctx
+        
+        
