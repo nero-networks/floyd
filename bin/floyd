@@ -116,7 +116,9 @@ function build_app() {
     for file in $(find $WORKDIR -type f -path '*node_modules' -prune -o -name floyd-build.*)
     do
         dir=$(dirname $file)
-
+        
+        test -x $file || chmod +x $file
+        
         if [ $dir != $WORKDIR ]	
         then
             $file ./${dir#$WORKDIR/}
