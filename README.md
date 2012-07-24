@@ -14,7 +14,7 @@ Install with [npm](http://github.com/isaacs/npm):
 
     mkdir ~/projects/
     cd ~/projects/
-    git clone tesla:/home/nero/develop/floyd
+    git clone https://github.com/nero-networks/floyd.git
 
 #### Prepare your System for the git installation
 
@@ -97,8 +97,8 @@ I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
 
 Take a look into the [examples](/nero-networks/floyd/tree/master/examples/) folder. There are many examples including
 
-- [**auth**](/nero-networks/floyd/tree/master/examples/auth/) - uses http, gui and dnode to realise an authenticated environment
 - [**basics**](/nero-networks/floyd/tree/master/examples/basics/) - a very basic configuration. this is the HelloWorld example
+- [**auth**](/nero-networks/floyd/tree/master/examples/auth/) - uses http, gui and dnode to realise an authenticated environment
 - [**chat**](/nero-networks/floyd/tree/master/examples/chat/) - a tiny pubsub chat. made with dnode Bridges
 - [**connect**](/nero-networks/floyd/tree/master/examples/connect/) - a demonstration how to use the connect module with floyd
 - [**dnode**](/nero-networks/floyd/tree/master/examples/dnode/) - a simple dnode Bridge demo
