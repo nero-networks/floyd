@@ -319,7 +319,44 @@ module.exports = objects =
             value = dfault
             
         return value
+    
+    ##
+    ## replaces the method with a wrapper which calls the interceptor 
+    ## the interceptor gets passed all arguments plus the replaced super-method
+    ##    
+    ##  # 1. given some random api object  
+    ##  test =
+    ##      calculate: (x, fn)->
+    ##    
+    ##          fn null, x * x
+    ##  
+    ##  # 2. this intercepts the trigger method, 
+    ##  # modifies x and calls the super method  
+    ##  floyd.tools.objects.intercept test, 'trigger', (x, fn, calculate)->
+    ##    
+    ##      calculate x * 2, fn
+    ##    
+    ##  # 3. usage. this will display (2x)² = 400
+    ##  test.calculate 10, (err, res)->
+    ##    
+    ##      console.log '(2x)² =', res
+    ##        
+    ##
+    intercept: (obj, method, interceptor)->
+
+        _super = obj[method]
+    
+        obj[method] = (args...)->
+    
+            args.push (args...)-> 
+            
+                _super.apply obj, args
+            
+            interceptor.apply obj, args
         
+        obj[method]._super = _super
+        
+        return obj
 ##
 ##
 ##

@@ -1,4 +1,5 @@
 
+
 module.exports = 
 
     class ViewContext extends floyd.Context
@@ -9,15 +10,13 @@ module.exports =
         configure: (config)->
             @_template ?= config.template
             
-            _boot = @boot
-            
-            @boot = (done)=>
-                
+            floyd.tools.objects.intercept @, 'boot', (done, boot)=>
+               
                 @_build (err)=>
                     return done(err) if err
                     
-                    _boot.apply @, [done]
-
+                    boot done
+                
             
             super new floyd.Config
             
