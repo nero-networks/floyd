@@ -102,7 +102,9 @@ module.exports =
             
             config = new floyd.Config config
             
-            ## extend with methods from config. add @method._super for each
+            ##
+            ## extend context with methods from config. add @method._super for each
+            ##
             for key, value of config
                 do(key, value)=>
                     if typeof value is 'function'
@@ -116,10 +118,12 @@ module.exports =
                             @[key]._super = (args...)=> 
                                 #console.log 'calling _orig_super for', key, _orig_super.toString()
                                 _orig_super.apply @, args
+
+                                    
             
-            
-            _destroy = @destroy
-            @destroy = (done)=>
+            ##
+            ##           
+            floyd.tools.objects.intercept @, 'destroy', (done, destroy)=>
             
                 if @stop && @_status isnt 'stopped'
                     return @_logger.warn 'context not stopped!'
@@ -127,7 +131,7 @@ module.exports =
                 @_init 'destroy', null, (err)=>
                     done(err) if err					
 
-                    _destroy.call @, (err)=>
+                    destroy (err)=>
                         @_changeStatus 'destroyed'	
                             
                         done err
@@ -250,6 +254,7 @@ module.exports =
                     (next)=> ## check for user restriction and test identity.login
                         
                         if user = (@data.permissions?[key]?.user || @data.permissions?.user)
+                            
                             identity.login (err, login)=>
                                 next login && login.match user
                         
@@ -259,6 +264,7 @@ module.exports =
 
                     (next)=> ## check for roles restriction and test identity.hasRole
                         if roles = (@data.permissions?[key]?.roles || @data.permissions?.roles)
+                            
                             identity.hasRole roles, (err, ok)=>
                                 next ok
                                 

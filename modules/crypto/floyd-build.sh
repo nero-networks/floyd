@@ -12,6 +12,8 @@ SOURCE="components/"
 
 TARGET="tools/cryptojs.js"
 
+ZIPFILE="http://code.google.com/p/crypto-js/downloads/detail?name=CryptoJS%20v3.0.2.zip"
+
 lastmod=$(date -d @$(find $SOURCE -type f -printf '%A@\t%p\n' | sort -r -k1 | head -n1 | cut -f1) +%s)
 
 curr=0
@@ -26,8 +28,8 @@ then
     
     (cd $SOURCE
     
-    echo -e "/*\n * DON'T EDIT THIS FILE! \n *\n * update ./modules/crypto/components/* then run floyd build\n *\n */"
-    
+    echo -e "/*\n * DON'T EDIT THIS FILE! \n *\n * fetch a copy of crypto-js from here\n * $ZIPFILE\n * and update ./modules/crypto/components/* with the components of your choice,\n * then run floyd build\n *\n */"  
+
     echo -e "\n(function() {"
     
     cat core.js cipher-core.js 
