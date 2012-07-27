@@ -76,6 +76,7 @@ module.exports = (parent, config, fn)->
             @_emit 'close'
             fn?()
             
+            
     , config
 
     

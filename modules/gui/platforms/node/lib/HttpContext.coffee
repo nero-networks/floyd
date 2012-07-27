@@ -121,13 +121,13 @@ module.exports =
                             ## send the response
                             _dt = window.document._doctype?._fullDT || '<!DOCTYPE html>'
                             fn null, _dt+window.document.innerHTML
-        
+                            
                             ## cleanup async!
                             process.nextTick ()=>
                                 
                                 ## release the jsdom-window into the pool
                                 @_releaseWindow window	
-        
+
                         
                         ## fire!
                         window.run "(#{__boot__})(#{model})"

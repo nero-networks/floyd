@@ -71,13 +71,11 @@ module.exports = (handler)->
             throw new Error 'duplicate identity: '+id
     
     
+   ##
     ##
     ##
-    ##
-    destroyIdentity: (identity, done)->		
+    destroyIdentity: (identity, done)->
         id = identity.id
-        
-        #console.log 'destroy', id
         
         if pool[id] 
             delete pool[id]
@@ -89,10 +87,10 @@ module.exports = (handler)->
             
         else
             console.warn 'unmanaged identity', id 
-    
-        done()
         
+        done?()
         
+
     ##
     ##
     ##

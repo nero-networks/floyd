@@ -31,6 +31,10 @@ module.exports =
                 settings.os = _probe
             
             super settings
+            
+            window.process ?=
+                nextTick: (fn)->
+                    setTimeout fn, 1
 
         
         ##
