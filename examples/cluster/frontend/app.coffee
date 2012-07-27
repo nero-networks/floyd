@@ -66,7 +66,7 @@ module.exports = new floyd.Config 'config.gui.server', 'config.dnode.server',
                 display = $ 'input[name=display]'
                 refresh = $ 'button[name=refresh]'
                 
-                @lookup 'frontend.backend.test', @identity, (err, ctx)=>
+                @lookup 'backend.test', @identity, (err, ctx)=>
                     return @logger.error(err) if err
                     
                     refresh.click ()=>

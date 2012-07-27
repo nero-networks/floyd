@@ -45,7 +45,7 @@ module.exports =
             
             booted: ()->
             
-                @lookup 'dnode.test.echo', @identity, (err, ctx)=>				
+                @lookup 'test.echo', @identity, (err, ctx)=>				
                     return console.error(err) if err
 
                     $('button').click ()=>	

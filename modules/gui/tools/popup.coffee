@@ -25,7 +25,10 @@ module.exports = (parent, config, fn)->
         id: _id
         
         type: 'gui.ViewContext'
-
+        
+        data:
+            'parent-selector': 'body'
+                    
         children: [ 
         
             new floyd.Config
@@ -67,10 +70,11 @@ module.exports = (parent, config, fn)->
         
         append: (ele)->
             @find('.body').append ele
-            
-        button: (ele, handler)->
-            @find('.buttons').append $(ele).click handler
-            
+        
+        
+        close: (fn)->
+            @_emit 'close'
+            fn?()
             
     , config
 
@@ -87,5 +91,22 @@ module.exports = (parent, config, fn)->
                 return fn(err) if err
                 
                 fn err, child
+                
+                child.on 'cancel', ->
+                    child.close()
+                    
+                child.on 'close', ->
+                
+                    child.__root.remove()
+                    
+                    process.nextTick ()->
+                        child.stop ()-> 
+                            #console.log 'stopped', child.ID
+                            
+                            parent.children.delete child
+                            
+                            child.destroy ()->
+                            
+                                #console.log 'destroyed', child.ID
         
             

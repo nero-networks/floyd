@@ -32,9 +32,6 @@ module.exports =
                 
                 data:
                     selector: 'body'
-            
-                booted: ->			
-                    console.floyd = @
                     
             ]
 

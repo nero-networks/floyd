@@ -147,7 +147,7 @@ module.exports =
                             @__root.hide()
                     
                         @__root.click =>
-                            @lookup 'auth.test', @identity, (err, test)->
+                            @lookup 'test', @identity, (err, test)->
                                 
                                 test.secret (err, secret)->
                                     return alert(err.message) if err

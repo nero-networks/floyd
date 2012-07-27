@@ -54,7 +54,7 @@ module.exports =
                     @_build done, 1
                 
                 ## or by id -> stage 1
-                else if ( @__root = $ '#'+@id, @parent?.__root ).length
+                else if ( @__root = $ '#'+@id ).length
                     
                     @forIdentity @identity, (err, ctx)=>
                         @__root.data 'floyd', ctx
@@ -66,8 +66,8 @@ module.exports =
                 
                     @_create (err, ele)=>
                         return done(err) if err
-                        
-                        if @parent?._append 
+                                                
+                        if !@data['parent-selector'] && @parent?._append 
     
                             @parent._append ele, (err)=>
                                 return done(err) if err
@@ -75,7 +75,7 @@ module.exports =
                                 @_build done, stage
                         
                         else
-                            $('body').append(ele) if ele
+                            $(@data['parent-selector'] || 'body').append(ele) if ele
                     
                             @_build done, stage
                             

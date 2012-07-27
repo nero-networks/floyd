@@ -33,15 +33,22 @@ module.exports = objects =
             
             waiting = obj.length
             
-            for item in obj										
-                each item, next	
+            for item in obj
+                try	
+                    each item, next
+                    
+                catch err
+                    next err	
         
         else
             return done?() if !( waiting = floyd.tools.objects.keys(obj).length )
             
             for key, item of obj
-                each key, item, next		
-    
+                try
+                    each key, item, next		
+                
+                catch err
+                    next err
         
         
     
@@ -357,6 +364,8 @@ module.exports = objects =
         obj[method]._super = _super
         
         return obj
+        
+        
 ##
 ##
 ##
