@@ -33,8 +33,9 @@ module.exports =
         ##
         start: (done)->
         
-            @_model.remote.data = 
-                origin: @ID
+            if @_model.remote
+                @_model.remote.data ?= {}
+                @_model.remote.data.origin = @ID
         
             super done
 
