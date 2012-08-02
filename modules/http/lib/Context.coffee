@@ -25,7 +25,8 @@ module.exports =
             
             if !@_model.remote && @_model.local
                 @_model.remote = {}
-
+            
+            
             if typeof (route = config.data.route) is 'function'
                 config.data.route = ()=>
                     route.apply @, arguments
@@ -54,7 +55,7 @@ module.exports =
                             
                             @_createRemote req, res, (err, remote)=>
                                 return next(err) if err || !remote
-                                
+                                                                
                                 if remote.length > 512
                                     res.compress()
                             
@@ -208,7 +209,7 @@ module.exports =
                         
                         if req.session.user
                             model.USER = req.session.user
-                
+
                 fn null, model
             
             

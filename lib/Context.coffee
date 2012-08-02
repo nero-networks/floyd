@@ -111,14 +111,13 @@ module.exports =
 
                         _orig_super = @[key]
                                     
-                        @[key] = (args...)=> 
+                        @[key] = (args...)=>
                             value.apply @, args
                         
                         if _orig_super 
                             @[key]._super = (args...)=> 
                                 #console.log 'calling _orig_super for', key, _orig_super.toString()
                                 _orig_super.apply @, args
-
                                     
             
             ##
@@ -129,13 +128,18 @@ module.exports =
                     return @_logger.warn 'context not stopped!'
                 
                 @_init 'destroy', null, (err)=>
-                    done(err) if err					
-
-                    destroy (err)=>
-                        @_changeStatus 'destroyed'	
+                    done?(err) if err					
+                    
+                    if !destroy
+                        done?()
+                    
+                    else
+                    
+                        destroy (err)=>
+                        
+                            @_changeStatus 'destroyed'	
                             
-                        done err
-            
+                            done? err
             
             if manager = config.data.authManager
                 
@@ -305,9 +309,9 @@ module.exports =
                 done: (err)=>
                     
                     if !__first && ( __first = true )
-                        @_changeStatus status
+                        @_changeStatus? status
                         
-                    done err
+                    done? err
                     
                     
 

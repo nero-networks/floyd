@@ -95,40 +95,53 @@ module.exports =
         ##
         ##
         ##
-        login: (token, user, pass, fn)->
-
+        login: (token, user, pass, _fn)->
+            
+            fn = (err, user)=>
+                if err
+                    setTimeout ()=>
+                        _fn err
+                    , 2500
+                    
+                else _fn null, user
+            
             sid = token.substr 40 ## TODO - validate token
         
             sess = @_registry.get(sid)
             
             _dbq = false
             
-            _dbq && console.log 'login %s@%s', user, sid
+            _dbq && console.log 'login %s@%s pass:', user, sid, !!pass
             
             return fn(new Error 'login failed') if !sess || !user || !pass
             
-            @lookup 'users', @identity, (err, users)=>
+            users = @parent.children.users
+            
+            users.get user, (err, data)=>	
+
+                return fn(err || new Error 'login failed') if err || !data
                 
-                users.get user, (err, data)=>					
-                    return fn(err ? new Error 'login failed') if err || !data
+                hash = floyd.tools.crypto.password pass, data?.pass.substr(40)	
+                
+                _dbq && console.log 'check', hash is data?.pass
+                
+                if data.pass isnt hash
+                    console.warn 'access denied for %s@%s', user, sid
+                     
+                    fn new Error 'login failed' 
+                
+                else
+                    _dbq && console.log 'access granted %s@%s', user, sid 
                     
-                    hash = floyd.tools.crypto.password pass, data?.pass.substr(40)	
+                    data.lastlogin = +new Date()
                     
-                    _dbq && console.log 'check', hash is data?.pass
+                    users.set user, data, (err)=>
                     
-                    if data.pass isnt hash
-                        console.warn 'access denied for %s@%s', user, sid
-                         
-                        fn new Error 'login failed' 
-                    
-                    else
-                        _dbq && console.log 'access granted %s@%s', user, sid 
-                        
                         sess.public.user =	floyd.tools.objects.clone data,	
                             login: user
                         
                         delete sess.public.user.pass
-
+    
                         ##
                         fn null, sess.public.user
                     

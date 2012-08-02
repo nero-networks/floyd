@@ -10,7 +10,7 @@ module.exports =
         ##
         ##
         configure: (config)->
-            
+
             ##
             ##
             config = super new floyd.Config
@@ -25,26 +25,23 @@ module.exports =
             ## hack to delegate lookups to origin 
             
             if origin = config.ORIGIN
-                _lookup = @lookup
-                
-                @lookup = (name, identity, fn)=>
+            
+                floyd.tools.objects.intercept @, 'lookup', (name, identity, fn, lookup)=>
                     
                     #console.log 'lookup', name, origin
                     
-                    _lookup.call @, name, identity, (err, ctx)=>					
+                    lookup name, identity, (err, ctx)=>					
                         if ctx
                             fn(null, ctx)
                         
                         else
-                            _lookup.call @, origin+'.'+name, identity, fn
+                            lookup origin+'.'+name, identity, fn
                     
                 
 
             ## hack to connect us before our children are booted 
             
-            _boot = @boot								
-            
-            @boot = (done)=>
+            floyd.tools.objects.intercept @, 'boot', (done, boot)=>
             
                 @_connect (err)=>
                     return done(err) if err
@@ -56,7 +53,7 @@ module.exports =
                     @_listen (err)=>
                         return done(err) if err
                         
-                        _boot.call @, done 
+                        boot done 
 
             return config	
     

@@ -21,34 +21,28 @@ module.exports = objects =
     ## and finally *done* after all items are processed.
     ##
     process: (obj, {each, done})->
-        return done?() if !obj
+        done ?= (err)-> console.error(err) if err
+    
+        return done() if !obj
         
         waiting = 0	 
         next = (err)->													
             if --waiting <= 0 || err
-                return done?(err)
+                return done(err)
         
         if floyd.tools.objects.isArray obj
-            return done?() if !obj.length
+            return done() if !obj.length
             
             waiting = obj.length
             
             for item in obj
-                try	
-                    each item, next
-                    
-                catch err
-                    next err	
+                each item, next
         
         else
-            return done?() if !( waiting = floyd.tools.objects.keys(obj).length )
+            return done() if !( waiting = floyd.tools.objects.keys(obj).length )
             
             for key, item of obj
-                try
-                    each key, item, next		
-                
-                catch err
-                    next err
+                each key, item, next		
         
         
     
@@ -313,7 +307,12 @@ module.exports = objects =
         if typeof item is 'string' && item.indexOf('/') != -1
             return require item			
         
-        for base in [base, (floyd:floyd), floyd, floyd.tools, fallback]
+        if fallback is false
+            list = [base]
+        else
+            list = [base, (floyd:floyd), floyd, floyd.tools, fallback]
+            
+        for base in list
             if (_item = _resolve item, base) || _item is false
                 return _item				
         

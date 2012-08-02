@@ -129,7 +129,16 @@ module.exports =
                                 ## release the jsdom-window into the pool
                                 @_releaseWindow window	
 
-                        
+                        ##
+                        window.addEventListener 'error', onerr = (e)=> 
+                            window.removeEventListener 'unload', onerr
+                            
+                            fn e.data
+                            
+                            process.nextTick ()=>
+                                @_releaseWindow window  
+                            
+                            
                         ## fire!
                         window.run "(#{__boot__})(#{model})"
             
@@ -197,22 +206,28 @@ module.exports =
                             
 __boot__ = (config)->
     
-    trigger = (type)->
+    trigger = (type, data)->
         (event = window.document.createEvent 'Event').initEvent type, true, true
+        if data
+            event.data = data
+        
         window.dispatchEvent event
     
     trigger 'load'
     
+    _error = (err)->
+        trigger 'error', err
+        
+    
     ##
     floyd.init config, (err, ctx)->
-        return console.error(err) if err
-        
+        return _error(err) if err
         
         stopped = !ctx.stop
         destroyed = !ctx.destroy
         
         next = (err)->
-            console.error(err) if err
+            return _error(err) if err
             
             if !stopped && stopped = true
 

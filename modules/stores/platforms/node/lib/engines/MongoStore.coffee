@@ -83,6 +83,8 @@ module.exports =
                 
                 options ?= {}		
                 
+                options.skip = options.offset
+                
                 for method in __OPTIONS
                     if options[method] && q[method]
                         q[method] options[method] 

@@ -1,11 +1,6 @@
 
 module.exports = (parent, config, fn)->
-    
-    ##
-    if typeof view is 'function'
-        fn = view
-        view = {}
-    
+        
     if typeof config is 'function'
         fn = config
         config = {}
@@ -16,7 +11,7 @@ module.exports = (parent, config, fn)->
             
     
     ##
-    _id = floyd.tools.objects.cut(view, 'id') || config?.id || parent.__ctxID()
+    _id = config?.id || parent.__ctxID()
     
     ##
     ##
@@ -24,60 +19,10 @@ module.exports = (parent, config, fn)->
             
         id: _id
         
-        type: 'gui.ViewContext'
-        
-        data:
-            'parent-selector': 'body'
-                    
-        children: [ 
-        
-            new floyd.Config
-            
-                type: 'gui.ViewContext'
-                
-                data:
-                    selector: '.body'
-             
-            , config?.view
-            
-            new floyd.Config
-            
-                type: 'gui.ViewContext'
-                
-                data:
-                    selector: '.buttons'
-                    
-                    content: ->
-                        button class:'cancel', 'Abbrechen'
-                        button class:'ok', 'Ok'
-                
-                running: ->
-                    @find('button').click (e)=>
-                        @parent._emit $(e.currentTarget).attr('class').split(' ').shift(), e
-                
-            , config?.buttons
-            
-            
-            
-        ]
-        
-        template: ->				
-            
-            div id:@id, class: 'gui Popup', ->				
-                div class: 'body floyd-loading'					
-                div class: 'buttons floyd-loading'
-                    
-        
-        append: (ele)->
-            @find('.body').append ele
-        
-        
-        close: (fn)->
-            @_emit 'close'
-            fn?()
-            
+        type: 'gui.widgets.Popup'
             
     , config
+
 
     
     ##
@@ -91,8 +36,6 @@ module.exports = (parent, config, fn)->
             child.start (err)=>
                 return fn(err) if err
                 
-                fn err, child
-                
                 child.on 'cancel', ->
                     child.close()
                     
@@ -100,14 +43,15 @@ module.exports = (parent, config, fn)->
                 
                     child.__root.remove()
                     
-                    process.nextTick ()->
-                        child.stop ()-> 
-                            #console.log 'stopped', child.ID
-                            
-                            parent.children.delete child
-                            
-                            child.destroy ()->
-                            
-                                #console.log 'destroyed', child.ID
-        
-            
+                    child.stop ()-> 
+                        #console.log 'stopped', child.ID
+                        
+                        parent.children.delete child
+                        
+                        child.destroy ()->
+                        
+                            #console.log 'destroyed', child.ID
+    
+                fn null, child
+                
+    
