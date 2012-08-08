@@ -13,7 +13,7 @@ module.exports =
             
             ## platform type
             settings.platform ?= 'node'
-            settings.version = require('package.json').version
+            settings.version = require(settings.libdir+'/package.json').version
             
             ## platform ident string
             settings.ident ?= 'NodeJS'
