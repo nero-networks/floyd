@@ -35,7 +35,9 @@ module.exports =
                                 button class:'ok', 'Ok'
                         
                         running: ->
+                            console.log @find('button')
                             @find('button').click (e)=>
+                                console.log $(e.currentTarget).attr('class').split(' ').shift()
                                 @parent._emit $(e.currentTarget).attr('class').split(' ').shift(), e
                         
                     , config?.buttons
@@ -50,15 +52,6 @@ module.exports =
                         div class: 'body floyd-loading'                 
                         div class: 'buttons floyd-loading'
                 
-                running: ->
-                
-                    if @data['parent-selector'] is 'body'
-                        $('body').css overflow: 'hidden'
-                        
-                shutdown: ->
-                    if @data['parent-selector'] is 'body'
-                        $('body').css overflow: 'auto'
-                    
                     
             , config
             

@@ -119,8 +119,13 @@ module.exports =
         each: (fn, done)->
             @_engine.each(fn, done)
 
-        distinct: (field, fn)->
-            @_engine.distinct(field, fn)
+        distinct: (field, query, fn)->
+            if typeof query is 'function'
+                fn = query
+                query = null
+                
+            @_engine.distinct(field, query, fn)
+            
         ##
         ## Find all entities where its field values matching corresponding query,
         ## then callback fn(err, entities).

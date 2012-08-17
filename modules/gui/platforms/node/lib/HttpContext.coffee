@@ -206,6 +206,10 @@ module.exports =
                             
 __boot__ = (config)->
     
+    require 'path' ## hack to avoid error 
+    ## Object #<Object> has no method 'path' 
+    ## at Function.resolve (http://tesla:9080/floyd.js:45:36)
+    
     trigger = (type, data)->
         (event = window.document.createEvent 'Event').initEvent type, true, true
         if data

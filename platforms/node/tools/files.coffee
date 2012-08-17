@@ -125,10 +125,13 @@ module.exports = files =
     ##
     ## watch files
     watch: (name, options, fn)->		
+    
+        ## TODO huch?? warum werden die options nicht verwendet??
+        
         if typeof options is 'function' 
             fn = options 
             options = 
-                persistent: false
+                persistent: false  
             
         fs.watch normpath(name), fn
         

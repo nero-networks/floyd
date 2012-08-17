@@ -72,8 +72,8 @@ module.exports =
                 done?()
 
         
-        distinct: (field, fn)->
-            @_client.distinct field, fn
+        distinct: (field, query, fn)->
+            @_client.distinct field, query, fn
 
         find: (query, options, fields, fn)->			
             query ?= {}

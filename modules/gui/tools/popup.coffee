@@ -7,7 +7,7 @@ module.exports = (parent, config, fn)->
     
     if !fn
         fn = (err)=> 
-            parent.logger.error(err) if err
+            parent.error(err) if err && parent.error
             
     
     ##
@@ -27,31 +27,27 @@ module.exports = (parent, config, fn)->
     
     ##
     ##
-    parent._createChild config, (err, child)=>
-        return fn(err) if err
-        
-        child.boot (err)=>
+    try
+        parent._createChild config, (err, child)=>
             return fn(err) if err
             
-            child.start (err)=>
-                return fn(err) if err
+            child.on 'cancel', ->
+                child.close()
                 
-                child.on 'cancel', ->
-                    child.close()
+            child.on 'close', ->
+            
+                child.__root.remove()
+                
+                child.stop ()-> 
+                    #console.log 'stopped', child.ID
                     
-                child.on 'close', ->
-                
-                    child.__root.remove()
+                    parent.children.delete child
                     
-                    child.stop ()-> 
-                        #console.log 'stopped', child.ID
-                        
-                        parent.children.delete child
-                        
-                        child.destroy ()->
-                        
-                            #console.log 'destroyed', child.ID
+                    child.destroy ()->
+                    
+                        #console.log 'destroyed', child.ID
     
-                fn null, child
-                
+            fn null, child
     
+    catch err
+        alert err.message

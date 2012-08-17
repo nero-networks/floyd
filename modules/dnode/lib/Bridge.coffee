@@ -223,5 +223,4 @@ module.exports =
 
             lookup: (args...)=> child.lookup.apply child, args
             
-            ping: (fn)->
-                fn new Date()
+            ping: (fn)-> fn()

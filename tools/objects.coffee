@@ -77,6 +77,20 @@ module.exports = objects =
     ##
     ##
     ##
+    cleanup: (obj)->
+        for key, value of obj
+            
+            if !value
+                delete obj[key]
+                
+            else if objects.isObject value
+                obj[key] = objects.cleanup value
+                
+        return obj
+    
+    ##
+    ##
+    ##
     isArray: (obj)->
         obj instanceof Array || (obj && obj.push && obj.pop && obj.length isnt undefined)
     

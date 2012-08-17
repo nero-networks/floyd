@@ -117,7 +117,6 @@ module.exports =
                                     _checkAccess key, _args, ()=>
                                         
                                         ## EXPERIMENTAL bind the identity to the method... 
-                                        
                                         value.identity = identity
                                         
                                         try					

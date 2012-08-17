@@ -78,13 +78,8 @@ module.exports =
                 done?()
 
         
-        distinct: (field, fn)->
-            _list = []			
-            @each (id, val)->
-                if (_val=val[field]) && _list.indexOf(_val) is -1
-                    _list.push _val
-                 
-            , fn
+        distinct: (field, query, fn)->
+            throw new Error 'unimplemented'
         
         find: (query, options, fields, fn)->
             

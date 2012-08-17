@@ -25,11 +25,12 @@ module.exports =
                 
                 @_avatar = {}
                 
-                ## TODO: hardcoded lookup origin (2x)
-                @lookup 'chat.pubsub', @identity, (err, ctx)=>
+                @lookup 'pubsub', @identity, (err, ctx)=>
                     return done(err) if err
                     
                     @_pubsub = ctx 
+                    
+                    done()
 
                                 
         ##
@@ -49,7 +50,12 @@ module.exports =
         ##
         receive: (msg)->
             if msg
+
                 msg.direct = true
+                if msg.data.text.substr(0, 11) is '_ENCRYPTED_'
+                    if (pass = prompt 'Verschlüsselte Nachricht von: '+msg.data.nick+'. Passworteingabe erforderlich.')
+                        msg.data.text = floyd.tools.crypto.decrypt msg.data.text.substr(11), pass
+                    
                 @_receive null, msg
             
 
@@ -88,6 +94,9 @@ module.exports =
             
             if cmd is 'color'
                 @_avatar.color = args.shift()
+            
+            else if cmd is 'clear'
+                @_display.html ''
             
             else
                 @_display.append $('<li>').text 'unknown command '+cmd
@@ -187,25 +196,13 @@ module.exports =
             cls = _cls user
             
             if !@_users.find('.'+cls).length
-                @_users.append $('<li>').text(user).addClass(cls).click ()=>
-                    
-                    if text = prompt 'enter private message for: '+user
-                        
-                        ## TODO: hardcoded lookup origin
-                        @lookup 'chat.'+origin, @identity, (err, priv)=>
-                            return console.error(err) if err
-                            
-                            priv.receive
-                                origin: @ID
-                                data:
-                                    text: text
-                                    nick: @_nick
-                                    avatar: @_avatar
+                @_users.append $('<li>').text(user).addClass(cls).click ()=> 
+                    @_sendPrivate user, origin
                     
                 if !quiet
                     @_write user+' has joined the channel'
         
-            
+         
         ##
         ##
         _delUser: (user)->			
@@ -213,6 +210,48 @@ module.exports =
                 console.log ele
                 @_write user+' has left the channel'
                 ele.remove()
+        
+        ##
+        ##
+        _sendPrivate: (user, origin)->
+                
+            @lookup origin, @identity, (err, priv)=>
+                return console.error(err) if err
+                
+                _sendDirect = (text)=>                
+                    priv.receive
+                        origin: @ID
+                        data:
+                            text: text
+                            nick: @_nick
+                            avatar: @_avatar
+                    
+                
+                floyd.tools.gui.popup @, 
+                    view:
+                        data:
+                            user: user
+                            content: ->
+                                h1 'private message to: '+@data.user
+                                textarea name:'text', rows:10, cols:50
+                                br()
+                                label 'Password (optional)'
+                                input type:'password', name:'pass'
+                    buttons:
+                        data:
+                            content: ->
+                                button class:'cancel', 'cancel'
+                                button class:'send', 'send'
+                                
+                    running: ->
+                        @on 'send', ()=>
+                            text = @find('[name=text]').val()
+                            
+                            if (pass = @find('[name=pass]').val())
+                                text = '_ENCRYPTED_'+floyd.tools.crypto.encrypt text, pass
+                            
+                            ## send direct
+                            _sendDirect text
             
 _cls = (str)->
     str.replace /[ .+]/g, ''

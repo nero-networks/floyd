@@ -29,7 +29,7 @@ module.exports =
         ## * parent
         ##
         constructor: (config={}, @parent)->			
-            @_status = 'unconfigured'
+            @_status = []
             
             config = @configure config
 
@@ -46,7 +46,7 @@ module.exports =
             
             @_emitter = @_createEmitter config
             
-            @_hiddenKeys.push 'configure', 'boot', 'start', 'stop', 'delegate', 'data', 'parent', 'children'
+            @_hiddenKeys.push 'configure', 'boot', 'start', 'stop', 'error', 'delegate', 'data', 'parent', 'children'
             
             @children = new floyd.data.MappedCollection()
 
@@ -59,21 +59,48 @@ module.exports =
                     @_createChild child, next			
                         
                 done: (err)=>
-                    
-                    @logger.error(err) if err				
+                    @error(err) if err				
 
-
+        ##
+        ##
+        ##
+        error: (err)=>
+            if !@_errorHandler
+                if @parent
+                    @parent.error err
+                
+                else
+                    @logger.error err
+                
+            else
+                @_errorHandler err
+        
         ##
         ##
         ##
         _createChild: (config, done)->
             if typeof (ctor = config.type) isnt 'function'
                 ctor = floyd.tools.objects.resolve(ctor || 'floyd.Context')
+            
+            done ?= (err)=> @error(err) if err
                 
             if ctor 
                 @children.push ctx = new ctor config, @
-        
-                done null, ctx
+
+                if @_status.indexOf('booting') != -1
+                    
+                    ctx.boot (err)=>
+                        return done(err) if err
+                        
+                        if @_status.indexOf('started') != -1                            
+                            ctx.start (err)=>
+                                done err, ctx
+                            
+                        else
+                            done null, ctx
+                    
+                else
+                    done null, ctx
                 
             else
                 done new Error 'Unknown Context-Type: '+config.type
@@ -124,8 +151,8 @@ module.exports =
             ##           
             floyd.tools.objects.intercept @, 'destroy', (done, destroy)=>
             
-                if @stop && @_status isnt 'stopped'
-                    return @_logger.warn 'context not stopped!'
+                if @stop && @_status.indexOf('stopped') is -1
+                    return @logger.warn 'context not stopped!'
                 
                 @_init 'destroy', null, (err)=>
                     done?(err) if err					
@@ -248,6 +275,17 @@ module.exports =
             super identity, key, args, (err)=>
                 
                 checks = [
+                    (next)=>
+                        if @data.permissions?.__checks
+                            for check in @data.permissions.__checks
+                                do(check)=>
+                                    checks.push (next)=>
+                                        check.apply @, [identity, key, args, next]
+                
+                        
+                        next true
+                        
+                ,
 
                     (next)=> ## check for general remote restriction
                         
@@ -255,15 +293,24 @@ module.exports =
                         
                 ,
 
-                    (next)=> ## check for user restriction and test identity.login
+                    (next)=> ## check for login restriction
+                        
+                        if (@data.permissions?[key]?.login || @data.permissions?.login)
+                            
+                            identity.login (err, login)=>
+                                next !!login
+                        
+                        else next true
+                ,
+
+                     (next)=> ## check for user restriction and test identity.login
                         
                         if user = (@data.permissions?[key]?.user || @data.permissions?.user)
                             
                             identity.login (err, login)=>
-                                next login && login.match user
+                                next login is user
                         
-                        else
-                            next true
+                        else next true
                 ,
 
                     (next)=> ## check for roles restriction and test identity.hasRole
@@ -272,9 +319,16 @@ module.exports =
                             identity.hasRole roles, (err, ok)=>
                                 next ok
                                 
-                        else
-                            next true
+                        else next true
                 
+                ,
+                
+                    (next)=> ## custom check function - must callback true to permit!
+                        if check = (@data.permissions?[key]?.check || @data.permissions?.check)
+                            
+                            check identity, key, args, next                            
+                            
+                        else next true
                     
                 ]
                 
@@ -322,7 +376,10 @@ module.exports =
         ## * emits booting and booted
         ##
         boot: (done)->			
-
+            @_errorHandler = done
+            
+            @_changeStatus 'booting'
+            
             @_init 'boot', 'booted', done
                         
                         
@@ -588,16 +645,16 @@ module.exports =
         _changeStatus: (status)->
             
             if status
-                @_status = status
+                @_status.push status
                 
-                @_emit 'before:'+@_status
+                @_emit 'before:'+status
                 
                 if @logger.isLoggable @logger.Level.STATUS
-                    @logger.status 'status changed to', @_status
+                    @logger.status 'status changed to', status
     
-                @_emit @_status
+                @_emit status
             
-                @_emit 'after:'+@_status
+                @_emit 'after:'+status
             
         
             

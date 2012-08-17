@@ -10,7 +10,7 @@ cd $MODULE
 
 SOURCE="components/"
 
-TARGET="tools/cryptojs.js"
+TARGET="tools/CryptoJS.js"
 
 ZIPFILE="http://code.google.com/p/crypto-js/downloads/detail?name=CryptoJS%20v3.0.2.zip"
 
@@ -32,9 +32,19 @@ then
 
     echo -e "\n(function() {"
     
-    cat core.js cipher-core.js 
+    cat core.js
     
-    for file in $(find -type f|grep -v "core.js")
+    for file in $(find ./modules -type f)
+    do
+        echo -e "\n\n\n/* $file */\n\n"
+        
+        cat $file
+        
+    done
+    
+    cat evpkdf.js cipher-core.js
+    
+    for file in $(find ./cipher -type f)
     do
         echo -e "\n\n\n/* $file */\n\n"
         
