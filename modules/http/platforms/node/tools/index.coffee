@@ -21,13 +21,16 @@ module.exports =
         
         curr = 0
         file = null
+        sec = 0
         progress = ()=>    
             
             if handler.progress && data.total && data.file
-        
+                now = +new Date()
                 data.progress = (parseInt data.received * 100 / data.total)
                 
-                if data.file isnt file || data.progress is 100 || data.progress >= curr + 1
+                if data.file isnt file || data.progress is 100 || data.progress >= curr + 5 || now > sec + 1000
+                    
+                    sec = now
                     curr = data.progress
                     file = data.file
                     
