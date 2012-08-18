@@ -35,13 +35,13 @@ module.exports = files =
     ##
     exists: (name)->
     
-        return fs.existsSync normpath name			
+        return fs.existsSync normpath name            
 
     ##
     ##
     stat: (name)->
 
-        return fs.lstatSync normpath name			
+        return fs.lstatSync normpath name            
     
     ##
     ##
@@ -53,7 +53,7 @@ module.exports = files =
     ##
     list: (dir)->
         
-        fs.readdirSync normpath(dir)			
+        fs.readdirSync normpath(dir)            
     
     
     ##
@@ -85,8 +85,9 @@ module.exports = files =
         if floyd.tools.objects.isArray name
             name = _join name
         
-        if files.exists name
+        name = normpath name
         
+        if files.exists name
             if files.is_dir name
         
                 if recursive
@@ -124,7 +125,7 @@ module.exports = files =
     
     ##
     ## watch files
-    watch: (name, options, fn)->		
+    watch: (name, options, fn)->        
     
         ## TODO huch?? warum werden die options nicht verwendet??
         
@@ -145,12 +146,12 @@ module.exports = files =
 ##
 normpath = (dir)->
 
-    if typeof dir is 'object'			
+    if typeof dir is 'object'            
         dir = _join dir
                     
-    dir = dir.replace floyd.appdir, ''
+    dir = dir.replace floyd.system.appdir, ''
     
-    path.join floyd.system.appdir, path.normalize(dir)	
+    path.join floyd.system.appdir, path.normalize(dir)    
 
 ##
 ##
