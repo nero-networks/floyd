@@ -26,6 +26,7 @@
         "cookies":         ">= 0.3.0",
         "dateformatjs":    ">= 0.0.7",
         "dnode":           "0.9.12",
+        "formidable":      ">= 1.0.11",
         "htmlparser":      ">= 1.7.6",
         "jsdom":           ">= 0.2.14",
         "markdown":        ">= 0.3.1",    
