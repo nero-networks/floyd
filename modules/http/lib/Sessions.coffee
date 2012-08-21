@@ -22,7 +22,7 @@ module.exports =
                                         
                     registry:
                         interval: 60
-                        timeout: 600
+                        timeout: 3600
                     
             , config	
         
@@ -306,7 +306,7 @@ module.exports =
                 
             ##
             get: (id)->
-            
+                pool[id]?.touch()
                 pool[id]
             
             

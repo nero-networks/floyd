@@ -7,55 +7,67 @@ module.exports =
         ##
         configure: (config)->
             
+            children = [
+            
+                new floyd.Config
+                        
+                    type: 'gui.ViewContext'
+                    
+                    data:
+                        selector: '.body'
+                 
+                , config?.view
+                
+            ]
+            
+            if config?.buttons
+            
+                children.push new floyd.Config
+                        
+                    type: 'gui.ViewContext'
+                    
+                    data:
+                        selector: '.buttons'
+                        
+                        content: ->
+                            button class:'cancel', 'Abbrechen'
+                            button class:'ok', 'Ok'
+                    
+                    booted: ->
+                        @find('button').click (e)=>
+                            action = $(e.currentTarget).attr('class').split(' ').shift()
+                            
+                            console.log action
+                            
+                            @_emit e, action: action
+                            @parent._emit e, action: action
+                            
+                    
+                , config?.buttons
+            
             super new floyd.Config 
                 
                 data:
                     'parent-selector': 'body'
                             
-                children: [ 
-                
-                    new floyd.Config
-                    
-                        type: 'gui.ViewContext'
-                        
-                        data:
-                            selector: '.body'
-                     
-                    , config?.view
-                    
-                    new floyd.Config
-                    
-                        type: 'gui.ViewContext'
-                        
-                        data:
-                            selector: '.buttons'
-                            
-                            content: ->
-                                button class:'cancel', 'Abbrechen'
-                                button class:'ok', 'Ok'
-                        
-                        running: ->
-                            console.log @find('button')
-                            @find('button').click (e)=>
-                                console.log $(e.currentTarget).attr('class').split(' ').shift()
-                                @parent._emit $(e.currentTarget).attr('class').split(' ').shift(), e
-                        
-                    , config?.buttons
-                    
-                    
-                    
-                ]
+                children: children
                 
                 template: ->                
                     
-                    div id:@id, class: 'gui Popup', ->              
+                    div id:@id, class: 'gui Popup', style:'display: none', ->              
                         div class: 'body floyd-loading'                 
                         div class: 'buttons floyd-loading'
+                
                 
                     
             , config
             
          
+        start: (done)->
+            super (err)=>
+                done(err) if err
+                
+                @__root.fadeIn 'slow', done
          
         ##
         ##
@@ -71,6 +83,11 @@ module.exports =
             @_emit 'close'
             fn?()
             
-                
+        ##
+        ##
+        ##
+        fadeOut: (speed='slow', fn)->
+            @__root.fadeOut speed, ()=>
+                @close fn
                 
         

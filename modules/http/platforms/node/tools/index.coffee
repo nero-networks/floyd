@@ -3,7 +3,7 @@ formidable = require 'formidable'
 
 module.exports =
 
-    upload: (req, handler)->
+    upload: (req, handler, done)->
     
         ##
         handler.data = data = 
@@ -13,7 +13,8 @@ module.exports =
     
         
         ## formidable - nothing more to say!
-    
+        
+        
         ##
         form = formidable.IncomingForm()
         
@@ -37,16 +38,6 @@ module.exports =
                     handler.progress data
      
      
-        ## handler
-        
-        ##
-        form.on 'file', (field, file)=>
-            
-            handler.file? file, field, data
-            
-            progress()
-            
-        
         ## progress
         
         ##
@@ -66,12 +57,28 @@ module.exports =
             progress()
         
         
+        ## collect files
+        
+        files = []
+        
+        ##
+        form.on 'file', (field, file)=>
+            files.push file
+            
+            if handler.file
+                handler.file 
+                    name: file.name
+                    size: file.size
+                , data, field
+            
+            progress()
+            
+        
         ## fire!
         
         ##
-        form.parse req, (err, fields, files)=>
-                
-            handler.done? err, fields, files
+        form.parse req, (err, fields)=>            
+            done err, files, fields
         
         
     
