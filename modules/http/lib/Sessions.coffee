@@ -137,13 +137,15 @@ module.exports =
                     
                     users.set user, data, (err)=>
                     
-                        sess.public.user =	floyd.tools.objects.clone data,	
+                        data = floyd.tools.objects.clone data,	
                             login: user
                         
-                        delete sess.public.user.pass
-    
+                        delete data.pass
+                        
+                        sess.public.user = data
+                        
                         ##
-                        fn null, sess.public.user
+                        fn null, data
                     
 
         ##
@@ -174,7 +176,24 @@ module.exports =
             
             if (sess = @_registry.get sid)
                 
-                fn null, sess.public.user
+                if user = sess.public.user?.name
+                    
+                    ## TODO integrate the data update with the login.
+                    ##      mongo handler -> update sess.public.user
+                    
+                    @parent.children.users.get user, (err, data)=>
+                        return fn(err) if err
+                        
+                        data = floyd.tools.objects.clone data,  
+                            login: user
+                            
+                        delete data.pass
+                            
+                        fn null, sess.public.user = data
+                        
+                else
+                    fn new Error 'not logged in'
+                    
 
             else 
                 #console.warn 'user failure', identity.id, sess, sess?.user

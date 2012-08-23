@@ -43,9 +43,11 @@ module.exports = (parent, config, fn)->
                     
                     parent.children.delete child
                     
-                    child.destroy ()->
+                    parent.once 'destroyed', ()->
                     
-                        #console.log 'destroyed', child.ID
+                        child.destroy ()->
+                        
+                            #console.log 'destroyed', child.ID
     
             fn null, child
     

@@ -2,7 +2,7 @@
     "name":                "floyd",
     "author":              "Roman De Meo",
     "description":         "floyd - a hierarchical app container",
-    "version":             "0.2.3",
+    "version":             "0.2.4",
 
     "main":                "./index",
 

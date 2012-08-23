@@ -426,7 +426,7 @@ module.exports =
             @logger.debug 'lookup:', name, identity.id
             
             ## --> EXPERIMENTAL identity based lookups cache -> nero
-            if false
+            if false #inactive
                 if !(lookups = LOOKUPS[__ident])
                     #@logger.info 'create lookups cache for', __ident
                     

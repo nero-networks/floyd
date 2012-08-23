@@ -53,7 +53,7 @@ module.exports =
     ##
     ##
     parse: (date, format='dd.MM.yyyy HH:mm')->		
-        _format(format).parse if date instanceof Date then date else new Date date
+        _format(format).parse date
 
     
     ##

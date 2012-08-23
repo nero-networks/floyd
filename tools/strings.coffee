@@ -78,7 +78,7 @@ module.exports =
     ##	   
     ##	console.log i, 'UUIDs per second'
     ##
-    ##	my firebug(fireace) console says: 
+    ##	my firebug(acebug) console says: 
     ##	23368 UUIDs per second
     ##	23486 UUIDs per second
     ##	23502 UUIDs per second

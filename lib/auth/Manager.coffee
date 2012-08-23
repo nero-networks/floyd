@@ -71,7 +71,7 @@ module.exports = (handler)->
             throw new Error 'duplicate identity: '+id
     
     
-   ##
+    ##
     ##
     ##
     destroyIdentity: (identity, done)->
@@ -112,7 +112,10 @@ module.exports = (handler)->
     ##
     ##
     logout: (fn)->
-        manager.emit 'logout'
+        console.log manager, typeof manager.emit
+        
+        if manager.emit
+            manager.emit 'logout'
 
         __user = null
         

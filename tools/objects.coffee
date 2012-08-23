@@ -98,7 +98,7 @@ module.exports = objects =
     ##
     ##
     isObject: (obj)->
-        obj && typeof obj is 'object' && !objects.isArray(obj) && !objects.isRegExp(obj)
+        obj && typeof obj is 'object' && !objects.isArray(obj) && !objects.isDate(obj) && !objects.isRegExp(obj)
     
     
     ##
