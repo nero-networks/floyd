@@ -20,15 +20,14 @@ module.exports = files =
     ##
     ##
     mkdir: (dir)->
-
-        parts = dir.split('/'); 
+        parts = normpath(dir).split('/'); 
         
+        temp = '/'
         while parts.length > 0
-            if !files.exists ( temp = path.join temp, parts.shift() )
+            if !fs.existsSync( temp = path.join temp, parts.shift() )
                 fs.mkdirSync temp
         
-        return dir
-    
+        return dir    
         
     
     ##
