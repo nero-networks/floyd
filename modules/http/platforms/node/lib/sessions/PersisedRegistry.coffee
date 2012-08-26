@@ -13,15 +13,20 @@ module.exports =
             
             floyd.tools.objects.process floyd.tools.stores.read('registry', @__store),
                 
-                each: (id, data)=>
+                each: (id, data, next)=>
+
+                    sess = new (floyd.tools.objects.resolve @_config.sessions.type) id, @_config.sessions
                     
-                    @add id, sess = new (floyd.tools.objects.resolve @_config.sessions.type) id, @_config.sessions, data
+                    floyd.tools.objects.extend sess, data
+                    
+                    @add sess
+                    
+                    next()
                     
                 done: (err)=>
                     throw err if err
                     
-                    if floyd.tools.files.fs.existsSync
-                        
+                    if floyd.tools.files.fs.existsSync @__store
                         floyd.tools.files.fs.unlinkSync @__store
         
         ##

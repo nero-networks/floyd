@@ -19,7 +19,13 @@ module.exports =
                 host: host
                 port: port
                 path: path
-            
+        
+        if options.url
+            {host, port, path} = url.parse options.url
+            options.host = host
+            options.port = port
+            options.path = path
+        
         #console.log options
         
         http.get options, (res)->			

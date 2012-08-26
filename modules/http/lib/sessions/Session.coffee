@@ -5,15 +5,14 @@ module.exports =
 
     class Session extends events.EventEmitter
     
-        constructor: (@SID, config, data)->
-            if data
-                floyd.tools.objects.extend @, data
+        constructor: (@SID, config)->
         
             #console.log 'create session', @SID
             
             @token = floyd.tools.crypto.hash(floyd.tools.strings.uuid()+@SID)+@SID
              
             @public =
+                SID: @SID
                 TOKEN: @token
                 on: ()=> @addListener.apply @, agruments
                 off: ()=> @removeListener.apply @, agruments

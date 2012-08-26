@@ -153,37 +153,52 @@ module.exports =
             ## TODO https
             prefix = 'http://'+req.headers.host
             
+            
+            floyd.tools.http.get 
+                url: prefix+'/floyd.js'
+                headers:
+                    Cookie: 'FSID='+req.session.SID
+                    
+            , (err, script)=>
                 
-            scripts = [prefix+'/floyd.js']
-
-            ##
-            ##
-            jsdom.env template, scripts, (err, window)=>
-                
-                if window
-                
-                    window.$('html > script').remove()
+                ##
+                jsdom.env 
                     
-                    window.location = Url.parse prefix+req.url
+                    html:template 
                     
-                    window.console = console
+                    src: [script]
                     
-                    window.floyd = window.require 'floyd'
+                    document:
+                        referer: req.referer
+                        cookie: 'FSID='+req.session.SID+'; path=/; httponly'
                     
-                    window.floyd.system.platform = 'jsdom'	
+                    done: (err, window)=>
                     
-                    window.floyd.system.libdir = floyd.system.libdir
-                    window.floyd.system.appdir = floyd.system.appdir
+                        process.nextTick ()=>
+                            if window
+                            
+                                window.$('html > script').remove()
+                                
+                                window.location = Url.parse prefix+req.url
+                                
+                                window.console = console
+                                
+                                window.floyd = window.require 'floyd'
+                                
+                                window.floyd.system.platform = 'jsdom'	
+                                
+                                window.floyd.system.libdir = floyd.system.libdir
+                                window.floyd.system.appdir = floyd.system.appdir
+                                
+                                window.floyd.tools.files = floyd.tools.files
+                                
+                                window.floyd.__parent = 
+                                    lookup: (name, identity, fn)=>						
+                                        @lookup name, identity, (err, ctx)=>
+                                            fn err, ctx
+                                                                
+                            fn err, window
                     
-                    window.floyd.tools.files = floyd.tools.files
-                    
-                    window.floyd.__parent = 
-                        lookup: (name, identity, fn)=>						
-                            @lookup name, identity, (err, ctx)=>
-                                fn err, ctx
-                                                    
-                fn err, window
-        
 
 
         ##

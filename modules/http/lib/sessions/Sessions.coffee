@@ -73,6 +73,7 @@ module.exports =
         ##
         _getSID: (req)->
             
+            
             #console.log 'search cookie', @data.cookie.name, req.url, req.headers.cookie
             
             if !(sid = req.cookies.get @data.cookie.name)

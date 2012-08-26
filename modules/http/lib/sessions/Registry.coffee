@@ -10,10 +10,10 @@ module.exports =
         
         ##  
         add: (sess)->
-        
-            @_pool[sess.SID] = sess
-            
-            @_observe() if !@_running
+            if sess.SID
+                @_pool[sess.SID] = sess
+                
+                @_observe() if !@_running
         
             
         ##
