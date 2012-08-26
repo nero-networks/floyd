@@ -3,7 +3,7 @@ formidable = require 'formidable'
 
 module.exports =
 
-    upload: (req, handler, done)->
+    upload: (req, res, handler, done)->
     
         ##
         handler.data = data = 
@@ -17,6 +17,10 @@ module.exports =
         
         ##
         form = formidable.IncomingForm()
+                
+        if handler.maxSize && parseInt(req.headers['content-length']) > handler.maxSize
+            handler.error err = new Error 'limit exceeded'
+            return done err
         
         form.uploadDir = floyd.system.appdir+'/.floyd/tmp/'
         
@@ -34,6 +38,8 @@ module.exports =
                     sec = now
                     curr = data.progress
                     file = data.file
+                    
+                    data.state = 'uploading'
                     
                     handler.progress data
      
@@ -63,16 +69,22 @@ module.exports =
         
         ##
         form.on 'file', (field, file)=>
-            files.push file
+                    
+            if file.type.match handler.accept
             
-            if handler.file
-                handler.file 
-                    name: file.name
-                    size: file.size
-                , data, field
+                files.push file
+                
+                if handler.file
+                    handler.file 
+                        name: file.name
+                        size: file.size
+                    , data, field
+                
+                progress()
             
-            progress()
-            
+            else                
+                handler.error new Error 'invalid type:'+file.name
+                
         
         ## fire!
         

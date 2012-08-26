@@ -6,6 +6,7 @@ module.exports =
     ##
     ##
     context: (id, type, config)->
+    
         new floyd.Config
             id: id
             
@@ -23,7 +24,7 @@ module.exports =
     ##	
     read: (key, file='.floyd/default-store.json')->
         
-        floyd.tools.objects.resolve key, _read(file)
+        floyd.tools.objects.resolve key, _read(file) || {}
         
         
         
@@ -31,8 +32,13 @@ module.exports =
     ##
     ##
     write: (key, value, file='.floyd/default-store.json')->
+        _data = data = _read(file) || {}
         
-        (data = _read(file))[key] = value
+        keys = key.split '.'
+        while keys.length > 1 && _data[keys[0]]
+            _data = _data[keys.shift()]
+            
+        _data[keys.shift()] = value
         
         _write file, data
     
@@ -42,10 +48,11 @@ module.exports =
 ##
 ##
 _read = (file)->
+
+    if floyd.tools.files.fs.existsSync file
+
+        JSON.parse floyd.tools.files.fs.readFileSync file, 'utf-8'
     
-    JSON.parse floyd.tools.files.fs.readFileSync file, 'utf-8'
-
-
 
 ##
 ##

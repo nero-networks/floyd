@@ -2,7 +2,10 @@
 im = require 'imagemagick'
 
 module.exports = 
-
+    
+    ##
+    ##
+    ##
     resize: (dimensions, src, dest, done)->
         
         if typeof dimensions is 'string'
@@ -13,7 +16,6 @@ module.exports =
         _scale = (size, src, dest, next)->      
             
             im.convert [src, '-resize', size+'\>', dest], next
-        
         
         floyd.tools.objects.process dimensions,
             done: done
@@ -27,4 +29,4 @@ module.exports =
                     
                 _scale size, src, _dest, next
                 
-                
+            

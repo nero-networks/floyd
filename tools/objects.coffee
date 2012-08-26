@@ -22,7 +22,7 @@ module.exports = objects =
     ##
     process: (obj, {each, done})->
         done ?= (err)-> console.error(err) if err
-    
+
         return done() if !obj
         
         waiting = 0	 

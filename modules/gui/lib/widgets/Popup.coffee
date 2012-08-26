@@ -34,13 +34,13 @@ module.exports =
                             button class:'ok', 'Ok'
                     
                     booted: ->
+                        @view = @parent.children[0]
+                        
                         @find('button').click (e)=>
                             action = $(e.currentTarget).attr('class').split(' ').shift()
                             
-                            console.log action
-                            
-                            @_emit e, action: action
-                            @parent._emit e, action: action
+                            @_emit action, e
+                            @parent._emit action, e
                             
                     
                 , config?.buttons

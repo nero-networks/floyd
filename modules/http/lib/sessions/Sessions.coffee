@@ -11,6 +11,7 @@ module.exports =
         constructor: (config, parent)->
             super config, parent
             @_hiddenKeys.push 'Registry', 'Session'
+            
         
         configure: (config)->
             @_TOKENS = config.tokens
@@ -21,8 +22,12 @@ module.exports =
                         name: 'FSID'
                                         
                     registry:
+                        type: 'http.sessions.Registry'
                         interval: 60
                         timeout: 3600
+                        
+                        sessions:
+                            type: 'http.sessions.Session'
                     
             , config	
         
@@ -32,7 +37,7 @@ module.exports =
         start: (done)->
 
             ## TODO: read persisted
-            @_registry = new @Registry @data.registry
+            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry
             
                         
             ## use the next HttpContext (idealy our parent) to connect req handler
@@ -83,14 +88,6 @@ module.exports =
             ##
             return sid
         
-        
-        ##
-        ##
-        ##
-        createSession: (fn)->
-            console.log 'creating session'
-            
-            fn null, @_load @_createSID(), fn
         
         ##
         ##
@@ -253,7 +250,7 @@ module.exports =
             ## search and create
             if !(sess = @_registry.get sid)
             
-                @_registry.add sess = new Session sid
+                @_registry.add sess = new (floyd.tools.objects.resolve @data.registry.sessions.type) sid, @data.registry.sessions
                 
             sess.resume()			
             
@@ -278,114 +275,4 @@ module.exports =
         
             floyd.tools.strings.uuid()
         
-        
-        ##
-        ##
-        ##
-        Registry: (config)->
-            pool = {}
-            _running = false
-            
-            observe = ()->
-                
-                _running = setInterval ()=>
-                    
-                    if !(keys = floyd.tools.objects.keys pool).length
-                        clearInterval _running
-                        _running = null
-                    
-                    else
-                    
-                        now = +new Date()
-                        
-                        #console.log 'starting cleanup run:', now, keys
-                        
-                        for sid in keys
-                            do (sid)=>
-                                sess = pool[sid]
-                                
-                                #console.log 'check session', (sess.touched + config.timeout * 1000) < now, sess
-                                        
-                                if (sess.touched + config.timeout * 1000) < now
-                                    sess.destroy()
-                                    delete pool[sid]
-                    
-                , config.interval * 1000
-            
-            
-            ## public api
-            
-            ##	
-            add: (sess)->
-            
-                pool[sess.SID] = sess
-                
-                observe() if !_running
-            
-                
-            ##
-            get: (id)->
-                pool[id]?.touch()
-                pool[id]
-            
-            
-        
-        
-        ##
-        ##
-        ##		
-        Session:
-        
-            class Session extends events.EventEmitter
-            
-                constructor: (@SID)->
-                
-                    #console.log 'create session', @SID
-                    
-                    @token = floyd.tools.crypto.hash(floyd.tools.strings.uuid()+@SID)+@SID
-                     
-                    @public =
-                        TOKEN: @token
-                        on: ()=> @addListener.apply @, agruments
-                        off: ()=> @removeListener.apply @, agruments
-                        once: (action, handler)=> 
-                            @on action, _handler = (event)=>
-                                @off _handler
-                                handler event
-                                
-                                
-                
-                ##
-                touch: ()->
-                    @touched = @public.touched = +new Date()
-                    
-                    #console.log 'touch session', @SID
-
-                    @emit 'touch', @touched 
-                    
-                
-                ##
-                destroy: ()->
-                
-                    #console.log 'destroy session', @SID
-                    
-                    @emit 'destroy'
-                
-                
-                ##
-                suspend: ()->
-                
-                    #console.log 'suspend session', @SID
-                    
-                    @touch()
-                    
-                    @emit 'suspend'
-         
-         
-                ##
-                resume: ()->
-                
-                    #console.log 'resume session', @SID
-
-                    @emit 'resume'
-        
+     

@@ -29,6 +29,18 @@ module.exports =
                     
                 children: [
                 
+                    id: 'sessions'
+                    
+                    data:
+                        registry:
+                            type: 'http.sessions.PersisedRegistry'
+                    
+                    shutdown: ->
+                        if @_registry
+                            @_registry.persist()
+                                          
+                ,
+                
                     id: 'lib'
                     
                     type: 'http.LibLoader'

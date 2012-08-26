@@ -47,7 +47,7 @@ module.exports =
                 
                     id: 'sessions'
                     
-                    type: 'http.Sessions'
+                    type: 'http.sessions.Sessions'
                     
                     data: config?.data?.sessions || {}
                     
