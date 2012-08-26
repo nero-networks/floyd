@@ -153,13 +153,13 @@ module.exports =
             ## TODO https
             prefix = 'http://'+req.headers.host
             
-            
             floyd.tools.http.get 
                 url: prefix+'/floyd.js'
                 headers:
                     Cookie: 'FSID='+req.session.SID
                     
             , (err, script)=>
+                return fn(err) if err
                 
                 ##
                 jsdom.env 

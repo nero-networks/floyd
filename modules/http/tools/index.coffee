@@ -14,20 +14,18 @@ module.exports =
     ##
     get: (options, fn)->
         if typeof options is 'string'
-            {host, port, path} = url.parse options
+            {hostname, port, path} = url.parse options
             options =
-                host: host
+                host: hostname
                 port: port
                 path: path
         
         if options.url
-            {host, port, path} = url.parse options.url
-            options.host = host
+            {hostname, port, path} = url.parse options.url
+            options.host = hostname
             options.port = port
             options.path = path
-        
-        #console.log options
-        
+           
         http.get options, (res)->			
             data = ''			
             
