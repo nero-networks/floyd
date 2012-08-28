@@ -173,18 +173,20 @@ module.exports =
                         cookie: 'FSID='+req.session.SID+'; path=/; httponly'
                     
                     done: (err, window)=>
+                        return fn(err) if err
                     
                         process.nextTick ()=>
-                            if window
                             
-                                window.$('html > script').remove()
-                                
-                                window.location = Url.parse prefix+req.url
-                                
-                                window.console = console
-                                
-                                window.floyd = window.require 'floyd'
-                                
+                            window.$('html > script').remove()
+                            
+                            window.location = Url.parse prefix+req.url
+                            
+                            window.console = console
+                            
+                            window.floyd = window.require 'floyd'
+                            
+                            process.nextTick ()=>
+                            
                                 window.floyd.system.platform = 'jsdom'	
                                 
                                 window.floyd.system.libdir = floyd.system.libdir
@@ -197,7 +199,7 @@ module.exports =
                                         @lookup name, identity, (err, ctx)=>
                                             fn err, ctx
                                                                 
-                            fn err, window
+                                fn null, window
                     
 
 
