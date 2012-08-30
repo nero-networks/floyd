@@ -23,6 +23,7 @@ FORMATCACHE = {}
 _format = (f)->
     FORMATCACHE[f] ?= new DateFormat f
 
+
 module.exports = 
     SECOND:	1000
     MINUTE:	60 * 1000
@@ -54,6 +55,7 @@ module.exports =
     ##
     parse: (date, format='dd.MM.yyyy HH:mm')->		
         _format(format).parse date
+        #moment(datum, format)
 
     
     ##
@@ -61,6 +63,7 @@ module.exports =
     ##
     format: (date, format='dd.MM.yyyy HH:mm', split)->
         d = _format(format).format if date instanceof Date then date else new Date date
+        #d = moment(date).format format
         
         if split
             d = d.split split

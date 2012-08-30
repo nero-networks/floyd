@@ -33,12 +33,13 @@ module.exports =
                     
                     modules:		['crypto']
                     
-                    node_modules:	['path', 'events', 'http', 'url', 'floyd/node_modules/sprintf', 'floyd/node_modules/sanitizer', 'floyd/node_modules/dateformatjs']
+                    node_modules:	['path', 'events', 'http', 'url', 'floyd/node_modules/sprintf', 'floyd/node_modules/sanitizer', 'floyd/node_modules/moment', 'floyd/node_modules/dateformatjs']
                     
                     aliases: 		
                         sprintf: '/node_modules/floyd/node_modules/sprintf'
                         sanitizer: '/node_modules/floyd/node_modules/sanitizer'
                         dateformatjs: '/node_modules/floyd/node_modules/dateformatjs'
+                        moment: '/node_modules/floyd/node_modules/moment'
                         
                                         
             , config
