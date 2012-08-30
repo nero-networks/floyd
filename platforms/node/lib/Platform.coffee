@@ -78,7 +78,7 @@ module.exports =
                         get: ()->							
                             require path
                         set: ()->
-                            console.log 'reset', path
+                            #console.log 'reset', path
                         
             ##
             return @
