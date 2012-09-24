@@ -1,9 +1,10 @@
 
-module.exports = 
+module.exports = new floyd.Config 
     
     type: 'http.Server'
     
     data:
+        public: ['./public', floyd.system.libdir+'/modules/gui/public/']
         
         lib:
             modules: ['gui']
@@ -14,5 +15,6 @@ module.exports =
                 markdown: '/node_modules/floyd/node_modules/markdown'
                         
             
-            prepend: [require.resolve 'floyd/modules/http/public/js/jquery-1.7.2.min.js']
+            prepend: [floyd.system.libdir+'/modules/gui/public/js/jquery-1.7.2.min.js']
     
+  

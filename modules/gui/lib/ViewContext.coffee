@@ -15,10 +15,9 @@ module.exports =
                 @_build (err)=>
                     return done(err) if err
                     
-                    boot done
-                
+                    boot done                
             
-            super new floyd.Config
+            config = super new floyd.Config
             
                 data: 
                     selector: undefined
@@ -27,7 +26,11 @@ module.exports =
                         root: '<div class="floyd-loading"/>'
                     
             , config
-        
+            
+            if config.widget
+                @_widget = floyd.tools.gui.ck config.widget
+            
+            return config
         
         ##
         ##
@@ -182,3 +185,43 @@ module.exports =
         _update: (data, fn)->		
 
             @_append data, fn
+
+
+        ##
+        ##
+        ##  
+        _display: (data, options, fn)->
+            
+            item = if @data.key then data[@data.key] else data
+            
+            @_item item, (err, html)=>
+                
+                if html
+                    @__root.append html
+                
+                fn? err
+                
+        ##
+        ##
+        ##
+        _item: (item, fn)->
+            
+            @_prepare item, (err, context)=>
+                return fn(err) if err
+                
+                if @_widget
+                    @_widget
+                        format: @data.find 'debug'
+                        context: context
+                    , fn    
+                
+                else
+                    fn null, context
+        ##
+        ##
+        ##
+        _prepare: (item, fn)->
+            item.__data = @data
+            
+            fn null, item
+ 

@@ -36,7 +36,7 @@ module.exports =
                     ctype: 'text/html'
                     
                     ## a directory relative to floyd.appdir
-                    public: './public'
+                    public: ['./public']
                     
                     ## the default index file
                     index: 'index.html'

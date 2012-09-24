@@ -32,7 +32,7 @@ module.exports = (parent, config, fn)->
             return fn(err) if err
             
             child.on 'cancel', ->
-                child.close()
+                child.fadeOut()
                 
             child.on 'close', ->
             

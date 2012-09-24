@@ -701,7 +701,7 @@ module.exports =
             
             @_emitter = new events.EventEmitter()
             
-            @_emitter.setMaxListeners @data.events?.listeners ? 5
+            @_emitter.setMaxListeners @data.events?.listeners ? 41 ## shows up in log with 42 ;-)
             
             for action in ACTIONS
                 do(action)=>
