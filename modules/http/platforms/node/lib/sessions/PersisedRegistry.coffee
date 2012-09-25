@@ -10,7 +10,13 @@ module.exports =
             super @_config
             
             @__store = @_config.store || '.floyd/sessions-store.json'
-            
+                        
+            if !floyd.tools.files.exists @__store
+                floyd.tools.stores.write 'registry', {}, @__store
+                
+                if process.getuid() is 0
+                    floyd.tools.files.chown @__store, floyd.system.UID, floyd.system.GID
+                    
             floyd.tools.objects.process floyd.tools.stores.read('registry', @__store),
                 
                 each: (id, data, next)=>
@@ -26,9 +32,11 @@ module.exports =
                 done: (err)=>
                     throw err if err
                     
-                    if floyd.tools.files.fs.existsSync @__store
-                        floyd.tools.files.fs.unlinkSync @__store
-        
+                    floyd.tools.stores.write 'registry', {}, @__store
+                    
+                    
+                    
+                    
         ##
         ##
         ##  

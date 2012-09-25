@@ -129,6 +129,15 @@ module.exports =
             if !config.id
                 config.id = @system.appdir.split('/').pop()
             
+            
+            if !config.UID || !config.GID
+                stat = floyd.tools.files.stat '.'
+                config.UID ?= stat.uid
+                config.GID ?= stat.gid                          
+            
+            @system.UID = config.UID
+            @system.GID = config.GID
+            
             ##
             ## create and start Context instance
             ctx = super config, fn
@@ -147,11 +156,6 @@ module.exports =
             ##
             ctx.on 'after:booted', ()=>
 
-                if !config.UID || !config.GID
-                    stat = floyd.tools.files.stat '.'
-                    config.UID ?= stat.uid
-                    config.GID ?= stat.gid 							
-                    
                 if process.getuid() is 0
                     
                     ## chown tmpdir

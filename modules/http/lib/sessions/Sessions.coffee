@@ -30,15 +30,20 @@ module.exports =
                             type: 'http.sessions.Session'
                     
             , config	
+
+        ##
+        ##
+        ##
+        boot: (done)->
+            
+            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry
+            
+            super done
         
         ##
         ##
         ##
         start: (done)->
-
-            ## TODO: read persisted
-            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry
-            
                         
             ## use the next HttpContext (idealy our parent) to connect req handler
             @delegate '_addMiddleware', (req, res, next)=>
