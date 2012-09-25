@@ -15,7 +15,11 @@ module.exports =
         ##
         _scale = (size, src, dest, next)->      
             
-            im.convert [src, '-resize', size+'\>', dest], next
+            if typeof size is 'function'
+                size src, dest, next
+            
+            else            
+                im.convert [src, '-resize', size+'\>', dest], next
         
         data =
             src: dest
@@ -30,9 +34,8 @@ module.exports =
             each: (name, size, next)->
                 if name is 'full'
                     _dest = dest
-                
                 else
-                    data.thumbnails[name] = _dest = dest.replace /\.([a-zA-Z]+)$/, ('.'+name+'.$1')
+                    data.thumbnails[name] = _dest = dest.replace /\.([a-zA-Z]+)$/, ('.'+name+'.$1')                    
                     
                 _scale size, src, _dest, next
                 

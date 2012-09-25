@@ -130,3 +130,28 @@
 .editor.Buttons a img {
   border-radius: 3px;
 }
+
+section.upload.Button iframe,
+section.upload.Button input.files {
+  display: none;
+}
+section.upload.Status {
+  width: 500px;
+  height: 30px;
+}
+section.upload.Status .progress {
+  border-radius: 3px;
+  background-color: #f00;
+  width: 0;
+  height: 10px;
+}
+section.upload.Status .info {
+  font-size: 80%;
+  padding-top: 5px;
+}
+section.upload.Status .info .name {
+  float: left;
+}
+section.upload.Status .info .value {
+  float: right;
+}

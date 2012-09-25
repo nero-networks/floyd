@@ -45,7 +45,7 @@ module.exports =
                         handler.request = req
                         
                         @_handleUpload handler, files, fields, (err)=>
-                            return next(err) if err
+                            return handler.error(err) if err
                             
                             handler.disconnect()
                 

@@ -195,11 +195,12 @@ module.exports =
             item = if @data.key then data[@data.key] else data
             
             @_item item, (err, html)=>
+                return fn(err) if err && fn
                 
                 if html
                     @__root.append html
                 
-                fn? err
+                @_cleanup item, fn
                 
         ##
         ##
@@ -224,4 +225,13 @@ module.exports =
             item.__data = @data
             
             fn null, item
- 
+
+                    
+        ##
+        ##
+        ##
+        _cleanup: (item, fn)->
+            delete item.__data
+            
+            fn?()
+             

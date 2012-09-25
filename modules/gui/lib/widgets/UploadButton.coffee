@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             config = super new floyd.Config
                 template: ->
-                    section class:'upload Button'
+                    section class:'upload Button floyd-loading'
                     
                 data:
                     multiple: false
@@ -40,7 +40,7 @@ module.exports =
                 popup: 
                     
                     data:
-                        class: 'dialog tiny'
+                        class: 'dialog narrow'
                         close: false                                            
                     
                     view:
