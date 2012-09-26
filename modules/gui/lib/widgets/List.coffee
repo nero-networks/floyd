@@ -48,7 +48,7 @@ module.exports =
 
                 if @children.browse
                     @children.browse.on 'browse', (e)=>
-                        @_loadData.call @, e.offset, e.limit, (err, items, data)=>
+                        @_loadData e.offset, e.limit, (err, items, data)=>
                             return done(err) if err
                             @_display items, data
                     
@@ -61,15 +61,25 @@ module.exports =
                 
                             
         _reload: (done)->
-            @_loadData.call @, @data.offset, @data.limit, (err, items, data)=>
+            @_loadData @data.offset, @data.limit, (err, items, data)=>
                 return @logger.error(err) if err                        
                 @_display.call @, items, data, done
                 
             
             
         _loadData: (offset, limit, fn)->
-        
-            fn null, @data.items.slice(offset, offset+limit),
+            items = []
+
+            if (_items = @data.items) 
+                if limit > -1
+                    _items = _items.slice offset, offset+limit
+                else
+                    _items = _items.slice offset
+                    
+                for image in _items
+                    items.push floyd.tools.objects.clone image            
+            
+            fn null, items,
                 offset: offset
                 limit: limit
                 size: @data.items.length
