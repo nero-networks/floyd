@@ -34,7 +34,7 @@ module.exports =
     ##
     ##
     ##
-    format: (date, format='DD.MM.YYYY HH:mm', split)->
+    format: (date, format='DD.MM.YYYY', split)->
         
         d = floyd.tools.date.moment(date).format format
         
