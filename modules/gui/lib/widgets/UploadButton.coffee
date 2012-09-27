@@ -15,6 +15,8 @@ module.exports =
                     selector: '.upload.Button'
                     action: './upload/'
                     
+                    text: 'hochladen'
+                    
                     content: ->                    
                         iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0
                         
@@ -34,7 +36,7 @@ module.exports =
                             else
                                 input class:'files', type:'file', name:'files'
     
-                        a class:'button img-next link', href:'#', 'hochladen'
+                        a class:'button img-next link', href:'#', (@data.text)
                     
                     
                 popup: 
