@@ -15,13 +15,13 @@ module.exports =
                     limit: -1
 
                     listSelector: 'tbody:first'
-                    
+
                     thead: true
-                    
+
                     title: null
-                    
+
                     fields: {}
-                    
+
                     content: ->
 
                         if @data.title
@@ -31,31 +31,44 @@ module.exports =
                             thead ->
                                 tr ->
                                     order = @data.fields._order || floyd.tools.objects.keys @data.fields
-                                    
+
                                     for key in order
-                                        title = @data.fields[key]
-                                        
-                                        if title.title
-                                            title = title.title
-                                            
-                                        th class:key, title
+                                        continue if key.charAt(0) is '_' || !(data = @data.fields[key])
+
+                                        attr =
+                                            class:key
+
+                                        if data.tooltip
+                                            attr.title = data.tooltip
+
+                                        th attr, data.title || data
 
                         tbody()
 
                 widget: ->
-                    tr ->
+
+                    data = @__data.fields
+                    attrs = {}
+
+                    if data._tooltip && @[data._tooltip]
+                        attrs.title = @[data._tooltip]
                         
-                        order = @__data.fields._order || floyd.tools.objects.keys @__data.fields
-                        
+                    if data._class && @[data._class]
+                        attrs.class = @[data._class]
+
+                    tr attrs, ->
+
+                        order = data._order || floyd.tools.objects.keys data
+
                         for key in order
-                            
-                            if (format = @__data.fields[key].format)
-                                value = format @
-                                
+                            continue if key.charAt(0) is '_' || !(field = data[key])
+
+                            if field.format
+                                value = field.format @
+
                             else
                                 value = @[key] || ''
-                                
-                            td class:key, value 
+
+                            td class:key, value
 
             , config
-
