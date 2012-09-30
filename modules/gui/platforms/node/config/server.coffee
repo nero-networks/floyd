@@ -15,6 +15,9 @@ module.exports = new floyd.Config
                 markdown: '/node_modules/floyd/node_modules/markdown'
                         
             
-            prepend: [floyd.system.libdir+'/modules/gui/public/js/jquery-1.7.2.min.js']
+            prepend: [
+                floyd.system.libdir+'/modules/gui/public/js/jquery-1.7.2.min.js'
+                floyd.system.libdir+'/modules/gui/public/js/jquery_single_double_click.js'
+            ]
     
   

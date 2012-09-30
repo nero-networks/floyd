@@ -11,8 +11,10 @@ module.exports =
             config = super new floyd.Config
 
                 widget: ->
-                    li ->
-                        @text
+                    if @class
+                        li class:@class, -> @text
+                    else
+                        li -> @text
 
                 data:
                     items: []
@@ -119,3 +121,12 @@ module.exports =
                         @children.browse._display items, data, fn
                     
                     else fn?()
+        ##
+        ##
+        ##
+        _prepare: (item, fn)->
+            if typeof item is 'string'
+                item =
+                    text: item
+                    
+            super item, fn

@@ -155,3 +155,7 @@ section.upload.Status .info .name {
 section.upload.Status .info .value {
   float: right;
 }
+
+.ComboBox {
+    width: '100px';
+}
