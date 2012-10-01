@@ -18,11 +18,12 @@ module.exports =
 
                 data:
                     items: []
-                    limit: 5
+                    limit: -1
                     offset: 0
                     listSelector: 'ul:first'
-                    content: ->
-                        ul()
+
+                content: ->
+                    ul()
                     
             , config
                 
@@ -130,3 +131,4 @@ module.exports =
                     text: item
                     
             super item, fn
+            

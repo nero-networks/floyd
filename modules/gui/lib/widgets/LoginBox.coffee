@@ -9,28 +9,28 @@ module.exports =
             
             super new floyd.Config
                     
-                template: ->
-                    div class: 'LoginBox floyd-loading'
-                    
                 data:
                     labels:
                         login: 'username'
                         pass: 'password'
                         
-                    content: ->
-                        form class:'login', action:'#', ->
-                            label ->
-                                span @data.labels.login
-                                input type:'text', name:'login', value:''
+                template: ->
+                    div class: 'LoginBox floyd-loading'
+                    
+                content: ->
+                    form class:'login', action:'#', ->
+                        label ->
+                            span @data.labels.login
+                            input type:'text', name:'login', value:''
 
-                            label ->
-                                span @data.labels.pass
-                                input type:'password', name:'pass', value:''
-                            
-                            button type: 'submit', 'login'
-                            
-                        form class:'logout', action:'#', ->
-                            button type: 'submit', 'logout'
+                        label ->
+                            span @data.labels.pass
+                            input type:'password', name:'pass', value:''
+                        
+                        button type: 'submit', 'login'
+                        
+                    form class:'logout', action:'#', ->
+                        button type: 'submit', 'logout'
                         
             , config
                 

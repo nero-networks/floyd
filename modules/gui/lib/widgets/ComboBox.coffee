@@ -9,31 +9,29 @@ module.exports =
             super new floyd.Config
 
                 template: ->
-                    div class:'ComboBox floyd-loading', ->
+                    div class:'ComboBox floyd-loading'
                 
+                
+                content: ->
+                    
+                    input name:@data.name
+                    
+                    button class:'icon '+@data.dropdown.button, title: @data.text, ->
+                        span @data.text
+                    
+                    div class:'dropdown '+@data.dropdown.class+' floyd-loading', style:'display:none'
+                    
+                    
                 data:
                     
                     name: 'value'
-                    
-                    event: 'change'
-                    
+                                        
                     dropdown:
                         button: 'select'
                         class: 'left down'
                     
                     text: 'Auswahl'
-                    
-                    content: ->
-                        
-                        input name:@data.name
-                        
-                        button class:'icon '+@data.dropdown.button, title: @data.text, ->
-                            span @data.text
-                        
-                        div class:'dropdown '+@data.dropdown.class+' floyd-loading'
-                    
-                    items: []
-                    
+                                        
                     
                 children: [
                 
@@ -42,8 +40,19 @@ module.exports =
                     data:
                         selector: 'div.dropdown'
                     
-                    _loadData: (offset, limit, fn)-> @parent._loadData fn            
-                    
+                    _loadData: (offset, limit, fn)-> 
+                        @parent._loadData (err, _items)=>
+                            if floyd.tools.objects.isArray _items
+                                items = _items
+                                
+                            else
+                                items = []
+                                for key, value of _items
+                                    items.push
+                                        class: key
+                                        text: (value.text || value)
+                            
+                            fn null, items
                 ]
             
             , config
@@ -56,20 +65,19 @@ module.exports =
         start: (done)->
             super (err)=>
                 return done(err) if err
+                                
+                @_input = @find '[name='+@data.name+']'
                 
-                @_input = @find('[name='+@data.name+']').on @data.event, (e)=>
-                    @_emit @data.name, 
-                        action: @_action
-                        value: @_text
-                        
-                        event: e
-                
-                dropdown = @find('.dropdown')
+                dropdown = @find '.dropdown'
                 
                 dropdown.find('li').click (e)=>
                     li = $(e.currentTarget)
                     
-                    @_setAction li.attr('class').split(' ').pop(), li.text() 
+                    if cls=li.attr('class')
+                        @_setAction cls.split(' ').pop(), li.text()
+                    
+                    else
+                        @_setAction li.text(), li.text()
                     
                     dropdown.hide()
                 
@@ -98,6 +106,10 @@ module.exports =
         
             @_input.val @_value
             
+            @_emit 'change',
+                name: @data.name
+                action: @_action
+                value: @_value
             
             
             

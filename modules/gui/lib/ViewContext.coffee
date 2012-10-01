@@ -30,7 +30,19 @@ module.exports =
             if config.widget
                 @_widget = floyd.tools.gui.ck config.widget
             
+            if typeof (@_content = config.data.content || config.content) is 'function' && !config.data.raw
+                @_content = floyd.tools.gui.ck @_content
+            
             return config
+
+        ##
+        ##
+        ##
+        boot: (done)->
+            super done
+            if @data.content
+                @logger.info '@data.content is deprecated. use @content instead -', @type, @ID
+            
         
         ##
         ##
@@ -162,23 +174,23 @@ module.exports =
         ##
         _load: (fn)->
             
-            if typeof @data.content is 'function'
+            if typeof @_content is 'function'
                 
                 if @data.raw
-                    @data.content.apply @, [fn]
+                    @_content.apply @, [fn]
                 
                 else
-                    (floyd.tools.gui.ck @data.content)
+                    @_content
                         format: @data.find('debug') 
                         context: @											
                     , fn
                     
                 
             else if !@data.raw
-                floyd.tools.gui.md @data.content, fn
+                floyd.tools.gui.md @_content, fn
 
             else
-                fn null, @data.content
+                fn null, @_content
         ##
         ##
         ##
@@ -231,6 +243,7 @@ module.exports =
         ##
         ##
         _cleanup: (item, fn)->
+            
             delete item.__data
             
             fn?()

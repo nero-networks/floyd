@@ -6,9 +6,6 @@ module.exports =
         configure: (config)->
             super new floyd.Config
 
-                template: ->
-                    table class:(@data.class+' floyd-loading')
-
                 data:
                     class: 'Table'
 
@@ -22,28 +19,31 @@ module.exports =
 
                     fields: {}
 
-                    content: ->
+                template: ->
+                    table class:(@data.class+' floyd-loading')
 
-                        if @data.title
-                            caption @data.title
+                content: ->
 
-                        if @data.thead
-                            thead ->
-                                tr ->
-                                    order = @data.fields._order || floyd.tools.objects.keys @data.fields
+                    if @data.title
+                        caption @data.title
 
-                                    for key in order
-                                        continue if key.charAt(0) is '_' || !(data = @data.fields[key])
+                    if @data.thead
+                        thead ->
+                            tr ->
+                                order = @data.fields._order || floyd.tools.objects.keys @data.fields
 
-                                        attr =
-                                            class:key
+                                for key in order
+                                    continue if key.charAt(0) is '_' || !(data = @data.fields[key])
 
-                                        if data.tooltip
-                                            attr.title = data.tooltip
+                                    attr =
+                                        class:key
 
-                                        th attr, data.title || data
+                                    if data.tooltip
+                                        attr.title = data.tooltip
 
-                        tbody()
+                                    th attr, data.title || data
+
+                    tbody()
 
                 widget: ->
 

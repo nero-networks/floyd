@@ -17,32 +17,38 @@ module.exports =
                     
                     text: 'hochladen'
                     
-                    content: ->                    
-                        iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0
+                    class: 'button'
+                    
+                content: ->                    
+                    iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0
+                    
+                    form action:@data.action, target:'upload-frame', method:'post', enctype:'multipart/form-data', ->
                         
-                        form action:@data.action, target:'upload-frame', method:'post', enctype:'multipart/form-data', ->
+                        for name, field of @data.fields
                             
-                            for name, field of @data.fields
-                                
-                                if !field || typeof field is 'string'
-                                    field = 
-                                        value:field||''
-                                        
-                                input type:(field.type||'hidden'), name:name, value:(field.value)
+                            if !field || typeof field is 'string'
+                                field = 
+                                    value:field||''
+                                    
+                            input type:(field.type||'hidden'), name:name, value:(field.value)
+                        
+                        if @data.multiple
+                            input class:'files', type:'file', name:'files', multiple:'multiple'
                             
-                            if @data.multiple
-                                input class:'files', type:'file', name:'files', multiple:'multiple'
-                                
-                            else
-                                input class:'files', type:'file', name:'files'
-    
-                        a class:'button img-next link', href:'#', (@data.text)
+                        else
+                            input class:'files', type:'file', name:'files'
+                    
+                    if @data.type is 'link'
+                        a class:@data.class, href:'#', (@data.text)
+                    
+                    else
+                        button class:@data.class, (@data.text)
                     
                     
                 popup: 
                     
                     data:
-                        class: 'dialog narrow'
+                        class: 'info narrow'
                         close: false                                            
                     
                     view:
