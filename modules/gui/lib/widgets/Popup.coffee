@@ -17,6 +17,7 @@ module.exports =
                     
                     data:
                         selector: '.body'
+                        
                     booted: ->
                         if @parent.children[1]
                             @buttons = @parent.children[1]
@@ -36,9 +37,9 @@ module.exports =
                     data:
                         selector: '.buttons'
                         
-                        content: ->
-                            button class:'cancel', 'Abbrechen'
-                            button class:'ok', 'Ok'
+                    content: ->
+                        button class:'cancel', 'Abbrechen'
+                        button class:'ok', 'Ok'
                     
                     booted: ->
                         @view = @parent.children[0]

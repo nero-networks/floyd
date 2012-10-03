@@ -7,7 +7,7 @@ module.exports = new floyd.Config
         public: ['./public', floyd.system.libdir+'/modules/gui/public/']
         
         lib:
-            modules: ['gui']
+            modules: ['gui', 'http']
             
             node_modules: ['floyd/node_modules/markdown']
             

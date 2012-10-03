@@ -156,6 +156,41 @@ section.upload.Status .info .value {
   float: right;
 }
 
-.ComboBox {
-    width: '100px';
+div.ComboBox {
+    position: relative;
+    display: inline-block;
+}
+div.ComboBox button.select {
+    float: right;
+}
+div.ComboBox .dropdown {
+    position: absolute;
+    background: white;
+    color: black;
+    border: 1px solid black;
+}
+div.ComboBox .dropdown.left {
+    left: 1px;
+}
+div.ComboBox .dropdown.right {
+    right: 1px;
+}
+div.ComboBox .dropdown.down {
+    top: 25px;
+}
+div.ComboBox .dropdown.up {
+    bottom: 25px;
+}
+div.ComboBox .dropdown ul {
+    padding: 0;
+    margin: 0;
+}
+div.ComboBox .dropdown li {
+    padding: 0 2px;
+    list-style: none;
+    cursor: pointer;
+}
+div.ComboBox .dropdown li:hover {
+    background: black;
+    color: white;
 }

@@ -1,6 +1,6 @@
 module.exports =
 
-    class ComnboBox extends floyd.gui.ViewContext
+    class ComboBox extends floyd.gui.ViewContext
         
         ##
         ##
@@ -28,7 +28,7 @@ module.exports =
                                         
                     dropdown:
                         button: 'select'
-                        class: 'left down'
+                        class: 'right down'
                     
                     text: 'Auswahl'
                                         
@@ -80,8 +80,11 @@ module.exports =
                         @_setAction li.text(), li.text()
                     
                     dropdown.hide()
+                    return false
                 
                 @find('.'+@data.dropdown.button).click (e)=>
+                    $('.dropdown').not(dropdown).fadeOut();
+                    
                     dropdown.toggle()
                     
                     return false
@@ -104,7 +107,7 @@ module.exports =
         ##
         _setAction: (@_action, @_value)->
         
-            @_input.val @_value
+            @_input.focus().val @_value
             
             @_emit 'change',
                 name: @data.name

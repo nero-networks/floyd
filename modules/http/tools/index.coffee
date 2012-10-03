@@ -46,11 +46,14 @@ module.exports =
     ##
     parseData: (req, fn)->
         
+        fn ?= (err, data)->
+            return data
+        
         if req.body 
             return fn null, req.body
         
         if typeof req is 'string'
-            fn null, qs.parse req
+            return fn null, qs.parse req
         
         data = req.url.split('?')[1] || ''
         
