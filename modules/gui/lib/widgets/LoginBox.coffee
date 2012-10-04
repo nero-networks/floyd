@@ -18,7 +18,7 @@ module.exports =
                     div class: 'LoginBox floyd-loading'
                     
                 content: ->
-                    form class:'login', action:'#', ->
+                    form class:'login', action:'#', method:'post', ->
                         label ->
                             span @data.labels.login
                             input type:'text', name:'login', value:''
