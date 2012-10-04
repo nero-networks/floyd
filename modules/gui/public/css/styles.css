@@ -132,8 +132,12 @@
 }
 
 section.upload.Button iframe,
+section.upload.Button form,
 section.upload.Button input.files {
-  display: none;
+  display: block;
+  width: 0px;
+  height: 0px;
+  visibility: hidden;
 }
 section.upload.Status {
   width: 500px;
