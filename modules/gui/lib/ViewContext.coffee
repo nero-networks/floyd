@@ -106,6 +106,8 @@ module.exports =
                         return done(err) if err
 
                         @__root.removeClass 'floyd-loading'
+                        if !@__root.attr('class').length
+                            @__root.removeAttr 'class'
         
                         @_emit 'loaded'
 
