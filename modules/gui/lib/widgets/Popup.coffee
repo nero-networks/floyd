@@ -97,7 +97,7 @@ module.exports =
                 done(err) if err
                 
                 if floyd.system.platform is 'remote'
-                    @find('a.close').click ()=> 
+                    @find('button.close, a.close').click ()=> 
                         @close()
                     
                     if @data.fade
