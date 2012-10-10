@@ -52,4 +52,5 @@ module.exports = (parent, config, fn)->
             fn null, child
     
     catch err
-        alert err.message
+        alert 'Error: '+err.message
+        console.log err
