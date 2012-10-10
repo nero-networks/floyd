@@ -14,7 +14,7 @@ module.exports =
                 
                 content: ->
                     
-                    input name:@data.name
+                    input type:@data.type, name:@data.name
                     
                     button class:'icon '+@data.dropdown.button, title: @data.text, ->
                         span @data.text
@@ -24,6 +24,8 @@ module.exports =
                     
                 data:
                     
+                    type: 'text'
+                    
                     name: 'value'
                                         
                     dropdown:
@@ -32,11 +34,10 @@ module.exports =
                     
                     text: 'Auswahl'
                                         
+                dropdown:
                     
-                children: [
-                
                     type: 'gui.widgets.List'
-                    
+
                     data:
                         selector: 'div.dropdown'
                     
@@ -53,12 +54,12 @@ module.exports =
                                         text: (value.text || value)
                             
                             fn null, items
-                ]
             
             , config
-
-        
-        
+            
+            
+            
+                
         ##
         ##
         ##
