@@ -6,7 +6,7 @@ module.exports =
         ##
         ##
         configure: (config)->
-            super new floyd.Config
+            config = super new floyd.Config
 
                 template: ->
                     div class:'ComboBox floyd-loading'
@@ -56,7 +56,11 @@ module.exports =
                             fn null, items
 
             , config
-
+            
+            config.children.push config.dropdown
+            
+            return config
+            
         ##
         ##
         ##
