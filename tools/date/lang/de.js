@@ -52,9 +52,11 @@
         this.moment.lang('de', lang);
     }
     // Floyd
-    if (typeof floyd !== 'undefined' && floyd.tools.date.moment && floyd.tools.date.moment.lang) {
-        floyd.tools.date.moment.lang('de', lang);
-    }
-        
-    
+    process.nextTick(function() {
+        if (typeof floyd !== 'undefined' && floyd.tools.date.moment && floyd.tools.date.moment.lang) {
+            floyd.tools.date.moment.lang('de', lang);
+        }
+    });
+
+
 }());
