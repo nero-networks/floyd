@@ -6,21 +6,6 @@ module.exports =
     ##
     class StoreContext extends floyd.Context
         
-        configure: (config)->
-            roles = config.permissions?.adminRoles || ['admin']
-            
-            super new floyd.Config
-            
-                data:
-                    permissions:
-                        set: (roles: roles)							
-                        remove: (roles: roles)
-                        clear: (roles: roles)
-                        clear_expired: (roles: roles)						
-                    
-            
-            , config
-        
         constructor: (config, parent)->
             super config, parent
         
