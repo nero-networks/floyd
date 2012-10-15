@@ -57,10 +57,21 @@ module.exports =
 
             , config
             
-            config.children.push config.dropdown
+            @__dropdown = config.dropdown
             
             return config
             
+        ##
+        ##
+        ##
+        boot: (done)->
+            super (err)=>
+                return done(err) if err
+                
+                if @__dropdown
+                    @_createChild @__dropdown, (err, @_dropdown)=>
+                        done err 
+                
         ##
         ##
         ##
@@ -86,9 +97,14 @@ module.exports =
 
                 @find('.'+@data.dropdown.button).click (e)=>
                     $('.dropdown').not(dropdown).fadeOut();
-
-                    dropdown.toggle()
-
+                    
+                    if @_dropdown
+                        @_dropdown._updateData (err)=>
+                            return alert(err.message) if err
+                            dropdown.toggle()
+                    
+                    else dropdown.toggle()
+                    
                     return false
 
                 $(document).click ()=>
