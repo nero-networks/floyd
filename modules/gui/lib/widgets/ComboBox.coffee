@@ -57,10 +57,21 @@ module.exports =
 
             , config
             
-            config.children.push config.dropdown
+            @__dropdown = config.dropdown
             
             return config
             
+        ##
+        ##
+        ##
+        boot: (done)->
+            super (err)=>
+                return done(err) if err
+                
+                if @__dropdown
+                    @_createChild @__dropdown, (err, @_dropdown)=>
+                        done err 
+                
         ##
         ##
         ##
@@ -81,22 +92,31 @@ module.exports =
                     else
                         @_setAction li.text(), li.text()
 
-                    dropdown.hide()
+                    dropdown.hide().parent().removeClass 'activeBox'
                     return false
 
                 @find('.'+@data.dropdown.button).click (e)=>
-                    $('.dropdown').not(dropdown).fadeOut();
-
-                    dropdown.toggle()
-
+                    $('.dropdown').not(dropdown).fadeOut().parent().removeClass 'activeBox';
+                    
+                    if @__root.hasClass 'activeBox'
+                        dropdown.hide().parent().removeClass 'activeBox'
+                    
+                    else
+                        @__root.addClass 'activeBox'
+                        
+                        @_dropdown._updateData (err)=>
+                            return alert(err.message) if err
+                            dropdown.show()
+                            
                     return false
 
                 $(document).click ()=>
-                    dropdown.fadeOut();
+                    dropdown.fadeOut().parent().removeClass 'activeBox';
 
                 ##
                 done()
-
+        
+        
         ##
         ##
         ##
