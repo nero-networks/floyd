@@ -103,11 +103,14 @@ module.exports =
 
                     else
                         @__root.addClass 'activeBox'
-
-                        @_dropdown._updateData (err)=>
-                            return alert(err.message) if err
-                            dropdown.show()
-
+                        
+                        if @_dropdown._updateData
+                            @_dropdown._updateData (err)=>
+                                return alert(err.message) if err
+                                dropdown.show()
+                                
+                        else dropdown.show()
+                        
                     return false
 
                 $(document).click ()=>
@@ -130,8 +133,10 @@ module.exports =
         _setAction: (@_action, @_value)->
 
             @_input.focus().val @_value
-
+            @_input.data 'action', @_action
+            
             @_emit 'change',
                 name: @data.name
                 action: @_action
                 value: @_value
+        
