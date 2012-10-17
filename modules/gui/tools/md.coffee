@@ -72,3 +72,5 @@ module.exports = parse = (input, _options, fn)->
     
     fn null, html
     
+    return html
+    

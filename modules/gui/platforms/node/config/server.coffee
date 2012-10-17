@@ -18,6 +18,7 @@ module.exports = new floyd.Config
             prepend: [
                 floyd.system.libdir+'/modules/gui/public/js/jquery-1.7.2.min.js'
                 floyd.system.libdir+'/modules/gui/public/js/jquery_single_double_click.js'
+                floyd.system.libdir+'/modules/gui/public/js/jquery.highlight-3.min.js'
             ]
     
   

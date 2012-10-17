@@ -13,8 +13,15 @@ module.exports =
 
 
                 content: ->
-
-                    input type:@data.type, name:@data.name
+                    
+                    attribs = 
+                        type:@data.type
+                        name:@data.name
+                    
+                    attribs.disabled = 'disabled' if @data.input?.disabled
+                    attribs.readonly = 'readonly' if @data.input?.readonly
+                    
+                    input attribs
 
                     button class:'icon '+@data.dropdown.button, title: @data.text, ->
                         span @data.text
