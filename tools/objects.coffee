@@ -412,7 +412,6 @@ _extend = (target, source)->
             
     else if objects.isArray source
         
-        t_index=0
         for item in source
             
             if objects.isObject(item) || objects.isArray(item)
@@ -423,11 +422,13 @@ _extend = (target, source)->
                         if item.id is _item.id
                             value = _item
                             break;
-                else				
-                    if value = target[t_index++]	
-                        
-                        while value.id
-                            value = target[t_index++] ?= {}
+                ## removed this to prevent element merging if id attribute is not present
+                ##else				
+                ##    t_index ?= 0
+                ##    if value = target[t_index++]	
+                ##        
+                ##        while value.id
+                ##            value = target[t_index++]
                     
                 if !value
                     value = if objects.isArray(item) then [] else {}
