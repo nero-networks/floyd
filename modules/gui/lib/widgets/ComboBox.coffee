@@ -95,6 +95,10 @@ module.exports =
                 @_dropdown.on 'display', ()=>
                     @_wireItems()
                 
+                input = @find('[name='+@data.name+']').change (e)=>
+                    if (val = input.val()) isnt @_value
+                        @_setAction '_custom_', val
+                
                 @find('.'+@data.dropdown.button).click (e)=>
                     $('.dropdown').not(dropdown).fadeOut().parent().removeClass 'activeBox';
 
