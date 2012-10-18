@@ -89,19 +89,12 @@ module.exports =
                 @_input = @find '[name='+@data.name+']'
 
                 dropdown = @find '.dropdown'
-
-                dropdown.find('li').click (e)=>
-                    li = $(e.currentTarget)
-
-                    if cls=li.attr('class')
-                        @_setAction cls.split(' ').pop(), li.text()
-
-                    else
-                        @_setAction li.text(), li.text()
-
-                    dropdown.hide().parent().removeClass 'activeBox'
-                    return false
-
+                
+                @_wireItems()
+                
+                @_dropdown.on 'display', ()=>
+                    @_wireItems()
+                
                 @find('.'+@data.dropdown.button).click (e)=>
                     $('.dropdown').not(dropdown).fadeOut().parent().removeClass 'activeBox';
 
@@ -126,14 +119,44 @@ module.exports =
                 ##
                 done()
 
+        
+        ##
+        ##
+        ##
+        _wireItems: ()->
+            dropdown = @find '.dropdown'
 
+            dropdown.find('li').click (e)=>
+                li = $(e.currentTarget)
+
+                if cls=li.attr('class')
+                    @_setAction cls.split(' ').pop(), li.text()
+
+                else
+                    @_setAction li.text(), li.text()
+
+                dropdown.hide().parent().removeClass 'activeBox'
+                return false
+            
+        
         ##
         ##
         ##
         _loadData: (fn)->
 
             fn null, @data.items
-
+        
+        ##
+        ##
+        ##
+        _display: (items, action, value, fn)->
+            action ?= items[0]
+            value ?= action
+            @_setAction action, value
+            @_dropdown._display? items, {}, fn
+            
+        
+        
         ##
         ##
         ##
