@@ -408,13 +408,13 @@ _extend = (target, source)->
     
     if !objects.isArray(target) && objects.isArray(source)
         for _source in source
-            _extend target, source
+            _extend target, _source
             
     else if objects.isArray source
         
         for item in source
             
-            if objects.isObject(item) || objects.isArray(item)
+            if objects.isObject(item) # || objects.isArray(item)
                 
                 value = null
                 if item.id
