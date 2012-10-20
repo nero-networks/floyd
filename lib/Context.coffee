@@ -707,7 +707,7 @@ module.exports =
                 do(action)=>
                     if typeof (handler = @[action]) is 'function'
                         
-                        @on action, (event)=>							
+                        @once action, (event)=>							
                             handler.apply @, [event]
                             
             if config.events
@@ -746,7 +746,15 @@ module.exports =
             for action in actions
                 event.type = action
                 
-                @_emitter.emit action, event, args				
+                stop = @_emitter.emit action, event, args
+                
+                ## all non served events are boubled up if @data.intercepted is true
+                ## or if @data.intercepted is an array that contains action as a string
+                
+                ## boubling is always suppressed is suppressed for livecycle-events        
+                if !stop && (@data.intercepted is true || @data.intercepted?.indexOf action) && ACTIONS.indexOf(action) is -1
+                    
+                    @parent._emit action, event, args	
                 
             return @
         
