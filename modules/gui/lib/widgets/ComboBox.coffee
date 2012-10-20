@@ -154,7 +154,7 @@ module.exports =
         ##
         ##
         _display: (items, action, value, fn)->
-            action ?= items[0]
+            action ?= items?[0]
             value ?= action
             @_setAction action, value
             @_dropdown._display? items, {}, fn

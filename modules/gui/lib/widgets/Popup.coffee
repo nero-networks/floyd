@@ -17,6 +17,7 @@ module.exports =
                     
                     data:
                         selector: '.body'
+                        intercepted: true
                         
                     booted: ->
                         if @parent.children[1]
@@ -36,6 +37,7 @@ module.exports =
                     
                     data:
                         selector: '.buttons'
+                        intercepted: true
                         
                     content: ->
                         button class:'cancel', 'Abbrechen'
@@ -44,11 +46,14 @@ module.exports =
                     booted: ->
                         @view = @parent.children[0]
                         
+                        #floyd.tools.objects.intercept @ '_emit', (args..., _emit)=>
+                        #    _emit.apply @, args
+                        #    @parent._emit.apply @parent, args
+                        
                         @find('button, a').click (e)=>
                             action = $(e.currentTarget).attr('class').split(' ').shift()
 
                             @_emit action, e
-                            @parent._emit action, e
                             
                     
                 , config.buttons
@@ -61,6 +66,7 @@ module.exports =
                     'parent-selector': 'body'
                     close: true
                     fade: true
+                    intercepted: true
                             
                 children: children
                 

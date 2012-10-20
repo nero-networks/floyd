@@ -29,13 +29,10 @@ module.exports = (parent, config, fn)->
     ##
     try
         parent._createChild config, (err, child)=>
-            return fn(err) if err
-            
-            child.on 'cancel', ->
-                child.fadeOut()
+            return fn(err) if err            
                 
-            child.on 'close', ->
-            
+            child.on 'close', (e)->
+        
                 child.__root.remove()
                 
                 child.stop ()-> 
@@ -48,6 +45,8 @@ module.exports = (parent, config, fn)->
                         child.destroy ()->
                         
                             #console.log 'destroyed', child.ID
+                
+                return false
     
             fn null, child
     
