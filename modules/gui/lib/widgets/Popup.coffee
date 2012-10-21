@@ -17,7 +17,8 @@ module.exports =
                     
                     data:
                         selector: '.body'
-                        intercepted: true
+                        events:
+                            delegate: true
                         
                     booted: ->
                         if @parent.children[1]
@@ -37,7 +38,8 @@ module.exports =
                     
                     data:
                         selector: '.buttons'
-                        intercepted: true
+                        events:
+                            delegate: true
                         
                     content: ->
                         button class:'cancel', 'Abbrechen'
@@ -66,7 +68,8 @@ module.exports =
                     'parent-selector': 'body'
                     close: true
                     fade: true
-                    intercepted: true
+                    events:
+                        delegate: true
                             
                 children: children
                 

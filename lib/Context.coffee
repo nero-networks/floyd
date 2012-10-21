@@ -748,11 +748,10 @@ module.exports =
                 
                 stop = @_emitter.emit action, event, args
                 
-                ## all non served events are boubled up if @data.intercepted is true
-                ## or if @data.intercepted is an array that contains action as a string
-                
-                ## boubling is always suppressed is suppressed for livecycle-events        
-                if !stop && (@data.intercepted is true || @data.intercepted?.indexOf action) && ACTIONS.indexOf(action) is -1
+                ## all non served events are boubled up if @data.events?.delegate is true
+                ## or if @data.events?.delegate is an array that contains action as a string
+                ## delegation is always suppressed is suppressed for livecycle-events        
+                if !stop && (@data.events?.delegate is true || @data.events?.delegate?.indexOf action) && ACTIONS.indexOf(action) is -1
                     
                     @parent._emit action, event, args	
                 
