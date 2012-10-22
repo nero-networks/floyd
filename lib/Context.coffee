@@ -119,10 +119,10 @@ module.exports =
         ## base configuration
         ##		
         configure: (config)->
-            
+        
             if typeof config is 'string'
                 config = new floyd.Config floyd.tools.objects.resolve config
-            
+
             config.id ?= @__ctxID()
             
             config.type ?= 'floyd.Context'
@@ -264,6 +264,11 @@ module.exports =
                     @_getAuthManager().authorize config.TOKEN
 
                     
+            if typeof config?.configure is 'function'
+                config = config.configure.apply @, [config]
+            
+            ##
+            
             return config 
                                 
                 
@@ -416,8 +421,10 @@ module.exports =
         ## 
         ##
         lookup: (name, identity, done)->
-                
-            __ident = identity.id
+            
+            if !(__ident = identity.id) || !identity.token
+                console.log '2. parameter is not identity', @ID
+                throw new Error '2. parameter is not identity'
             
             _children = 0
             _parent = !!(@parent && @parent.lookup)
