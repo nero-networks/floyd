@@ -7,31 +7,40 @@ module.exports =
         configure: (config)->
             
             super new floyd.Config 
-            
+                data:
+                    itemSelector: '> ul > li'
+                    
                 children: [
 
                     new floyd.Config
                         type: 'gui.editor.Editor'
                         
                         template: ->
-                            div class:'editor Buttons', style:'display: none', ->
-                                div class:'items'
+                            div class:'editor Buttons', style:'display: none'
 
                         _wireMouse: ()->
                             @parent.parent.once 'display', ()=> 
                                 @_wireMouse()
                             
-                            @parent.parent.__root.find('> ul > li') 
+                            @parent.parent.find(@data.find 'itemSelector') 
                             
                             .mouseenter (event)=>
                                 @parent._allow event, ()=>
                                     $(event.currentTarget).append @__root
-                                    @__root.show()
+                                    @_show()
+                                    
                                 
                             .mouseleave (event)=>
-                                @__root.hide()
-                                @parent.__root.append @__root
+                                @_hide()
                                 
+                        ##
+                        _show: ()->
+                            @__root.show()
+                        
+                        ##
+                        _hide: ()->
+                            @__root.hide()
+                          
                     , config.each
                 
                 ]
@@ -55,8 +64,7 @@ module.exports =
                                 @__root.css 'opacity', .35
             , config
             
-            
-                
+        
         ##
         ##
         _allow: (event, ok)->

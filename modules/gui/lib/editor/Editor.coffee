@@ -11,8 +11,7 @@ module.exports =
             super new floyd.Config
 
                 template: ->
-                    div class:'editor Buttons', style:'opacity: .35', ->
-                        div class:'items'
+                    div class:'editor Buttons', style:'opacity: .35'
                 
                 events:
                     'after:booted': ()->
@@ -59,16 +58,18 @@ module.exports =
                         handler = (event, open)=>
                             open editor
                             
-                    @_append $('<a href="#'+action+'"><img src="/img/buttons/'+action+'.png"/></a>').click (event)=>
+                    @_createButton action, (err, button)=>
+                        @_append button.click (event)=>
                 
-                        handler.apply @, [event, _popup]
+                            handler.apply @, [event, _popup]
                 
-                        return false
-                        
+                            return false
         
         ##
         ##
         ##
-        _append: (ele)->
-            @find('.items').append ele
+        _createButton: (action, fn)->
+            fn null, $('<a href="#'+action+'"><img src="/img/buttons/'+action+'.png"/></a>')
+                  
+        
             
