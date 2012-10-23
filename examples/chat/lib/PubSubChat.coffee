@@ -207,7 +207,6 @@ module.exports =
         ##
         _delUser: (user)->			
             if (ele = @_users.find '.'+_cls user).length
-                console.log ele
                 @_write user+' has left the channel'
                 ele.remove()
         
@@ -216,7 +215,7 @@ module.exports =
         _sendPrivate: (user, origin)->
                 
             @lookup origin, @identity, (err, priv)=>
-                return console.error(err) if err
+                return @error(err) if err
                 
                 _sendDirect = (text)=>                
                     priv.receive
@@ -231,20 +230,21 @@ module.exports =
                     view:
                         data:
                             user: user
-                            content: ->
-                                h1 'private message to: '+@data.user
-                                textarea name:'text', rows:10, cols:50
-                                br()
-                                label 'Password (optional)'
-                                input type:'password', name:'pass'
+
+                        content: ->
+                            h1 'private message to: '+@data.user
+                            textarea name:'text', rows:10, cols:50
+                            br()
+                            label 'Password (optional)'
+                            input type:'password', name:'pass'
+
                     buttons:
-                        data:
-                            content: ->
-                                button class:'cancel', 'cancel'
-                                button class:'send', 'send'
-                                
-                    running: ->
-                        @on 'send', ()=>
+                        content: ->
+                            button class:'cancel', 'cancel'
+                            button class:'send', 'send'
+                              
+                    events: 
+                        send: ()->
                             text = @find('[name=text]').val()
                             
                             if (pass = @find('[name=pass]').val())

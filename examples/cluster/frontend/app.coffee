@@ -19,8 +19,6 @@ module.exports = new floyd.Config 'config.gui.server', 'config.dnode.server',
         
         data:
             ports: [
-                parent: true
-            ,
                 port: 8031
             ]
     

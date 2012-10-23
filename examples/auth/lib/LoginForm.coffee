@@ -13,8 +13,7 @@ module.exports =
             super new floyd.Config
                 
                 template: ->
-                    form ->
-
+                    div ->
                         div class: 'login', ->
                             input name: 'user'
                             input name: 'pass', type: 'password'
