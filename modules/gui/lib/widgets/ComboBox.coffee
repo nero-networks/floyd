@@ -138,7 +138,7 @@ module.exports =
 
                 else
                     @_setAction li.text(), li.text()
-
+                
                 dropdown.hide().parent().removeClass 'activeBox'
                 return false
             
@@ -166,7 +166,11 @@ module.exports =
         ##
         _setAction: (@_action, @_value)->
 
-            @_input.focus().val @_value
+            @_input.val @_value
+            
+            if !@data.input?.readonly
+                @_input.focus()
+            
             @_input.data 'action', @_action
             
             @_emit 'change',
