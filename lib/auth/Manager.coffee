@@ -43,7 +43,7 @@ module.exports = (handler)->
     authorize: __authorize = (token, fn)->
         manager.emit 'authorizing', __token = token
         
-        #console.log 'authorizing', __user, handler.x
+        #console.log 'authorizing', __user, token
         
         handler.authorize token, (err, user)=>
             #console.log 'post authorizing', user
@@ -99,11 +99,11 @@ module.exports = (handler)->
             #console.log 'LOGIN:', user
             return fn(err) if err 
             
-            __authorize __token
+            __authorize __token, ()=>
             
-            if fn
-                process.nextTick ()=>
-                    fn null, true
+                if fn
+                    process.nextTick ()=>
+                        fn null, true
              
     
     
@@ -112,7 +112,7 @@ module.exports = (handler)->
     ##
     ##
     logout: (fn)->
-        console.log manager, typeof manager.emit
+        #console.log manager, typeof manager.emit
         
         if manager.emit
             manager.emit 'logout'
