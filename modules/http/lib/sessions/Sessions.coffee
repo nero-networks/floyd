@@ -179,11 +179,10 @@ module.exports =
             
             if (sess = @_registry.get sid)
                 
-                if user = sess.public.user?.name
-                    
-                    ## TODO integrate the data update with the login.
-                    ##      mongo handler -> update sess.public.user
-                    
+                #console.log 'found session', sess, sess.public.user?.login
+                
+                if user = sess.public.user?.login
+                                        
                     @parent.children.users.get user, (err, data)=>
                         return fn(err) if err
                         
