@@ -200,7 +200,7 @@ module.exports =
                             #console.log 'autorizazion request', __user, @id
                             
                             if !@identity
-                                #console.log 'authorized user', __user.login
+                                #console.log 'no identity', __user?.login
                                 
                                 fn null, __user
 
@@ -209,7 +209,7 @@ module.exports =
                                 _auth (err, auth)=>
                                     return fn(err) if err
 
-                                    #console.log 'delegate authorize', identity.id
+                                    #console.log 'delegate authorize', @identity.id
                                     auth.authorize token, (err, user)=>
                                             
                                         fn err, __user = user
