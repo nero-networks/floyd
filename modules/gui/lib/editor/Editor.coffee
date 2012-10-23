@@ -46,30 +46,31 @@ module.exports =
                     view: 
                         children: [ editor ]
             
-            for action, handler of buttons
-                do(action, handler)=>
-                    if typeof handler is 'string'
-                        handler = 
-                            type: handler
-                    
-                    if typeof handler is 'object'
-                        editor = handler
-                        
-                        handler = (event, open)=>
-                            open editor
+            for action, conf of buttons
+                do(action, conf)=>
+                                    
+                    if typeof conf is 'function'
+                        conf =
+                            handler: conf
                             
-                    @_createButton action, (err, button)=>
+                    @_createButton action, conf, (err, button)=>
+                        if conf.text
+                            button.text conf.text
+                        
+                        if conf.title
+                            button.attr 'title', conf.title
+                            
                         @_append button.click (event)=>
                 
-                            handler.apply @, [event, _popup]
+                            conf.handler.apply @, [event, _popup]
                 
                             return false
         
         ##
         ##
         ##
-        _createButton: (action, fn)->
-            fn null, $('<a href="#'+action+'"><img src="/img/buttons/'+action+'.png"/></a>')
+        _createButton: (action, conf, fn)->
+            fn null, $('<button/>').addClass action
                   
         
             
