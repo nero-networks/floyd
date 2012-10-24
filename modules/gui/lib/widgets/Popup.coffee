@@ -68,8 +68,6 @@ module.exports =
                     'parent-selector': 'body'
                     close: true
                     fade: true
-                    events:
-                        delegate: true
                             
                 children: children
                 
