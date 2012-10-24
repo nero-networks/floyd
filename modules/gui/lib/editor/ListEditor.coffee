@@ -15,11 +15,18 @@ module.exports =
                     new floyd.Config
                         type: 'gui.editor.Editor'
                         
+                        data:
+                            events:
+                                delegate: true
+                                
                         template: ->
                             div class:'editor Buttons', style:'display: none'
 
                         _wireMouse: ()->
-                            @parent.parent.once 'display', ()=> 
+                            @parent.parent.once 'before:display', ()=>
+                                @parent.__root.append @__root     
+                                                
+                            @parent.parent.once 'display', ()=>                     
                                 @_wireMouse()
                             
                             @parent.parent.find(@data.find 'itemSelector') 
@@ -31,6 +38,7 @@ module.exports =
                                     
                                 
                             .mouseleave (event)=>
+                                @parent.__root.append @__root
                                 @_hide()
                                 
                         ##
@@ -52,6 +60,10 @@ module.exports =
                     
                         type: 'gui.editor.Editor'
                         
+                        data:
+                            events:
+                                delegate: true
+                                
                         buttons:
                             add: config.add
                         

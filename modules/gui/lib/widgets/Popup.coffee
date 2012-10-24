@@ -101,18 +101,22 @@ module.exports =
         ## 
         start: (done)->
             super (err)=>
-                done(err) if err
+                return done(err) if err
                 
                 if floyd.system.platform is 'remote'
                     @find('button.close, a.close').click ()=> 
                         @close()
                     
-                    if @data.fade
-                        @__root.fadeIn 'slow'
+                    setTimeout ()=>
+                        
+                        if @data.fade
+                            @__root.fadeIn 'slow'
+                        
+                        else
+                            @__root.show()
                     
-                    else
-                        @__root.show()
-
+                    , 100 ## das merkt man sogut wie nicht und die gui wirkt stabiler dadurch... weniger aufbau-gewusel
+                    
                     done()
                 
                 else done()

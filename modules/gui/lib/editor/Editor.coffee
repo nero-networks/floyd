@@ -61,9 +61,14 @@ module.exports =
                             button.attr 'title', conf.title
                             
                         @_append button.click (event)=>
-                
-                            conf.handler.apply @, [event, _popup]
-                
+                            if conf.handler
+                                conf.handler.apply @, [event, _popup]
+                            
+                            else
+                                @_emit action,
+                                    event: event
+                                    open: _popup
+                                
                             return false
         
         ##

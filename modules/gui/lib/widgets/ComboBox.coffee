@@ -23,7 +23,7 @@ module.exports =
                     
                     input attribs
 
-                    button class:'icon '+@data.dropdown.button, title: @data.text, ->
+                    button class:'icon '+@data.dropdown.button, title: @data.text, name: @data.dropdown.button, ->
                         span @data.text
 
                     div class:'dropdown '+@data.dropdown.class+' floyd-loading', style:'display:none'
@@ -86,8 +86,6 @@ module.exports =
             super (err)=>
                 return done(err) if err
 
-                @_input = @find '[name='+@data.name+']'
-
                 dropdown = @find '.dropdown'
                 
                 @_wireItems()
@@ -95,16 +93,17 @@ module.exports =
                 @_dropdown.on 'display', ()=>
                     @_wireItems()
                 
-                input = @find('[name='+@data.name+']').change (e)=>
-                    if (val = input.val()) isnt @_value
+                @_input = @find('[name='+@data.name+']').change (e)=>
+                    if (val = @_input.val()) isnt @_value
                         @_setAction '_custom_', val
                 
-                @find('.'+@data.dropdown.button).click (e)=>
+                @find('[name='+@data.dropdown.button+']').click (e)=>
                     $('.dropdown').not(dropdown).fadeOut().parent().removeClass 'activeBox';
-
+                    
                     if @__root.hasClass 'activeBox'
-                        dropdown.hide().parent().removeClass 'activeBox'
-
+                        @__root.removeClass 'activeBox'
+                        dropdown.hide()
+                        
                     else
                         @__root.addClass 'activeBox'
                         
@@ -118,7 +117,8 @@ module.exports =
                     return false
 
                 $(document).click ()=>
-                    dropdown.fadeOut().parent().removeClass 'activeBox';
+                    dropdown.fadeOut()
+                    @__root.removeClass 'activeBox';
 
                 ##
                 done()
@@ -139,7 +139,8 @@ module.exports =
                 else
                     @_setAction li.text(), li.text()
                 
-                dropdown.hide().parent().removeClass 'activeBox'
+                dropdown.hide()
+                @__root.removeClass 'activeBox'
                 return false
             
         

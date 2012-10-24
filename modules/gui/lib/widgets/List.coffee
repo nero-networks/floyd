@@ -95,6 +95,8 @@ module.exports =
             if @data.key
                 items = floyd.tools.objects.resolve @data.key, items, false
 
+            @_emit 'before:display'
+            
             @_ul.html ''
             @_items = items
             @_elements = []
@@ -113,7 +115,7 @@ module.exports =
 
                 done: (err)=>
                     return fn(err) if err
-
+                    
                     @_emit 'display',
                         items: items
                         data: data
