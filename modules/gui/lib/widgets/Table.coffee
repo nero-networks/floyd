@@ -62,13 +62,15 @@ module.exports =
 
                         for key in order
                             continue if key.charAt(0) is '_' || !(field = data[key])
-
+                            
                             if field.format
                                 value = field.format @
 
-                            else
-                                value = @[key] || ''
-
+                            else 
+                                value = @[key]
+                            
+                            value = (value?.toString()) || ''
+                                                        
                             td class:key, value
 
             , config
