@@ -217,7 +217,6 @@ module.exports =
                 if html
                     @__root.append html
                 
-                @_cleanup item, fn
                 
         ##
         ##
@@ -239,17 +238,9 @@ module.exports =
         ##
         ##
         _prepare: (item, fn)->
-            item.__data = @data
             
-            fn null, item
+            fn null, floyd.tools.objects.clone item,
+                __data: @data
 
-                    
-        ##
-        ##
-        ##
-        _cleanup: (item, fn)->
-            
-            delete item.__data
-            
-            fn?()
+              
              
