@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             config = super new floyd.Config
                 template: ->
-                    section class:'upload Button floyd-loading'
+                    section class:'upload Button floyd-loading', style: 'display:inline-block'
                     
                 data:
                     multiple: false
@@ -15,14 +15,13 @@ module.exports =
                     selector: '.upload.Button'
                     action: './upload/'
                     
-                    text: 'hochladen'
+                    button:
+                        text: 'hochladen'
                     
-                    class: 'button'
+                        class: 'button'
                     
                 content: ->                    
-                    iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0
-                    
-                    form action:@data.action, target:'upload-frame', method:'post', enctype:'multipart/form-data', ->
+                    form action:@data.action, target:'upload-frame', method:'post', enctype:'multipart/form-data', style: 'width:0;height:0;visibility:hidden', ->
                         
                         for name, field of @data.fields
                             
@@ -32,17 +31,24 @@ module.exports =
                                     
                             input type:(field.type||'hidden'), name:name, value:(field.value)
                         
-                        if @data.multiple
-                            input class:'files', type:'file', name:'files', multiple:'multiple'
+                        _attr = 
+                            class: 'files'
+                            type: 'file'
+                            name: 'files'
+                            style: 'width:0;height:0;visibility:hidden'
                             
-                        else
-                            input class:'files', type:'file', name:'files'
+                        if @data.multiple
+                            _attr.multiple ='multiple'
+                            
+                        input _attr
                     
-                    if @data.type is 'link'
-                        a class:@data.class, href:'#', (@data.text)
+                    if @data.button.type is 'link'
+                        a class:@data.button.class, href:'#', (@data.button.text)
                     
                     else
-                        button class:@data.class, (@data.text)
+                        button class:@data.button.class, (@data.button.text)
+                    
+                    iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0, style: 'width:0;height:0;visibility:hidden'
                     
                     
                 popup: 
@@ -52,15 +58,14 @@ module.exports =
                         close: false                                            
                     
                     view:
-                        data:
-                            content: ->
-                                section class:'upload Status', ->
-                                    
-                                    div class:'progress'
-                                    
-                                    div class:'info', ->
-                                        span class:'name'
-                                        span class:'value'
+                        content: ->
+                            section class:'upload Status', ->
+                                
+                                div class:'progress'
+                                
+                                div class:'info', ->
+                                    span class:'name'
+                                    span class:'value'
                                          
                     
                     update: (data)->

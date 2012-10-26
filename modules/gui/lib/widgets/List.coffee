@@ -7,7 +7,6 @@ module.exports =
         ##
         ##
         configure: (config)->
-
             config = super new floyd.Config
 
                 widget: ->
@@ -95,6 +94,7 @@ module.exports =
             if @data.key
                 items = floyd.tools.objects.resolve @data.key, items, false
 
+            
             @_emit 'before:display'
             
             @_ul.html ''
@@ -128,8 +128,11 @@ module.exports =
         ##
         ##
         _prepare: (item, fn)->
-            if typeof item is 'string'
+            if !floyd.tools.objects.isObject item
                 item =
                     text: item
-
+                
+            if @format
+                item.text = @format item.text
+                
             super item, fn

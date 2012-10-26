@@ -18,8 +18,8 @@ module.exports =
                         type:@data.type
                         name:@data.name
                     
-                    attribs.disabled = 'disabled' if @data.input?.disabled
-                    attribs.readonly = 'readonly' if @data.input?.readonly
+                    attribs.disabled = 'disabled' if @data.disabled
+                    attribs.readonly = 'readonly' if @data.readonly
                     
                     input attribs
 
@@ -47,7 +47,10 @@ module.exports =
 
                     data:
                         selector: 'div.dropdown'
-
+                    
+                    format: config.format
+                    parse: config.parse
+                    
                     _loadData: (offset, limit, fn)->
                         @parent._loadData (err, _items)=>
                             if floyd.tools.objects.isArray _items
@@ -59,7 +62,6 @@ module.exports =
                                     items.push
                                         class: key
                                         text: (value.text || value)
-
                             fn null, items
 
             , config
@@ -166,10 +168,10 @@ module.exports =
         ##
         ##
         _setAction: (@_action, @_value)->
-
+            
             @_input.val @_value
             
-            if !@data.input?.readonly
+            if !@data.readonly
                 @_input.focus()
             
             @_input.data 'action', @_action

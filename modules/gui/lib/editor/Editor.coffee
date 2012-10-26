@@ -11,7 +11,7 @@ module.exports =
             super new floyd.Config
 
                 template: ->
-                    div class:'editor Buttons', style:'opacity: .35'
+                    div class:'editor Buttons floyd-loading', style:'opacity: .35'
                 
                 events:
                     'after:booted': ()->
