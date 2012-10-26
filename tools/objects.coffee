@@ -447,7 +447,9 @@ _extend = (target, source)->
         for key, item of source
         
             if objects.isObject(item) || objects.isArray(item)
-            
+                if typeof target?[key] isnt typeof item
+                    delete target[key]  
+                
                 target[key] ?= if objects.isArray(item) then [] else {}
             
                 _extend target[key], item
