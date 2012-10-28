@@ -381,7 +381,8 @@ module.exports =
         ## * emits booting and booted
         ##
         boot: (done)->			
-            @_errorHandler = done
+            @_errorHandler = (err)=>
+                done(err) if err
             
             @_changeStatus 'booting'
             
