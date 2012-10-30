@@ -606,10 +606,10 @@ module.exports =
             #@logger.info 'delegation of method', method, args
             
             _parent = @parent
-            while _parent && !_parent[method] && _parent._parent
+            while _parent && !_parent[method] && _parent.parent
                 #@logger.info 'checking parent', _parent.id
                 
-                _parent = _parent._parent
+                _parent = _parent.parent
             
             if _parent && _parent[method]
                 #@logger.info 'using parent', _parent.id
@@ -622,6 +622,7 @@ module.exports =
                     throw err
             
             else
+                #@logger.info 'missed', method
                 return success: false
 
         ##
