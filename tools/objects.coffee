@@ -25,8 +25,8 @@ module.exports = objects =
 
         return done() if !obj
         
-        waiting = 0	 
-        next = (err)->													
+        waiting = 0  
+        next = (err)->                                                  
             if --waiting <= 0 || err
                 return done(err)
         
@@ -42,7 +42,7 @@ module.exports = objects =
             return done() if !( waiting = floyd.tools.objects.keys(obj).length )
             
             for key, item of obj
-                each key, item, next		
+                each key, item, next        
         
         
     
@@ -60,7 +60,7 @@ module.exports = objects =
             if objects.isArray obj
                 obj.splice key, 1
                 
-            else				
+            else                
                 delete obj[key]
             
             return data
@@ -181,9 +181,9 @@ module.exports = objects =
                 value = handler.handle type, key, value
                 
             if type is 'object'
-                _all.push value				
+                _all.push value             
             
-            return value			
+            return value            
         
         ##
         JSON.stringify obj, _handle, indent
@@ -198,7 +198,7 @@ module.exports = objects =
         list = []
     
         ##
-        model = floyd.tools.objects.traverse obj,				
+        model = floyd.tools.objects.traverse obj,               
             
             function: (key, value)->
                 code = value.toString()
@@ -211,7 +211,7 @@ module.exports = objects =
         ##
         while list.length
             [id, code] = list.pop()
-            model = model.replace '"'+id+'"', code 			
+            model = model.replace '"'+id+'"', code          
         
         ##
         return model
@@ -220,7 +220,7 @@ module.exports = objects =
     ##
     ##
     ##
-    immutable: (target, key, value)->		
+    immutable: (target, key, value)->       
         objects.property target, key, value, 
             get: (-> value)
             set: (-> value)
@@ -273,7 +273,7 @@ module.exports = objects =
     ##
     ##
     ##
-    copy: (obj, addon)->	
+    copy: (obj, addon)->    
         _obj = {}
         for key, value of obj
             _obj[key] = value
@@ -292,7 +292,7 @@ module.exports = objects =
         
     ##
     ## 
-    ##	
+    ##  
     extend: (target, args...)->
         if !target
             target = {}
@@ -319,7 +319,7 @@ module.exports = objects =
     resolve: (item, base, fallback)->
         
         if typeof item is 'string' && item.indexOf('/') != -1
-            return require item			
+            return require item         
         
         if fallback is false
             list = [base]
@@ -328,7 +328,7 @@ module.exports = objects =
             
         for base in list
             if (_item = _resolve item, base) || _item is false
-                return _item				
+                return _item                
         
     ##
     ##
@@ -378,6 +378,39 @@ module.exports = objects =
         
         return obj
         
+    
+    ##
+    ## this is an coffeescript adaption of Object.identical by Chris O'Brien
+    ###
+        Original script title: "Object.identical.js"; version 1.12
+        Copyright (c) 2011, Chris O'Brien, prettycode.org
+        http://github.com/prettycode/Object.identical.js
+    
+        Permission is hereby granted for unrestricted use, modification, and redistribution of this
+        script, only under the condition that this code comment is kept wholly complete, appearing
+        directly above the script's code body, in all original or modified non-minified representations
+    ###
+    ##
+    identical: (a, b, sortArrays)->
+    
+        sort = (obj)->
+            
+            if sortArrays && floyd.tools.objects.isArray obj
+                return obj.sort()
+            
+            else if typeof obj isnt 'object' || obj is null
+                return obj
+                
+            result = []
+            
+            for key in floyd.tools.objects.keys(obj).sort()
+                result.push 
+                    key: key
+                    value: sort obj[key]
+        
+            return result
+        
+        return JSON.stringify(sort a) is JSON.stringify(sort b)
         
 ##
 ##
@@ -403,7 +436,7 @@ _resolve = (item, base)->
 
 ##
 ## private static helper to recursively merge objects
-##			
+##          
 _extend = (target, source)->
     
     if !objects.isArray(target) && objects.isArray(source)
@@ -423,9 +456,9 @@ _extend = (target, source)->
                             value = _item
                             break;
                 ## removed this to prevent element merging if id attribute is not present
-                ##else				
+                ##else              
                 ##    t_index ?= 0
-                ##    if value = target[t_index++]	
+                ##    if value = target[t_index++]  
                 ##        
                 ##        while value.id
                 ##            value = target[t_index++]
