@@ -6,12 +6,16 @@ module.exports =
         ##
         ##
         ##
-        constructor: (config, parent)->
-            super config, parent
+        configure: (config)->
             
             @_pool = new floyd.data.MappedCollection()
             
-        
+            if typeof (@_sampler = config.sampler) is 'function'
+                @_sampler =
+                    tick: @_sampler
+            
+            super config
+            
         ##
         ##
         ##
@@ -52,8 +56,22 @@ module.exports =
                 #console.log 'online event', @_pool.length
                 
                 @_emit 'pool:online'
+                
+                ##
+                ## using timeout instead of interval offers the possibility to change 
+                ## the sampling rate between ticks or even the tick method itsself
+                ##
+                if @_sampler?.tick
+                    tick = ()=>
+                        if @_pool.length
+                            @_sampler._timeout = setTimeout tick, @_sampler.rate || 1000
 
-            
+                            @_sampler.tick.apply @, []
+                                                
+                    ## initialize the loop
+                    tick()
+                    
+                    
             
         ##
         ##
@@ -69,3 +87,7 @@ module.exports =
                 
                 @_emit 'pool:offline'
                 
+                if @_sampler?._timeout
+                    clearTimeout @_sampler._timeout
+                    @_sampler._timeout = null
+            

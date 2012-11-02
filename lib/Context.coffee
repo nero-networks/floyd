@@ -675,11 +675,9 @@ module.exports =
         on: ()->
             @addListener.identity = @on.identity
             @addListener.apply @, arguments					
-            return @
         
         off: ()->
             @removeListener.apply @, arguments					
-            return @
         
         addListener: (action, handler)->
             @_emitter.addListener.apply @_emitter, arguments							
@@ -692,15 +690,12 @@ module.exports =
             
             #console.log @ID, @_emitter._events
                 
-            return @
         
         removeListener: (action)->
             @_emitter.removeListener.apply @_emitter, arguments							
-            return @
         
         once: ()->
             @_emitter.once.apply @_emitter, arguments	
-            return @
         
         
         ##
@@ -754,6 +749,8 @@ module.exports =
             ##
             for action in actions
                 event.type = action
+                
+                #console.log 'emit', action, @_emitter
                 
                 stop = @_emitter.emit action, event, args
                 
