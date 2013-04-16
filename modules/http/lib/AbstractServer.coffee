@@ -89,7 +89,9 @@ module.exports =
             
                 @_addMiddleware mw
             
-            @on 'booted', ()=>
+            ## call super to boot the actual floyd.Context instance
+            super (err)=>
+                return done(err) if err
                 
                 ## bind to tcp-port
                 @server.listen @data.port, @data.host
@@ -99,9 +101,7 @@ module.exports =
         
                 @_emit 'listening', @data.port, @data.host
                 
-            
-            ## call super to boot the actual floyd.Context instance
-            super done
+                done()
         
         
         ##

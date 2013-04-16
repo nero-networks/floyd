@@ -56,13 +56,17 @@ module.exports =
         lookup: (name, identity, fn, noremote)->
             
             if noremote
-            
+                #console.log @id, 'direct lookup', name
+                
                 super name, identity, fn
                 
             else
-                #console.log @id
+                #console.log @id, 'proxy lookup', name
+                
                 @_proxy.lookup name, identity, (err, ctx)=>
                     return fn(err) if err
+                    
+                    #console.log 'proxy hit', name
                     
                     fn null, @_wrapRemote name, identity, ctx, fn
                 

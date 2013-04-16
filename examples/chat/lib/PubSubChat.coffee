@@ -15,7 +15,9 @@ module.exports =
                 @_input = @__root.find('> input')
                 @_button = @__root.find('> button')
                 
-                @_input.keypress (e)=> @_button.click() if e.which is 13
+                @_input.keypress (e)=> 
+                
+                    @_button.click() if e.which is 13
 
                 @_button.click ()=>
 

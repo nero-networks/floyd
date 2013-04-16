@@ -68,11 +68,7 @@ module.exports =
             
             ##
             data:
-                readonly: true
-                debug: false
-                type: 'file'
-                path: './private'
-                name: 'users'
+                readonly: true, debug: false, type: 'file', path: './private', name: 'users'
                 
         ,
             
