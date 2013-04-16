@@ -41,9 +41,11 @@ module.exports =
                 ##
                 process.on 'exit', ()=>
                     
-                    for file in files.list @system.tmpdir
-                    
-                        files.rm files.path.join(@system.tmpdir, file), true
+                    for _file in files.list @system.tmpdir
+                        file = files.path.join @system.tmpdir, _file
+                        
+                        if files.exists file
+                            files.rm file, true
             
         
             

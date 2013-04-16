@@ -28,13 +28,15 @@ module.exports =
             
                 floyd.tools.objects.intercept @, 'lookup', (name, identity, fn, lookup)=>
                     
-                    #console.log 'lookup', name, origin
+                    #console.log 'lookup', name
                     
                     lookup name, identity, (err, ctx)=>					
                         if ctx
                             fn(null, ctx)
                         
                         else
+                            #console.log 'retry lookup', origin+'.'+name, err.message
+                            
                             lookup origin+'.'+name, identity, fn
                     
                 
@@ -221,6 +223,8 @@ module.exports =
             
             ID: child.ID
 
-            lookup: (args...)=> child.lookup.apply child, args
+            lookup: (args...)=> 
+                #console.log 'remote api lookup:', args[0]
+                child.lookup.apply child, args
             
             ping: (fn)-> fn()

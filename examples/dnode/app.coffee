@@ -54,5 +54,5 @@ module.exports =
                         ctx.echo @ID, (err, res)=>
                             txt = res + ' roundtrip: ' + (+new Date() - start)
                             console.log txt
-                            $('body').append '<p>'+txt+'ms</p>'
+                            $('.display').html '<p>'+txt+'ms</p>'
                                 

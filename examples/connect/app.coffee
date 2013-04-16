@@ -2,7 +2,7 @@
 ## A Connect Floyd-Webserver Example
 ##
 ## creates a connect driven Http-Server Context
-## with public directory and request-time profiler
+## with public directory and response-time profiler
 ##
 
 connect = require 'connect'
@@ -25,7 +25,7 @@ module.exports =
     
     ##
     ## hooks up to the livecycle booted event
-    booted: ()->
+    booted: ->
             
         ## registers the responseTime middleware.
         ## writes header x-response-time
