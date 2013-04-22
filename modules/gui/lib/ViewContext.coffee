@@ -67,12 +67,12 @@ module.exports =
             if stage is 0
                 
                 ## element is already there, found by selector -> stage 1
-                if @data.selector && ( @__root = $ @data.selector, @parent?.__root ).length
+                if @data.selector && ( @__root = $ @data.selector, @parent?.__root )?.length
                     
                     @_build done, 1
                 
                 ## or by id -> stage 1
-                else if ( @__root = $ '#'+@id ).length
+                else if ( @__root = $ '#'+@id )?.length
                     
                     @forIdentity @identity, (err, ctx)=>
                         @__root.data 'floyd', ctx
@@ -109,7 +109,7 @@ module.exports =
                         return done(err) if err
 
                         @__root.removeClass 'floyd-loading'
-                        if !@__root.attr('class').length
+                        if !@__root.attr('class')?.length
                             @__root.removeAttr 'class'
         
                         @_emit 'loaded'

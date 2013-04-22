@@ -17,7 +17,7 @@ module.exports =
                 
                 if !floyd.tools.files.exists _dir
                     floyd.tools.files.mkdir _dir, 0o700
-                            
+                    
                 
                 dataFile = floyd.tools.files.path.join _dir, options.name+'.data'
                 
