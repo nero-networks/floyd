@@ -54,8 +54,8 @@ module.exports =
                             handler: conf
                             
                     @_createButton action, conf, (err, button)=>
-                        if conf.text
-                            button.text conf.text
+                        
+                        button.text conf.text || action
                         
                         if conf.title
                             button.attr 'title', conf.title

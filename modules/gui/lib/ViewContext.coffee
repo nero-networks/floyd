@@ -41,7 +41,7 @@ module.exports =
         boot: (done)->
             super done
             if @data.content
-                @logger.info '@data.content is deprecated. use @content instead -', @type, @ID
+                @logger.info '@data.content is deprecated. use @content instead -', @type, @ID, @data.content
             
             if (cls=@data.class) && !@__root.hasClass cls
                 @__root.addClass cls
