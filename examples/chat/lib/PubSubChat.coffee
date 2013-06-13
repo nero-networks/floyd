@@ -17,13 +17,18 @@ module.exports =
                 
                 @_input.keypress (e)=> 
                 
-                    @_button.click() if e.which is 13
+                    if e.which is 13
+                        @_button.click() 
+                    
+                        return false
 
                 @_button.click ()=>
 
                     @_handle @_input.val(), (err)=>
                         return done(err) if err
                         @_input.val('')
+                    
+                    return false
                 
                 @_avatar = {}
                 
