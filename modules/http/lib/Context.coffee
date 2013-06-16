@@ -319,7 +319,7 @@ __boot__ = (config)->
                 
                 next()
                                     
-                return null
+                return undefined
                 
             
             
