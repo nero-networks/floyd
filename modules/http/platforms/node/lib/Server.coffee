@@ -104,7 +104,7 @@ module.exports =
         ##
         ##
         _createContent: (req, res, next)->
-            super req, res, (err, content)=>			
+            super req, res, (err, content)=>
                 return next(err, content) if err or content
                 
                 ## load file only if no content until here
