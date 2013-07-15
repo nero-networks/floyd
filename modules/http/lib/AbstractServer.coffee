@@ -116,8 +116,23 @@ module.exports =
         ##
         ##
         _prepareRequest: (req, res, done)->
-        
+            
+            ##
             req.uri = req.url.split('?').shift()
+            
+            ##
+            if @data.vhosts
+                _ex = @data.vhosts._exclude
+                _uri = req.uri
+                if !@data.vhosts._exclude || (_ex.indexOf(_uri) is -1 && _ex.indexOf(_uri.substr 0, _uri.lastIndexOf('/')+1) is -1)
+                    
+                    hostname = req.headers.host
+                    for vhost, prefix of @data.vhosts
+                        if hostname.substr(0, vhost.length) is vhost
+                            req.uri = prefix + req.uri
+                            req.url = prefix + req.url
+                        
+            #console.log req.headers.host, req.uri
             
             ## 
             ## send handler

@@ -65,8 +65,7 @@ module.exports =
                 
                         
                     ##					
-                    if @data.route	
-                                
+                    if @data.route
                         @delegate '_addRoute', @data.route, (req, res, next)=>
                         
                             req.uri = req.uri.replace @data.route, '/'
@@ -96,7 +95,9 @@ module.exports =
             
                 for expr, repl of @data.rewrite
                     if !(expr instanceof RegExp)
-                        expr = new RegExp expr
+                        expr = new RegExp _expr = expr
+                    
+                    #console.log req.uri, _expr, expr.exec req.uri
                     
                     if expr.exec req.uri
                         
@@ -105,7 +106,8 @@ module.exports =
                         req.url = req.url.replace new RegExp(req.uri+'(([?].*)?$)'), _uri+'$1'
                         
                         req.uri = _uri
-                
+            
+            
             ##
             @_process @_middleware,
             
