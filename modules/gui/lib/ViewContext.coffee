@@ -16,7 +16,8 @@ module.exports =
                     return done(err) if err
                     
                     boot done                
-            
+                
+                
             config = super new floyd.Config
             
                 data: 

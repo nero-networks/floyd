@@ -95,15 +95,25 @@ module.exports =
                 
                 ## bind to tcp-port
                 @server.listen @data.port, @data.host
-                    
+                
+                
+                
                 ## log a small "i'm alive" message
-                @logger.info '%s is now listening on %s:%s', @data.public, (@data.host||''), @data.port
+                @logger.info '%s is now listening on %s:%s', @_loginfo(), (@data.host||''), @data.port
         
                 @_emit 'listening', @data.port, @data.host
                 
                 done()
         
-        
+        ##
+        _loginfo:()->
+            
+            data = []
+            for p in @data.public
+                data.push p.replace floyd.system.libdir, 'floyd:'
+                
+            return data
+            
         ##
         ##
         ##

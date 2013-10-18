@@ -3,7 +3,8 @@ events = require 'events'
 
 ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped', 'message']
 
-LOOKUPS = {}
+USELOOKUPSCACHE = false
+LOOKUPSCACHE = {}
 
 module.exports = 
 
@@ -269,6 +270,9 @@ module.exports =
             
             ##
             
+            if config.data?.dump
+                console.log floyd.tools.objects.dump config
+            
             return config 
                                 
                 
@@ -434,23 +438,24 @@ module.exports =
             @logger.debug 'lookup:', name, identity.id
             
             ## --> EXPERIMENTAL identity based lookups cache -> nero
-            if false #inactive
-                if !(lookups = LOOKUPS[__ident])
-                    #@logger.info 'create lookups cache for', __ident
+            
+            if USELOOKUPSCACHE # inactive if false here
+                if !(lookupscache = LOOKUPSCACHE[__ident])
+                    @logger.info 'create lookups cache for', __ident
                     
-                    lookups = LOOKUPS[__ident] = {}
+                    lookupscache = LOOKUPSCACHE[__ident] = {}
                         
                     identity.on 'destroyed', ()=>
                         @logger.info 'destroy lookups cache for', __ident
-                        delete LOOKUPS[__ident]
+                        delete LOOKUPSCACHE[__ident]
                     
                     
                         
                         
                 ## interrupt search here and return lookup from cache
-                if lookups[name]
+                if lookupscache[name]
                     @logger.debug 'found cached:', name, identity.id
-                    return done(null, lookups[name]) 
+                    return done(null, lookupscache[name]) 
                 
             ## <-- EXPERIMENTAL
             
@@ -474,13 +479,16 @@ module.exports =
                 
                     if ctx
                     
-                        ## EXPERIMENTAL identity based lookups cache -> nero
-                        if false
-                            if !lookups[name]
-                                #@logger.info 'add %s to cache for', name, __ident
+                        ## --> EXPERIMENTAL identity based lookups cache -> nero
+                        
+                        if USELOOKUPSCACHE # inactive if false here
+                            if !lookupscache[name]
+                                @logger.info 'add %s to cache for', name, __ident
                             
-                                lookups[name] = ctx
-                             
+                                lookupscache[name] = ctx
+                        
+                        ## <-- EXERIMENTAL
+                        
                         __found()
                         
                         #@logger.debug __check(), n++, 'found', ctx.ID, identity.id

@@ -344,22 +344,21 @@ module.exports = objects =
     ## replaces the method with a wrapper which calls the interceptor 
     ## the interceptor gets passed all arguments plus the replaced super-method
     ##    
-    ##  # 1. given some random api object  
+    ##  # 1. given some random api object method. This one is saying hello to you.
     ##  test =
-    ##      calculate: (x, fn)->
+    ##      helloMyNameIs: (name, fn)->
     ##    
-    ##          fn null, x * x
+    ##          fn null, 'Hello ' + name + '!'
     ##  
-    ##  # 2. this intercepts the trigger method, 
-    ##  # modifies x and calls the super method  
-    ##  floyd.tools.objects.intercept test, 'trigger', (x, fn, calculate)->
+    ##  # 2. this intercepts the method by adding 'how are you feeling today?'
+    ##  floyd.tools.objects.intercept test, 'helloMyNameIs', (name, fn, helloMyNameIs)->
     ##    
-    ##      calculate x * 2, fn
+    ##      helloMyNameIs name + ' How are you today?', fn
     ##    
-    ##  # 3. usage. this will display (2x)² = 400
-    ##  test.calculate 10, (err, res)->
+    ##  # 3. usage. this will display 'Hello Floyd! How are you feeling today?'
+    ##  test.helloMyNameIs 'Floyd', (err, res)->
     ##    
-    ##      console.log '(2x)² =', res
+    ##      console.log res
     ##        
     ##
     intercept: (obj, method, interceptor)->

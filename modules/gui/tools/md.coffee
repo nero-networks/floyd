@@ -1,11 +1,11 @@
 
 md = require 'markdown'
 
-ALLOWEDTAGS = ['b', 'table', 'tr', 'th', 'td', 'br', 'div', 'section', 'article', 'nav', 'address']
+ALLOWEDTAGS = ['a', 'b', 'table', 'tr', 'th', 'td', 'br', 'div', 'header', 'footer', 'section', 'article', 'nav', 'address']
 
-FINDTAGS = /(<p>)?&lt;([\/]?)(b|table|tr|th|td|br|div|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/g
+FINDTAGS = /(<p>)?&lt;([\/]?)(a|b|table|tr|th|td|br|div|header|footer|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/g
 
-REPLACETAG = /(<p>)?&lt;([\/]?)(b|table|tr|th|td|br|div|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/
+REPLACETAG = /(<p>)?&lt;([\/]?)(a|b|table|tr|th|td|br|div|header|footer|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/
 
 MODIFIER = /^{:([ ]+)?([a-z]+)?(\.|#)?(.*?)}/
 

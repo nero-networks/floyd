@@ -78,7 +78,10 @@ module.exports =
                     ## getter delegation delays the require 'till its really needed
                     Object.defineProperty target, name,
                         get: ()->							
-                            require path
+                            try 
+                                require path 
+                            catch e
+                                console.error 'error in file '+path
                         set: ()->
                             #console.log 'reset', path
                         
@@ -172,7 +175,7 @@ module.exports =
                     ## out of previously required module exports.
                     
                     ## I decided to delete everything to be sure at all.
-                    ## I did mesured the startup time with and without the cache 
+                    ## I messured the startup time with and without the cache 
                     ## the overhead is about 55 to 60 milliseconds, tollerable in my oppinion
                     
                     #___start = +new Date()
