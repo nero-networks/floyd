@@ -13,7 +13,7 @@ module.exports =
             super new floyd.Config
                 
                 data:
-                    rcpt: 'info@localhost'
+                    rcpt: 'root@localhost'
                     
                     strings:
 
@@ -52,10 +52,7 @@ Betreff: %(subject)s
 Viele Grüsse und einen schönen Tag
 
 -----------------------------------------------------------------------
-Diese E-Mail wurde, zur Bestätigung, automatisch versendet.
-
-Falls Sie nicht der Urheber der Mitteilung sind informieren Sie mich
-bitte, indem Sie diese E-Mail an abuse@alprax.de weiterleiten.'''
+Diese E-Mail wurde, zur Bestätigung, automatisch versendet.'''
 
                     
                 
