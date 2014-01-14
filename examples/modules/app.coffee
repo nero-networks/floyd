@@ -4,10 +4,8 @@
 ##
 module.exports = 
 
-    ##	
     type: 'helloworld.HelloWorld'
 
-    ##
     data:
         logger:
             level: 'STATUS'

@@ -130,9 +130,7 @@ module.exports =
             
             config = new floyd.Config config
             
-            ##
-            ## extend context with methods from config. add @method._super for each
-            ##
+            # extend context with methods from config. add @method._super for each
             for key, value of config
                 do(key, value)=>
                     if typeof value is 'function'
@@ -184,8 +182,8 @@ module.exports =
                     #console.log '_createAuthHandler', manager, __user
                     
                     _auth = (fn)=>
-                        ## EXPERIMENTAL shortcut. use child if found
-                        ## re-think implications of unprotected usage
+                        # EXPERIMENTAL shortcut. use child if found
+                        # re-think implications of unprotected usage
                          
                         if (ctx = @children[manager]) 
                             fn null, ctx
@@ -195,7 +193,7 @@ module.exports =
                     
                     new floyd.auth.Handler
 
-                        ##
+                        #
                         authorize: (token, fn)=>
                             
                             #console.log 'autorizazion request', __user, @id
@@ -296,13 +294,13 @@ module.exports =
                         
                 ,
 
-                    (next)=> ## check for general remote restriction
+                    (next)=> # check for general remote restriction
                         
                         next (@data.permissions?[key] || @data.permissions) isnt false
                         
                 ,
 
-                    (next)=> ## check for login restriction
+                    (next)=> # check for login restriction
                         
                         if (@data.permissions?[key]?.login || @data.permissions?.login)
                             
@@ -312,7 +310,7 @@ module.exports =
                         else next true
                 ,
 
-                     (next)=> ## check for user restriction and test identity.login
+                     (next)=> # check for user restriction and test identity.login
                         
                         if user = (@data.permissions?[key]?.user || @data.permissions?.user)
                             
@@ -322,7 +320,7 @@ module.exports =
                         else next true
                 ,
 
-                    (next)=> ## check for roles restriction and test identity.hasRole
+                    (next)=> # check for roles restriction and test identity.hasRole
                         if roles = (@data.permissions?[key]?.roles || @data.permissions?.roles)
                             
                             identity.hasRole roles, (err, ok)=>
@@ -332,7 +330,7 @@ module.exports =
                 
                 ,
                 
-                    (next)=> ## custom check function - must callback true to permit!
+                    (next)=> # custom check function - must callback true to permit!
                         if check = (@data.permissions?[key]?.check || @data.permissions?.check)
                             
                             check identity, key, args, next                            
@@ -349,7 +347,7 @@ module.exports =
                     
                     else fn()
                 
-                ## start recursion
+                # start recursion
                 permit true
 
         ##
@@ -437,7 +435,7 @@ module.exports =
             
             @logger.debug 'lookup:', name, identity.id
             
-            ## --> EXPERIMENTAL identity based lookups cache -> nero
+            # --> EXPERIMENTAL identity based lookups cache -> nero
             
             if USELOOKUPSCACHE # inactive if false here
                 if !(lookupscache = LOOKUPSCACHE[__ident])
@@ -457,7 +455,7 @@ module.exports =
                     @logger.debug 'found cached:', name, identity.id
                     return done(null, lookupscache[name]) 
                 
-            ## <-- EXPERIMENTAL
+            # <-- EXPERIMENTAL
             
             
             @logger.debug 'start search', name, identity.id
@@ -479,7 +477,7 @@ module.exports =
                 
                     if ctx
                     
-                        ## --> EXPERIMENTAL identity based lookups cache -> nero
+                        # --> EXPERIMENTAL identity based lookups cache -> nero
                         
                         if USELOOKUPSCACHE # inactive if false here
                             if !lookupscache[name]
@@ -487,7 +485,7 @@ module.exports =
                             
                                 lookupscache[name] = ctx
                         
-                        ## <-- EXERIMENTAL
+                        # <-- EXERIMENTAL
                         
                         __found()
                         
@@ -519,7 +517,7 @@ module.exports =
                         if !__check()
                             @logger.debug 'test child', id
                             
-                            ## 1. the requested context is a direct child. 
+                            # 1. the requested context is a direct child. 
                             if name is id 
                                 
                                 @logger.debug 'found as a direct child', child.id
@@ -527,7 +525,7 @@ module.exports =
                                 #console.log @ID, name
                                 child.forIdentity identity, _try
                             
-                            ## 2. the prefix of name matches child.id
+                            # 2. the prefix of name matches child.id
                             else if name.substr(0, id.length) is id
                                 
                                 @logger.debug 'searching for %s in %s', name.substr(id.length+1), child.ID
@@ -542,8 +540,8 @@ module.exports =
                     ##						
                     else if name is @id
                         
-                        ## 4. last but not least it happens that 
-                        ## someone asks us about our self... 
+                        # 4. last but not least it happens that 
+                        # someone asks us about our self... 
                         
                         @logger.debug 'its my self', name, @ID
     
@@ -564,8 +562,8 @@ module.exports =
                     else if _parent
                         _parent = false
                         
-                        ## 3. if we still did not found anything we
-                        ## delegate that to the parent
+                        # 3. if we still did not found anything we
+                        # delegate that to the parent
                         
                         @logger.debug 'delegate to parent', @parent.ID, name
                         
@@ -579,7 +577,7 @@ module.exports =
                     else if _global 
                         _global = false
                     
-                        ## 5. EXPERIMENTAL 
+                        # 5. EXPERIMENTAL 
                         
                         @logger.debug 'maybe its global', @ID, name, floyd.__parent
                     

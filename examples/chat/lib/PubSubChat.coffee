@@ -156,8 +156,7 @@ module.exports =
                     
             if data = msg.data 
                 
-                ##
-                ## text message
+                # text message
                 if text = data.text
                     nick = data.nick
                     
@@ -172,8 +171,7 @@ module.exports =
                     @_write '<b style="'+style+'">'+nick+'</b>: '+text
                 
                 
-                ##
-                ## user connection
+                # user connection
                 if (user = data.connect) && msg.origin isnt @ID
                     
                     if user is @_nick
@@ -184,8 +182,7 @@ module.exports =
                         data.respond null, @_nick, @ID
                         
                                     
-                ##
-                ## user disconnection
+                # user disconnection
                 if (user = data.disconnect) && msg.origin isnt @ID
                     
                     @_delUser user

@@ -3,7 +3,6 @@ module.exports =
 
     new floyd.Config 'config.gui.server',
     
-        ##
         data:
             port: 9033
             
@@ -19,7 +18,6 @@ module.exports =
                 
                 file: '/index.html'
         
-            ##	
             remote:				
                 
                 children: [

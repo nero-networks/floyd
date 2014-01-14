@@ -179,7 +179,16 @@ module.exports =
                             
                             window.$('html > script').remove()
                             
-                            window.location = Url.parse prefix+req.url
+                            _loc = req.url
+                            if req.vhostpath
+                                _loc = _loc.substr req.vhostpath.length
+                                
+                            window.location = Url.parse prefix+_loc
+                            
+                            ## fake the protocol while forwarded from https proxy
+                            if window.location.protocol is 'http:' && (proto = req.headers['x-forwarded-proto']) is 'https'
+                                window.location.protocol = 'https:'
+                                window.location.href = window.location.href.replace /^http\:/, 'https:'                
                             
                             window.console = console
                             

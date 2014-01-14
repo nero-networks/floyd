@@ -50,6 +50,10 @@ module.exports =
                 ]
             
             , config
+            
+            ## require the module instance with the configured module
+            if typeof (@_module = config.data.module) is 'string'
+                @_module = require @_module
                 
             #console.log config.children
             return config
@@ -59,14 +63,8 @@ module.exports =
         ##
         ## @override
         _createServer: (handler)->
-            
-            ## create a server instance with the configured module
-            if typeof (module = @data.module) is 'string'
-                module = require(@data.module)
                 
-            server = module.createServer(handler)
-                                
-            return server
+            @_module.createServer(handler)
                 
         ##
         ##

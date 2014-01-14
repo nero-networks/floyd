@@ -66,14 +66,14 @@ module.exports =
                 
                 @find('button[name="login"]').click ()=>
                         
-                    ## login to the application as user with pass
+                    # login to the application as user with pass
                         
                     @_getAuthManager().login user.val(), pass.val(), (err)=>
 
-                        pass.val('') ## always empty the passwd field
+                        pass.val('') # always empty the passwd field
                         
                         if !err
-                            user.val('') ## for convinience leave user field until login succeeds
+                            user.val('') # for convinience leave user field until login succeeds
                         
                             
                         else alert err.message	

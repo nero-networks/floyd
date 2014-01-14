@@ -339,7 +339,24 @@ module.exports = objects =
             value = dfault
             
         return value
-    
+        
+    ##
+    ##
+    ##
+    write: (key, value, base)->
+        _obj = base
+        _key = key.split '.'
+        
+        _id = _key.pop() 
+        
+        while _key.length
+            _obj = (_obj[_key.shift()]={})
+        
+        _obj[_id] = value
+        
+        return _obj
+        
+        
     ##
     ## replaces the method with a wrapper which calls the interceptor 
     ## the interceptor gets passed all arguments plus the replaced super-method

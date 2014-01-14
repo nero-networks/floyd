@@ -77,7 +77,7 @@ module.exports =
             
             ##
             @server = @_createServer (req, res)=>
-        
+            
                 ##
                 @_handleRequest req, res, (err)=>
                     
@@ -141,6 +141,7 @@ module.exports =
                         if hostname.substr(0, vhost.length) is vhost
                             req.uri = prefix + req.uri
                             req.url = prefix + req.url
+                            req.vhostpath = prefix
                         
             #console.log req.headers.host, req.uri
             

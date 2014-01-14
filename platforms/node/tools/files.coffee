@@ -35,7 +35,8 @@ module.exports = files =
     exists: (name)->
     
         return fs.existsSync normpath name            
-
+    
+    
     ##
     ##
     stat: (name)->
@@ -46,7 +47,7 @@ module.exports = files =
     ##
     is_dir: (name)->
         
-        files.stat(name).isDirectory()
+        files.stat(normpath name).isDirectory()
     
     ##
     ##
@@ -57,14 +58,14 @@ module.exports = files =
     
     ##
     ##
-    write: (name, data, enc='utf-8')->
+    write: (name, data, enc='utf8')->
         
         fs.writeFileSync normpath(name), data, enc
     
     ##
     ##
-    read: (name, enc='utf-8')->
-        
+    read: (name, enc='utf8')->
+            
         fs.readFileSync normpath(name), enc
     
 
@@ -108,9 +109,9 @@ module.exports = files =
     
     ##
     ##
-    chmod: (name, uid, gid)->
+    chmod: (name, mode)->
     
-        fs.chmodSync normpath(name), uid, gid
+        fs.chmodSync normpath(name), mode
         
     
     ##

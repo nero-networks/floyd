@@ -18,6 +18,9 @@ module.exports =
                     div class: 'LoginBox floyd-loading'
                     
                 content: ->
+                
+                    p class:'hint'
+                
                     form class:'login', action:'#', method:'post', ->
                         label ->
                             span @data.labels.login
@@ -42,42 +45,49 @@ module.exports =
             super (err)=>
                 return done(err) if err
                 
-                @_logout = @find('form.logout').hide()
-                @_login = @find('form.login').hide()
+                @_hint = @find '.hint'
+        
+                ##
+                @_logout = @find('form.logout').hide().on 'submit', ()=>
+                    
+                    @_getAuthManager().logout (err)=>
+                        return @_onError(err) if err
+                        
+                        @_onLogout()
+                        
                 
+                    return false                    
+                
+                ##                
+                @_login = @find('form.login').hide().on 'submit', ()=>
+                    pwfield = @find('[name=pass]')
+                    if (login = @find('[name=login]').val()) && (pass = pwfield.val())
+                                                        
+                        @_getAuthManager().login login, pass, (err)=>
+                            pwfield.val ''
+                            
+                            return @_onError(err) if err
+                            
+                            @_onLogin()
+                    
+                    return false
+                
+                ##
+                done() 
+                
+                ##
                 @identity.login (err, user)=>
-                    
-                    if user
-                        @_logout.show().on 'submit', ()=>
-                        
-                            @_getAuthManager().logout (err)=>
-                                return @_onError(err) if err
-                                
-                                @_onLogout()
-                                
-                        
-                            return false                    
-                    else
-                    
-                        @_login.show().on 'submit', ()=>
-                            
-                            if (login = @find('[name=login]').val()) && (pass = @find('[name=pass]').val())
-                                                                
-                                @_getAuthManager().login login, pass, (err)=>
-                                    return @_onError(err) if err
-                                    
-                                    @_onLogin()
-                            
-                            return false
                 
-                    ##
-                    done() 
+                    if user then @_logout.show() else @_login.show()
+                
                 
         ##
         ##
         ##
         _onLogin: ()->
             @_login.hide()
+            
+            @_hint.hide()
             
             @_emit 'login'
             
@@ -98,5 +108,5 @@ module.exports =
         ##
         ##
         _onError: (err)->
-            alert(err.message)
+            @_hint.addClass('error').text(err.message)
             

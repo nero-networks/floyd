@@ -1,8 +1,10 @@
 
-LOGLEVEL = 'INFO' 	## try STATUS or DEBUG be carefull with FINE, FINER, FINEST
+## try STATUS or DEBUG be carefull with FINE, FINER, FINEST
+LOGLEVEL = 'INFO' 	
 
-DEBUG = true		## disabeling the debug mode triggers uglify-ing /floyd.js... 
-                    ## this takes serveral seconds on the very first reguest after app restart
+## disabeling the debug mode triggers uglify-ing /floyd.js... 
+## this takes serveral seconds on the very first reguest after app restart
+DEBUG = true		
 
 ##
 ## dnode example...
@@ -33,7 +35,6 @@ module.exports =
             
         ]			
             
-        ##
         remote:
         
             type: 'dnode.Bridge'

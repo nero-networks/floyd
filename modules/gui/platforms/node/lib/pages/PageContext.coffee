@@ -32,14 +32,26 @@ module.exports =
                 
             , config
             
+        ##
+        ##
+        ##
+        isPageContext: ()->
+            return true
         
         ##
         ##
         ##
         boot: (done)->
             
+            super done
+        
+        ##
+        ##
+        ##
+        start: (done)->
+
             file = @_contentFile()
-            
+
             @_reloadContent file
             
             prev = floyd.tools.files.stat file
@@ -55,13 +67,6 @@ module.exports =
                         @_reloadContent file
 
             ##
-            super done
-        
-        ##
-        ##
-        ##
-        start: (done)->
-            
             super done
             
         
@@ -84,10 +89,10 @@ module.exports =
                 path.push(filepath) 
         
             _parent = @parent
-        
-            while _parent instanceof floyd.gui.pages.PageContext
+
+            while _parent.isPageContext
                 path.unshift _parent.id
-            
+                
                 _parent = _parent.parent
         
             path.push @id
@@ -99,11 +104,19 @@ module.exports =
         ##
         ##
         _reloadContent: (file)->
-            #console.log @ID, 'reading file', file
+            #console.log @ID, 'reading file', file, floyd.tools.files.exists file
+            
+            if floyd.tools.files.exists file
+                data = floyd.tools.files.read file  
+                
+            else
+                floyd.tools.files.write file, ''
+                floyd.tools.files.chmod file, '664'
+                
             
             ##
             @__file = 
-                data: floyd.tools.files.read file
+                data: data || ''     
                 name: file
             
             ##

@@ -1,6 +1,40 @@
 
 mailer = require('nodemailer').createTransport 'SMTP'
 
+##
+SYSTEMTEXT = '''Hallo,
+
+am %(date)s um %(time)sh wurde über das Kontaktformular
+folgende Nachricht an Sie gesendet:
+
+Absender: %(name)s (%(email)s)
+
+Betreff: %(subject)s
+ 
+%(message)s
+
+
+Viele Grüße und einen schönen Tag wünscht
+
+Ihr Webserver'''
+
+##
+USERTEXT = '''Hallo %(name)s,
+                    
+Sie haben am %(date)s um %(time)sh über unser Kontaktformular
+folgende Nachricht an uns gesendet:
+
+Betreff: %(subject)s
+ 
+%(message)s
+
+
+Viele Grüsse und einen schönen Tag
+
+-----------------------------------------------------------------------
+Diese E-Mail wurde, zur Bestätigung, automatisch versendet.'''
+
+##
 module.exports =
     
     class ContactPage extends floyd.gui.pages.PageContext
@@ -20,39 +54,10 @@ module.exports =
                         subject: 'Kontaktanfrage - '
 
                         systemerror: 'error sending system mail'
-                        systemtext: '''Hallo,
-
-am %(date)s um %(time)sh wurde über das Kontaktformular
-folgende Nachricht an Sie gesendet:
-
-Absender: %(name)s (%(email)s)
-
-Betreff: %(subject)s
- 
-%(message)s
-
-
-Viele Grüße und einen schönen Tag wünscht
-
-Ihr Webserver'''
-
-
+                        systemtext: SYSTEMTEXT
 
                         usererror: 'error sending user mail'
-                        usertext: '''Hallo %(name)s,
-                    
-Sie haben am %(date)s um %(time)sh über unser Kontaktformular
-folgende Nachricht an uns gesendet:
-
-Betreff: %(subject)s
- 
-%(message)s
-
-
-Viele Grüsse und einen schönen Tag
-
------------------------------------------------------------------------
-Diese E-Mail wurde, zur Bestätigung, automatisch versendet.'''
+                        usertext: USERTEXT
 
                     
                 

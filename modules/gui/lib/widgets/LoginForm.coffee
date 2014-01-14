@@ -1,7 +1,7 @@
 
 module.exports = 
     
-    class ContactForm extends floyd.gui.ViewContext
+    class LoginForm extends floyd.gui.ViewContext
     
         ##
         ##
@@ -20,7 +20,7 @@ module.exports =
                         
                 content: ->
                     
-                    form class:'gui widgets LoginForm', ->
+                    form method:'post', action:'#', class:'gui widgets LoginForm', ->
 
                         p class:'hint'
                         

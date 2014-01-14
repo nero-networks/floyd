@@ -76,7 +76,15 @@ module.exports =
                     fn val, key
 
                 done?()
-
+        
+        
+        keys: (fn)->
+            keys = []
+            for key, val of @_memory
+                keys.push key
+            
+            fn null, keys
+            
         
         distinct: (field, query, fn)->
             throw new Error 'unimplemented'
@@ -84,17 +92,16 @@ module.exports =
         find: (query, options, fields, fn)->
             
             if query == {} || !query
-                items = _(@_memory).values()
+                items = floyd.tools.objects.values() #_(@_memory).values()
             
             else 
-                items = _(@_memory).select (item)->
-        
-                    for key, value of query
-                        if !item[key] || (_.isRegExp(value) && !item[key].match(value)) || item[key] != value
-                            return false
-                             
-                    return true
+                items = []
+                #_(@_memory).select (item)->
             
+                for key, value of query
+                    if item[key] && (item[key] != value || item[key].match value)
+                        items.push item
+        
             options ?= {}
             if items
                 options.size = items.length

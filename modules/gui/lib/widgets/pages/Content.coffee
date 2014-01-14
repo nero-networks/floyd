@@ -21,7 +21,7 @@ module.exports =
                     @lookup origin, @identity, (err, ctx)=>
                         return done(err) if err
                         
-                        $('#header').append ul = $('<ul class="navi"/>')
+                        $('#header').append ul = $('<ul class="adminnavi"/>')
                         
                         if @identity.hasRole ['admin', 'editor']
                         

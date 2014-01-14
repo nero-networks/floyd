@@ -9,7 +9,7 @@ module.exports =
         constructor: (config, parent)->
             super config, parent
         
-            ## instantiate store engine
+            # instantiate store engine
             if !@data.type
                 @_engine = new floyd.stores.Store()
                 if config.data
@@ -19,7 +19,7 @@ module.exports =
                 type = floyd.tools.strings.capitalize(@data.type)+'Store'
                 
                 if !floyd.stores.engines[type]
-                    return fn new floyd.error.Exception 'Invalid store type '+@data.type
+                    return @logger.error new floyd.error.Exception 'Invalid store type '+@data.type
 
                 @_engine = new floyd.stores.engines[type]()
             
@@ -102,8 +102,19 @@ module.exports =
         ## Iterate with fn(val, key), then callback done() when finished.
         ##
         each: (fn, done)->
-            @_engine.each(fn, done)
-
+            @_engine.each fn, done
+        
+        
+        ##
+        ##
+        ##
+        keys: (fn)->
+            @_engine.keys fn
+            
+            
+        ##
+        ##
+        ##
         distinct: (field, query, fn)->
             if typeof query is 'function'
                 fn = query
