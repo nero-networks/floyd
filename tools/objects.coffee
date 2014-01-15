@@ -273,13 +273,22 @@ module.exports = objects =
     ##
     ##
     ##
-    copy: (obj, addon)->    
-        _obj = {}
-        for key, value of obj
-            _obj[key] = value
+    copy: (obj, addon)->
+        
+        if objects.isArray obj
+            _obj = []
+            for value in obj
+                _obj.push value
+            
+        else
+            _obj = {}
+            for key, value of obj
+                _obj[key] = value
             
         if addon
-            @extend _obj, addon
+            _obj = @extend _obj, addon
+            
+        _obj
         
     
     ##
