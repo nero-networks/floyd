@@ -16,11 +16,14 @@ module.exports =
             config = super new floyd.Config
             
                 data:
+                    parent: false
                     ports: []
                     gateways: (if floyd.system.platform is 'remote' then [{}] else [])
 
             , config 
             
+            if config.data.parent
+                config.data.ports.push parent: true
             
             ## hack to delegate lookups to origin 
             
@@ -187,7 +190,7 @@ module.exports =
 
                     child._useProxy remote
                     
-                    #console.log 'add %s to %s', child.ID, root.ID
+                    @logger.debug 'adding remote %s', child.ID
                     
                     root.children.push child
                     

@@ -4,43 +4,68 @@ url = require 'url'
 
 qs = require 'querystring'
 
-module.exports = 
+module.exports = tools = 
 
     ##
     ##
     Agent: http.Agent
-    
-    ##
-    ##
-    get: (options, fn)->
-        if typeof options is 'string'
-            {hostname, port, path} = url.parse options
-            options =
-                host: hostname
-                port: port
-                path: path
-        
-        if options.url
-            {hostname, port, path} = url.parse options.url
-            options.host = hostname
-            options.port = port
-            options.path = path
            
-        http.get options, (res)->			
-            data = ''			
-            
-            res.on 'data', (chunk)->
-                data += chunk
-            
-            res.on 'end', ()->
-                fn null, data, res
-                
-            res.on 'error', fn
-    
     ##
     ##
     request: ()->
         http.request.apply http, arguments
+
+    
+    ##
+    ##
+    get: (options, fn)->
+        
+        tools.parseOptions options, (err, options)->
+            
+            http.get options, (res)->
+                
+                tools.readResponse res, fn		
+    
+    ##
+    ##
+    post: (options, data, fn)->
+        
+        data = qs.stringify data
+        
+        tools.parseOptions options, (err, options)->
+            
+            options.method ?= 'POST'
+            options.headers ?= {}
+            options.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            options.headers['Content-Length'] = data.length
+            
+            #console.log options
+            
+            req = http.request options, (res)->
+                
+                tools.readResponse res, fn
+                
+            req.write data
+            
+    ##
+    ##
+    parseOptions: (options, fn)->
+        
+        if typeof options is 'string'
+            options =
+                url: options
+        
+        if options.url
+            #console.log url.parse options.url
+            {auth, hostname, port, path} = url.parse options.url
+            if auth
+                options.auth = auth
+            options.host = hostname
+            options.port = port
+            options.path = path
+            
+        fn null, options
+
 
     ##
     ##
@@ -66,3 +91,17 @@ module.exports =
         req.on 'end', ()=>
             fn null, req.body = qs.parse data
             
+    
+    ##
+    ##
+    readResponse: (res, fn)->
+        data = ''           
+            
+        res.on 'data', (chunk)->
+            data += chunk
+            
+        res.on 'end', ()->
+            fn null, data, res
+                
+        res.on 'error', fn
+    

@@ -22,7 +22,7 @@ module.exports =
         type: 'dnode.Bridge'
         
         data:
-            ports: [parent: true]
+            parent: true
             
     ]
                             
