@@ -15,6 +15,9 @@ module.exports =
             settings.platform ?= 'node'
             settings.version = require(settings.libdir+'/package.json').version
             
+            ## platform hoistname
+            settings.hostname = require('os').hostname()
+            
             ## platform ident string
             settings.ident ?= 'NodeJS'
             settings.ident += ' ('+(p+'-'+v for p, v of process.versions).join(', ')+')'

@@ -22,7 +22,9 @@ module.exports =
             @system.platform ?= 'unknown'
             @system.ident ?= 'unknown'
             @system.os ?= process?.platform || 'unknown'
-    
+            
+            @system.hostname ?= 'unknown'
+            
             @system.errors ?= 
                 max: 5
             
