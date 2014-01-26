@@ -128,6 +128,13 @@ module.exports =
             
             config.type ?= 'floyd.Context'
             
+            if hostconfig = config.hostconfig?[floyd.system.hostname]
+
+                if typeof hostconfig is 'function'
+                    hostconfig.apply @, [config]
+                else
+                    floyd.tools.objects.extend config, hostconfig
+            
             config = new floyd.Config config
             
             # extend context with methods from config. add @method._super for each
