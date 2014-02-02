@@ -95,15 +95,4 @@ I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
 
 ## More
 
-Take a look into the [examples](/nero-networks/floyd/tree/master/examples/) folder. There are many examples including
-
-- [**basics**](/nero-networks/floyd/tree/master/examples/basics/) - a very basic configuration. this is the HelloWorld example
-- [**auth**](/nero-networks/floyd/tree/master/examples/auth/) - uses http, gui and dnode to realise an authenticated environment
-- [**chat**](/nero-networks/floyd/tree/master/examples/chat/) - a tiny pubsub chat. made with dnode Bridges
-- [**connect**](/nero-networks/floyd/tree/master/examples/connect/) - a demonstration how to use the connect module with floyd
-- [**dnode**](/nero-networks/floyd/tree/master/examples/dnode/) - a simple dnode Bridge demo
-- [**gui**](/nero-networks/floyd/tree/master/examples/gui/) - a serverside-rendered gui HelloWorld
-- [**modules**](/nero-networks/floyd/tree/master/examples/modules/) - the helloworldHelloWorld module demo
-- [**platforms**](/nero-networks/floyd/tree/master/examples/platforms/) - simple platform dependent code demo
-- [**privileged**](/nero-networks/floyd/tree/master/examples/privileged/) - changes the UID/GID if started as root
-- [**webserver**](/nero-networks/floyd/tree/master/examples/webserver/) - a basic webserver with statics, E-Tags and gzip compression
+Take a look into the [examples](/nero-networks/floyd/tree/master/examples/) folder.
