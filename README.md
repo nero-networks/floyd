@@ -95,4 +95,4 @@ I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
 
 ## More
 
-Take a look into the [examples](/nero-networks/floyd/tree/master/examples/) folder.
+Take a look into the examples folder.
