@@ -24,7 +24,7 @@ module.exports =
                     
                     type: 'gui.ViewContext'
                 
-                    content: 'Hello World!'
+                    content: '## Hello World!'
                 
                 ]
         ]
