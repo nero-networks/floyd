@@ -47,7 +47,7 @@ module.exports =
             
             @_emitter = @_createEmitter config
             
-            @_hiddenKeys.push 'configure', 'boot', 'start', 'stop', 'error', 'delegate', 'data', 'parent', 'children'
+            @_hiddenKeys.push 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate', 'data', 'parent', 'children'
             
             @children = new floyd.data.MappedCollection()
 
@@ -769,7 +769,7 @@ module.exports =
                 
                 ## all non served events are boubled up if @data.events?.delegate is true
                 ## or if @data.events?.delegate is an array that contains action as a string
-                ## delegation is always suppressed is suppressed for livecycle-events        
+                ## delegation is always suppressed for lifecycle-events        
                 if !stop && (@data.events?.delegate is true || @data.events?.delegate?.indexOf action) && ACTIONS.indexOf(action) is -1
                     
                     @parent._emit action, event, args	
