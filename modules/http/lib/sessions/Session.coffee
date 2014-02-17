@@ -14,8 +14,8 @@ module.exports =
             @public =
                 SID: @SID
                 TOKEN: @token
-                on: ()=> @addListener.apply @, agruments
-                off: ()=> @removeListener.apply @, agruments
+                on: (args...)=> @addListener.apply @, args
+                off: (args...)=> @removeListener.apply @, args
                 once: (action, handler)=> 
                     @on action, _handler = (event)=>
                         @off _handler
