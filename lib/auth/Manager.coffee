@@ -41,12 +41,14 @@ module.exports = (handler)->
     ##
     ##
     authorize: __authorize = (token, fn)->
-        manager.emit 'authorizing', __token = token
+        manager.emit 'authorizing', token
         
         #console.log 'authorizing', __user, token
         
         handler.authorize token, (err, user)=>
             #console.log 'post authorizing', user
+            
+            manager.emit 'authorized', __token = token
             
             if !err && __user = user
                 #console.log 'authorized user', user
