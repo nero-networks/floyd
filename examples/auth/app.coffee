@@ -134,17 +134,17 @@ module.exports =
                         button style:'display: none', 'click for secret'
                     
                     ##
-                    booted: ->
-                        
+                    wiring: ->
+                    
                         @identity.on 'login', ()=>
                             @__root.show()
-                            
+                        
                         @identity.on 'logout', ()=>
                             @__root.hide()
-                    
+                
                         @__root.click =>
                             @lookup 'test', @identity, (err, test)->
-                                
+                            
                                 test.secret (err, secret)->
                                     return alert(err.message) if err
                                     

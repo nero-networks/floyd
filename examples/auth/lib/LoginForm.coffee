@@ -48,7 +48,7 @@ module.exports =
         ##
         ##
         ##	
-        start: (done)->
+        wire: (done)->
             super (err)=>
                 
                 @identity.on 'login', ()=>
