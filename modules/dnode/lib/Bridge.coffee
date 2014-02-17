@@ -1,6 +1,4 @@
 
-dnode = if typeof DNode isnt 'undefined' then DNode else require('dnode')
-
 module.exports = 
 
     class DNodeBridge extends floyd.Context
@@ -162,6 +160,8 @@ module.exports =
         _createLocal: (fn)->
             
             ##
+            dnode = if typeof DNode isnt 'undefined' then DNode else require('dnode')
+
             dnode (proxy, conn)=>
 
                 @_createRemote proxy, conn, fn
