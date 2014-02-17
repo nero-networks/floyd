@@ -40,13 +40,36 @@ module.exports =
         ##
         ##
         boot: (done)->
+            @_hiddenKeys.push 'wire', 'wiring'
+            
             super done
+
             if @data.content
                 @logger.info '@data.content is deprecated. use @content instead -', @type, @ID, @data.content
             
             if (cls=@data.class) && !@__root.hasClass cls
                 @__root.addClass cls
+        
+        ##
+        ##
+        ##
+        start: (done)->
+            super (err)=>
+                return done(err) if err
+                
+                if floyd.system.platform is 'remote'
+                    @wire done
+                    
+                else done()
+                    
+        
+        ##
+        ##
+        ##
+        wire: (done)->
+            @wiring?()
             
+            done()
         
         ##
         ##
