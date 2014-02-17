@@ -62,7 +62,7 @@ module.exports =
             
             if !@data.find('debug')
                 process.nextTick ()=>
-                    @_getCached (err)=>
+                    @getCompiledCode (err)=>
                         @logger.error(err) if err
             
         ##
@@ -74,7 +74,7 @@ module.exports =
             
             req.cache.lastModified @_started, ()=>
             
-                @_getCached (err, data)=>
+                @getCompiledCode (err, data)=>
                     return next(err) if err
                                         
                     ## activate gzip compression
@@ -85,7 +85,7 @@ module.exports =
         ##
         ##
         ##
-        _getCached: (fn)->
+        getCompiledCode: (fn)->
         
             ## prepare the memory cache for the compiled result
             @__cache ?= 
@@ -187,7 +187,7 @@ module.exports =
                 if debug
                     bundle += '\n/* ' + file + ' */\n'
                     
-                bundle += __read__(file) + '\n'
+                bundle += 'try {\n'+__read__(file) + '\n} catch(e) {'+(if @data.showErrors then 'console.error(e);' else '')+'};\n'
             
             if debug
                 bundle += '\n/* floyd lib - browserify bundle */\n\n'
@@ -243,7 +243,7 @@ module.exports =
                 if debug
                     bundle += '\n/* ' + file + ' */\n'
                     
-                bundle += __read__(file) + '\n'
+                bundle += 'try {\n'+__read__(file) + '\n} catch(e) {'+(if @data.showErrors then 'console.error(e);' else '')+'};\n'
             
             ##
             fn null, bundle
