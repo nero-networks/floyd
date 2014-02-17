@@ -15,12 +15,7 @@ module.exports =
                         
             @logger = @_createLogger @ID
             
-            @identity = @createIdentity()
-            
-            for k, fn of @
-                if typeof fn is 'function'
-                    fn.identity = @identity		
-                        
+            @identity = @_createIdentity()
             
 
         ##
@@ -41,7 +36,7 @@ module.exports =
         ##
         ## 
         ##
-        createIdentity: (id)->
+        _createIdentity: (id)->
             if @identity
                 id = @identity.id+'.'+id
             else 
