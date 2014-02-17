@@ -116,7 +116,7 @@ module.exports = (code, cached=true)->
             
             handler.call options.context, scope
             
-            fn null, html
+            fn null, html.trim()
             
                         
             
