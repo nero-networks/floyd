@@ -28,12 +28,13 @@ module.exports =
                     try					
                         
                         handler null,
-                            origin: @publish.identity.id
+                            origin: (@publish.identity || @identity).id
                             data: data
                         
                         next()
                         
                     catch err
+                        console.log err
                         @unsubscribe handler.id
             
             
