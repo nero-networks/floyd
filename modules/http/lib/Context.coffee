@@ -300,6 +300,8 @@ __boot__ = (config)->
     ##
     window.addEventListener 'load', ()->
         
+        window.__initTime__ = +new Date()
+        
         process.nextTick ()->
         
             ctx = floyd.init config, (err)->

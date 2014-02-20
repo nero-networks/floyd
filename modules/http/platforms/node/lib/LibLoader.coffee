@@ -180,6 +180,8 @@ module.exports =
             ##
             bundle = floyd.tools.strings.sprintf '/*!\n * floyd %s | (c) 2012 - https://github.com/nero-networks/floyd/LICENSE | compiled on %s\n */\n', floyd.system.version, new Date()
             
+            bundle += '\nvar __initTime__;\n'
+            
             ##
             ## prepend unprocessed files 
             ##
