@@ -45,7 +45,7 @@ module.exports =
                         button class:'cancel', 'Abbrechen'
                         button class:'ok', 'Ok'
                     
-                    booted: ->
+                    wiring: ->
                         @view = @parent.children[0]
                         
                         #floyd.tools.objects.intercept @ '_emit', (args..., _emit)=>
@@ -99,27 +99,25 @@ module.exports =
         ##
         ##
         ## 
-        start: (done)->
+        wire: (done)->
             super (err)=>
                 return done(err) if err
                 
-                if floyd.system.platform is 'remote'
-                    @find('button.close, a.close').click ()=> 
-                        @close()
-                    
-                    setTimeout ()=>
-                        
-                        if @data.fade
-                            @__root.fadeIn 'slow'
-                        
-                        else
-                            @__root.show()
-                    
-                    , 100 ## das merkt man sogut wie nicht und die gui wirkt stabiler dadurch... weniger aufbau-gewusel
-                    
-                    done()
+                @find('button.close, a.close').click ()=> 
+                    @close()
                 
-                else done()
+                setTimeout ()=>
+                    
+                    if @data.fade
+                        @__root.fadeIn 'slow'
+                    
+                    else
+                        @__root.show()
+                
+                , 100 ## das merkt man sogut wie nicht und die gui wirkt stabiler dadurch... weniger aufbau-gewusel
+                
+                done()
+                
         ##
         ##
         ## 

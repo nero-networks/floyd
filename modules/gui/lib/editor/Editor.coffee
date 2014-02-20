@@ -13,13 +13,19 @@ module.exports =
                 template: ->
                     div class:'editor Buttons floyd-loading', style:'opacity: .35'
                 
-                events:
-                    'after:booted': ()->
-                        @_buildButtons config.buttons
-                        @_wireMouse()
-                        
             , config
         
+        ##
+        ##
+        ##
+        wire: (done)->
+            super (err)=>
+                return done(err) if err
+                
+                @_buildButtons config.buttons
+                @_wireMouse()
+               
+                
         ##
         ##
         ##

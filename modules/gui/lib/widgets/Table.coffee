@@ -11,7 +11,8 @@ module.exports =
 
                     limit: -1
 
-                    listSelector: 'tbody:first'
+                    listSelector: ->
+                        $ @find('tbody')[0]
 
                     thead: true
 

@@ -35,23 +35,22 @@ module.exports =
         ##
         ##
         ##
-        start: (done)->
+        wire: (done)->
             super (err)=>
                 return done(err) if err
                 
-                if floyd.system.platform is 'remote'
-                    tabs = @__root.parent().find('ul.bar a')
+                tabs = @__root.parent().find('ul.bar a')
 
-                    tabs.click (e)=>
-                        tabs.parent().removeAttr 'class'
-                        link = $(e.currentTarget)
-                        link.parent().addClass 'active'
+                tabs.click (e)=>
+                    tabs.parent().removeAttr 'class'
+                    link = $(e.currentTarget)
+                    link.parent().addClass 'active'
 
-                        @_showPanel link.attr('href').replace '#', ''
+                    @_showPanel link.attr('href').replace '#', ''
 
-                        return false;
+                    return false;
 
-                    @_showPanel @_tabs._active
+                @_showPanel @_tabs._active
 
                 done()
 

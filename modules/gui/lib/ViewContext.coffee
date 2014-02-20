@@ -86,20 +86,24 @@ module.exports =
             
             #@logger.info 'booting stage', stage
             
+            _sel = (selector, parent)=>
+                if typeof selector is 'string'
+                    $ selector, parent
+                    
+                else
+                    selector.apply @, []
+            
             ##
             ## get the root element to represent the context
             if stage is 0
                 
                 ## element is already there, found by selector -> stage 1
-                if @data.selector && ( @__root = $ @data.selector, @parent?.__root )?.length
+                if @data.selector && ( @__root = _sel @data.selector, @parent?.__root )?.length
                     
                     @_build done, 1
                 
                 ## or by id -> stage 1
                 else if ( @__root = $ '#'+@id )?.length
-                    
-                    @forIdentity @identity, (err, ctx)=>
-                        @__root.data 'floyd', ctx
                     
                     @_build done, 1
                 
@@ -114,12 +118,12 @@ module.exports =
                             @parent._append ele, (err)=>
                                 return done(err) if err
                                 
-                                @_build done, stage
+                                @_build done, 0
                         
                         else
-                            $(@data['parent-selector'] || 'body').append(ele) if ele
+                            _sel(@data['parent-selector'] || 'body').append(ele) if ele
                     
-                            @_build done, stage
+                            @_build done, 0
                             
             ##
             ## create content
@@ -138,15 +142,17 @@ module.exports =
         
                         @_emit 'loaded'
 
-                        @_build done, stage
+                        @_build done, 2
                             
                 else
                     @_build done, 2
             
             ## stage 2 -> ready
-            else
-                
-                done()
+            else                
+                @forIdentity @identity, (err, ctx)=>
+                    @__root.data 'floyd', ctx
+                    
+                    done()
 
                 
         ##

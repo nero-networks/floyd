@@ -5,13 +5,13 @@ module.exports =
         
         ##
         ##
-        boot: (done)->
+        wire: (done)->
             super (err)=>
                 done(err)
                 
                 #console.log @identity.login(), floyd.system.platform, location.pathname
                 
-                if @identity.login() && floyd.system.platform is 'remote'
+                if @identity.login() 
                     
                     path = location.pathname.substr(1).split('/')                        
                     path.pop()

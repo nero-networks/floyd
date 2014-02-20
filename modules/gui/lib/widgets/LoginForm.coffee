@@ -35,7 +35,7 @@ module.exports =
                             if user then @data.strings.logout else @data.strings.login
             
             
-                running: ->
+                wiring: ->
                 
                     hint = @find '.hint'
         

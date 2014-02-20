@@ -18,7 +18,7 @@ module.exports =
         ##
         ##
         ##
-        start: (done)->
+        wire: (done)->
             super (err)=>
                 return done(err) if err
                 

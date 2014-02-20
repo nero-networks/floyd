@@ -19,7 +19,8 @@ module.exports =
                     items: []
                     limit: -1
                     offset: 0
-                    listSelector: 'ul:first'
+                    listSelector: ->
+                        $ @find('ul')[0]
 
                 content: ->
                     ul()
@@ -53,8 +54,11 @@ module.exports =
                         @_loadData e.offset, e.limit, (err, items, data)=>
                             return done(err) if err
                             @_display items, data
-
-                @_ul = @find @data.listSelector
+                
+                if typeof (_sel = @data.listSelector) is 'function'
+                    @_ul = _sel.apply @, []
+                else
+                    @_ul = @find _sel
 
                 if !@_ul.children().length
                     @_reload done

@@ -52,7 +52,7 @@ module.exports =
                                     @data.strings.send
                         
                 
-                running: ->
+                wiring: ->
                     
                     form = @find '.gui.widgets.ContactForm'
                     
