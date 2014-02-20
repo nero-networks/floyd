@@ -38,7 +38,11 @@ module.exports = tools =
     
         tools.page route, new floyd.Config
             
+            local:
+                type: 'Context'
+            
             remote:
                 type: 'dnode.Bridge'
         
         , config
+        
