@@ -158,7 +158,7 @@ module.exports =
             floyd.tools.objects.intercept @, 'destroy', (done, destroy)=>
             
                 if @stop && @_status.indexOf('stopped') is -1
-                    return @logger.warn 'context not stopped!'
+                    return @logger.warning 'context not stopped!'
                 
                 @_init 'destroy', null, (err)=>
                     done?(err) if err					
@@ -338,7 +338,7 @@ module.exports =
                 ,
                 
                     (next)=> # custom check function - must callback true to permit!
-                        if check = (@data.permissions?[key]?.check || @data.permissions?.check)
+                        if typeof (check = @data.permissions) is 'function' || typeof (check = @data.permissions?[key]) is 'function' || check = (@data.permissions?[key]?.check || @data.permissions?.check)
                             
                             check identity, key, args, next                            
                             
