@@ -1,8 +1,8 @@
 {
     "name":                "floyd",
     "author":              "Roman De Meo",
-    "description":         "floyd - a hierarchical app container",
-    "version":             "0.2.4",
+    "description":         "floyd - hierarchical app containers",
+    "version":             "0.2.5",
 
     "main":                "./index",
 
@@ -22,9 +22,9 @@
 
     "dependencies": {
         "browserify":       "1.12.1",
+        "cheerio":          ">= 0.13.1",
         "coffee-script":    ">= 1.6.2",
         "cookies":          ">= 0.3.6",
-        "dateformatjs":     ">= 0.0.7",
         "dnode":            "0.9.12",
         "formidable":       ">= 1.0.13",
         "htmlparser":       ">= 1.7.6",
