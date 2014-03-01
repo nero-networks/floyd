@@ -74,28 +74,6 @@ module.exports =
         
         
         ##
-        ## BLOCKER: review and apply some common security strategies
-        ##
-        _getSID: (req)->
-            
-            
-            #console.log 'search cookie', @data.cookie.name, req.url, req.headers.cookie
-            
-            if !(sid = req.cookies.get @data.cookie.name)
-
-                sid = @_createSID()
-                
-                #console.log 'create cookie', sid				
-                
-                req.cookies.set @data.cookie.name, sid
-            
-            #console.log 'sid', sid
-            
-            ##
-            return sid
-        
-        
-        ##
         ##
         ##
         login: (token, user, pass, _fn)->
@@ -194,7 +172,7 @@ module.exports =
                         fn null, sess.public.user = data
                         
                 else
-                    fn new Error 'not logged in'
+                    fn()
                     
 
             else 
@@ -274,10 +252,31 @@ module.exports =
         
         
         ##
+        ## 
+        ##
+        _getSID: (req)->            
+            
+            #console.log 'search cookie', @data.cookie.name, req.url, req.headers.cookie
+            
+            if !(sid = req.cookies.get @data.cookie.name)
+
+                sid = @_createSID()
+                
+                #console.log 'create cookie', sid               
+                
+                req.cookies.set @data.cookie.name, sid
+            
+            #console.log 'sid', sid
+            
+            ##
+            return sid
+        
+        
+        ##
         ##
         ##
         _createSID: ()->
-        
-            floyd.tools.strings.uuid()
+            @_registry.createSID()
+            
         
      
