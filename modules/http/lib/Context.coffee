@@ -93,15 +93,16 @@ module.exports =
             ##
             if @data.rewrite 
             
-                for expr, repl of @data.rewrite
+                for expr, replacement of @data.rewrite
                     if !(expr instanceof RegExp)
-                        expr = new RegExp _expr = expr
-                    
-                    #console.log req.uri, _expr, expr.exec req.uri
-                    
+                        expr = new RegExp expr
+                                        
                     if expr.exec req.uri
                         
-                        _uri = req.uri.replace expr, repl
+                        req.rewrittenUri = req.uri
+                        req.rewrittenUrl = req.url
+                        
+                        _uri = req.uri.replace expr, replacement
                 
                         req.url = req.url.replace new RegExp(req.uri+'(([?].*)?$)'), _uri+'$1'
                         
