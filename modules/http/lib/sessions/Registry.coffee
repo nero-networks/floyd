@@ -21,6 +21,12 @@ module.exports =
             @_pool[id]?.touch()
             @_pool[id]
         
+        ##
+        createSID: ()->
+            if @_pool[sid = floyd.tools.strings.uuid()]
+                return @createSID()
+            
+            return sid
         
         ##   
         _observe: ()->
