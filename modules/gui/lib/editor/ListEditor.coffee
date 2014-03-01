@@ -20,7 +20,7 @@ module.exports =
                                 delegate: true
                                 
                         template: ->
-                            div class:'editor Buttons', style:'display: none'
+                            div class:'editor Buttons floyd-loading', style:'display: none'
 
                         _wireMouse: ()->
                             @parent.parent.once 'before:display', ()=>
