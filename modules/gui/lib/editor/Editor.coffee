@@ -8,12 +8,16 @@ module.exports =
         ##
         configure: (config)->
         
-            super new floyd.Config
+            config = super new floyd.Config
 
                 template: ->
                     div class:'editor Buttons floyd-loading', style:'opacity: .35'
                 
             , config
+            
+            @__buttons = config.buttons
+            
+            return config
         
         ##
         ##
@@ -22,7 +26,7 @@ module.exports =
             super (err)=>
                 return done(err) if err
                 
-                @_buildButtons config.buttons
+                @_buildButtons @__buttons
                 @_wireMouse()
                
                 
@@ -60,13 +64,24 @@ module.exports =
                             handler: conf
                             
                     @_createButton action, conf, (err, button)=>
+                                                
+                        if typeof conf is 'string'
+                            conf =
+                                text: conf
+
+                        if typeof conf is 'function'
+                            conf =
+                                handler: conf
                         
-                        button.text conf.text || action
+                        if conf.text        
+                            button.text conf.text 
                         
                         if conf.title
                             button.attr 'title', conf.title
                             
+                                
                         @_append button.click (event)=>
+                        
                             if conf.handler
                                 conf.handler.apply @, [event, _popup]
                             
@@ -74,6 +89,8 @@ module.exports =
                                 @_emit action,
                                     event: event
                                     open: _popup
+                                    root: @__root
+                                    parent: @__root.parent()
                                 
                             return false
         
