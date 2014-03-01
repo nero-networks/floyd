@@ -31,7 +31,7 @@ module.exports =
             if config.widget
                 @_widget = floyd.tools.gui.ck config.widget
             
-            if typeof (@_content = config.data.content || config.content) is 'function' && !config.data.raw
+            if !@_content && typeof (@_content = config.data.content || config.content) is 'function' && !config.data.raw
                 @_content = floyd.tools.gui.ck @_content
             
             return config
@@ -272,5 +272,33 @@ module.exports =
             fn null, floyd.tools.objects.clone item,
                 __data: @data
 
-              
-             
+        
+        ##
+        ##
+        ##      
+        _getBackend: (fn)->
+            return fn(null, @__BACKEND) if @__BACKEND
+            
+            @lookup @data.find('backend', @data.find('origin')), @identity, (err, ctx)=>
+                return fn(err) if err
+                
+                fn null, @__BACKEND = ctx
+      
+        ##
+        ##
+        ##      
+        _getOrigin: (fn)->
+            return fn(null, @__ORIGIN) if @__ORIGIN
+            
+            @lookup @data.find('origin'), @identity, (err, ctx)=>
+                return fn(err) if err
+                
+                fn null, @__ORIGIN = ctx
+      
+        ##
+        ##
+        ##
+        _href: (href)->
+            
+            encodeURI @data.find('hrefBase', '/')+href
+                   
