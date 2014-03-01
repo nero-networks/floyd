@@ -57,7 +57,9 @@ module.exports =
 
                     type: 'http.Cache'
                     
-                    data: config?.data?.cache || {}
+                    data: floyd.tools.objects.extend 
+                        permissions: false
+                    , config?.data?.cache
                     
                 ,			
                         
@@ -65,12 +67,14 @@ module.exports =
 
                     type: 'stores.Context'
                     
-                    data: config?.data?.users || {}
+                    data: floyd.tools.objects.extend 
+                        permissions: false
+                    , config?.data?.users
                     
                 ]
                 
                 
-            ,config
+            , config
         
         
         boot: (done)->
@@ -189,6 +193,15 @@ module.exports =
         ##
         ##
         _handleError: (req, res, err)->
+            if !res.err
+                if err.status is 302
+                    return req.redirect err.message
+                        
+                res.ctype = 'text/plain'
+                res.code = err.status
             
-            @_send req, res, err.message+'\n', (err.status||500), 'text/plain'
+                @_send req, res, err.message+'\n'
             
+                res.err = err
+            else
+                @logger.error err 
