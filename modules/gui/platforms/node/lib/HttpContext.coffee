@@ -37,6 +37,10 @@ module.exports =
                     @_model.remote.data ?= {}
                     @_model.remote.data.origin = @ID
                 
+                if @_model.local
+                    @_model.local.data ?= {}
+                    @_model.local.data.origin = @ID
+                
                 @__POOL__ = []
                 
                 @lookup @data.libloader, @identity, (err, ctx)=>
@@ -268,12 +272,17 @@ module.exports =
                     ctx.__initTime__ = +new Date()
                     
                     ##
+                    _released = false
                     ctx.__done__ = (err, result)=>
-                        return fn(err) if err
+                        if !_released && _released = true
+                            @_releaseContext ctx
+
+                        if err                            
+                            fn err
+                            
+                        else
+                            fn null, result
                         
-                        fn null, result
-                        
-                        @_releaseContext ctx
                     
                     ##    
                     require('vm').runInContext "(#{__boot_cheerio__})(#{model})", ctx    
@@ -291,6 +300,7 @@ module.exports =
                 window: {}
                 process: process
                 console: console
+                setTimeout: setTimeout
             
             ##
             vm.runInContext @__SCRIPT+"var floyd = require('floyd');", ctx
@@ -343,10 +353,11 @@ module.exports =
         _initContext: (req, res, ctx, done)->    
             
             ##
-            ctx.location = require('url').parse 'http://'+req.headers.host+req.url.substr (req.vhostpath||'').length
+            url = (req.rewrittenUrl || req.url).substr (req.vhostpath||'').length
+            ctx.location = require('url').parse 'http://'+req.headers.host+url
         
             ## fake the protocol while forwarded from https proxy
-            if ctx.location.protocol is 'http:' && req.headers['x-forwarded-proto'] is 'https'
+            if req.headers['x-forwarded-proto'] is 'https'
                 ctx.location.protocol = 'https:'
                 ctx.location.href = ctx.location.href.replace /^http\:/, 'https:'                
             
