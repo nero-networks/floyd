@@ -135,6 +135,8 @@ module.exports =
                 fn ?= fields
                 fields = null
             
+            options.limit = null if options.limit is -1
+            
             @_find query, options, fields, fn
             
         ##
