@@ -68,7 +68,7 @@ module.exports =
 
         _reload: (done)->
             @_loadData @data.offset, @data.limit, (err, items, data)=>
-                return @logger.error(err) if err
+                return done(err) if err
                 @_display.call @, items, data, done
 
 
