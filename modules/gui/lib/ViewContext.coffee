@@ -42,6 +42,15 @@ module.exports =
         boot: (done)->
             @_hiddenKeys.push 'wire', 'wiring'
             
+            floyd.tools.objects.intercept @, 'start', (done, start)=>
+                start (err)=>
+                    return done(err) if err
+                    if floyd.system.platform is 'remote'
+                        @wire done
+                    
+                    else done()
+                    
+            
             super done
 
             if @data.content
@@ -49,19 +58,7 @@ module.exports =
             
             if (cls=@data.class) && !@__root.hasClass cls
                 @__root.addClass cls
-        
-        ##
-        ##
-        ##
-        start: (done)->
-            super (err)=>
-                return done(err) if err
-                
-                if floyd.system.platform is 'remote'
-                    @wire done
-                    
-                else done()
-                    
+          
         
         ##
         ##
