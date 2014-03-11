@@ -1,6 +1,6 @@
 module.exports =
 
-    class TabPanel extends floyd.gui.ViewContext
+    class TabPanel extends floyd.gui.widgets.List
 
         ##
         ##
@@ -15,23 +15,57 @@ module.exports =
                 template: ->
                     section class:'Content Tabs', ->
 
-                        ul class:'bar', ->
-                            for tab in @_tabs._order
-                                attr = {}
-                                if tab is @_tabs._active
-                                    attr = class:'active'
+                        ul class:'bar'
+                        
+                widget: ->
+                    attr = {}
+                    if @_class
+                        attr = class: @_class
 
-                                li attr, ->
-                                    a href:'#'+tab, (@_tabs[tab])
-
-
+                    li attr, ->
+                        a href:'#'+@id, @text
+                    
+                
             , config
 
             @_tabs = config.tabs
             @_panels = config.panels
 
             return config
-
+        
+        
+        ##
+        ##
+        ##
+        _loadData: (offset, limit, fn)->
+            if !(_order = @_tabs._order).length
+                for key, val of @_tabs
+                    if key.charAt(0) isnt '_'
+                        _order.push key
+            
+            @identity.data (err, user)=>
+                _hasRole = (roles)=>
+                    for role in roles
+                        if user?.roles?.indexOf?(role) != -1
+                            return true 
+                
+                tabs = []
+                for tab in _order
+                    data = @_tabs[tab]
+                    if !data.roles || _hasRole data.roles
+                        tabs.push _tab =
+                            id: tab
+                            text: data.text || data
+                            _class: data.class || ''
+                
+                        if tab is @_tabs._active
+                            _tab._class = ('active '+_tab._class).trim()
+                
+                fn null, tabs,
+                    offset: offset
+                    limit: limit
+                    size: tabs.length
+        
         ##
         ##
         ##
