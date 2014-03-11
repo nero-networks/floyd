@@ -3,7 +3,8 @@
 ##
 ## @class floyd.auth.Identity
 ##
-module.exports = (id, manager)->
+module.exports = (id, _manager)->
+    manager = _manager
 
     events = require 'events'
     
@@ -20,7 +21,7 @@ module.exports = (id, manager)->
     ##
     ## private emitter
     emitter = new events.EventEmitter()
-    emitter.setMaxListeners 26
+    emitter.setMaxListeners 26 ## <-- dunno how many is good.. 26 is unique to identify warinings
     
     ##
     authorized = (token)->

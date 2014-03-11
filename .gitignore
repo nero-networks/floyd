@@ -1,9 +1,11 @@
 
 examples/*/.floyd/logs/*
 examples/*/.floyd/tmp/*
+examples/*/.floyd/sessions-store.json
 
 examples/*/*/.floyd/logs/*
 examples/*/*/.floyd/tmp/*
+examples/*/*/.floyd/sessions-store.json
 
 .project
 
@@ -12,3 +14,5 @@ node_modules/
 tmp/
 
 .nide
+
+*.komodoproject

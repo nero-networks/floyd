@@ -21,28 +21,37 @@ module.exports = objects =
     ## and finally *done* after all items are processed.
     ##
     process: (obj, {each, done})->
-        return done?() if !obj
+        done ?= (err)-> console.error(err) if err
         
-        waiting = 0	 
-        next = (err)->													
-            if --waiting <= 0 || err
-                return done?(err)
+        _array = false
         
+        _iter = []
+        
+        ##
+        next = (err)->
+            done(err) if err
+            
+            return done() if !_iter.length
+            
+            if _array
+                each _iter.shift(), next
+            
+            else
+                each (key=_iter.shift()), obj[key], next
+        
+        
+        ##
         if floyd.tools.objects.isArray obj
-            return done?() if !obj.length
+            _array = true
             
-            waiting = obj.length
-            
-            for item in obj										
-                each item, next	
-        
-        else
-            return done?() if !( waiting = floyd.tools.objects.keys(obj).length )
-            
-            for key, item of obj
-                each key, item, next		
+            _iter.push item for item in obj
+             
+        else            
+            _iter.push key for key, val of obj
+                
+        ##
+        next()
     
-        
         
     
     ##
@@ -59,7 +68,7 @@ module.exports = objects =
             if objects.isArray obj
                 obj.splice key, 1
                 
-            else				
+            else                
                 delete obj[key]
             
             return data
@@ -76,6 +85,20 @@ module.exports = objects =
     ##
     ##
     ##
+    cleanup: (obj)->
+        for key, value of obj
+            
+            if !value
+                delete obj[key]
+                
+            else if objects.isObject value
+                obj[key] = objects.cleanup value
+                
+        return obj
+    
+    ##
+    ##
+    ##
     isArray: (obj)->
         obj instanceof Array || (obj && obj.push && obj.pop && obj.length isnt undefined)
     
@@ -83,7 +106,7 @@ module.exports = objects =
     ##
     ##
     isObject: (obj)->
-        obj && typeof obj is 'object' && !objects.isArray(obj) && !objects.isRegExp(obj)
+        obj && typeof obj is 'object' && !objects.isArray(obj) && !objects.isDate(obj) && !objects.isRegExp(obj)
     
     
     ##
@@ -166,9 +189,9 @@ module.exports = objects =
                 value = handler.handle type, key, value
                 
             if type is 'object'
-                _all.push value				
+                _all.push value             
             
-            return value			
+            return value            
         
         ##
         JSON.stringify obj, _handle, indent
@@ -183,7 +206,7 @@ module.exports = objects =
         list = []
     
         ##
-        model = floyd.tools.objects.traverse obj,				
+        model = floyd.tools.objects.traverse obj,               
             
             function: (key, value)->
                 code = value.toString()
@@ -196,7 +219,7 @@ module.exports = objects =
         ##
         while list.length
             [id, code] = list.pop()
-            model = model.replace '"'+id+'"', code 			
+            model = model.replace '"'+id+'"', code          
         
         ##
         return model
@@ -205,7 +228,7 @@ module.exports = objects =
     ##
     ##
     ##
-    immutable: (target, key, value)->		
+    immutable: (target, key, value)->       
         objects.property target, key, value, 
             get: (-> value)
             set: (-> value)
@@ -258,13 +281,22 @@ module.exports = objects =
     ##
     ##
     ##
-    copy: (obj, addon)->	
-        _obj = {}
-        for key, value of obj
-            _obj[key] = value
+    copy: (obj, addon)->
+        
+        if objects.isArray obj
+            _obj = []
+            for value in obj
+                _obj.push value
+            
+        else
+            _obj = {}
+            for key, value of obj
+                _obj[key] = value
             
         if addon
-            @extend _obj, addon
+            _obj = @extend _obj, addon
+            
+        _obj
         
     
     ##
@@ -277,7 +309,7 @@ module.exports = objects =
         
     ##
     ## 
-    ##	
+    ##  
     extend: (target, args...)->
         if !target
             target = {}
@@ -304,11 +336,16 @@ module.exports = objects =
     resolve: (item, base, fallback)->
         
         if typeof item is 'string' && item.indexOf('/') != -1
-            return require item			
+            return require item         
         
-        for base in [base, (floyd:floyd), floyd, floyd.tools, fallback]
+        if fallback is false
+            list = [base]
+        else
+            list = [base, (floyd:floyd), floyd, floyd.tools, fallback]
+            
+        for base in list
             if (_item = _resolve item, base) || _item is false
-                return _item				
+                return _item                
         
     ##
     ##
@@ -319,27 +356,43 @@ module.exports = objects =
             value = dfault
             
         return value
-    
+        
+    ##
+    ##
+    ##
+    write: (key, value, base)->
+        _obj = base
+        _key = key.split '.'
+        
+        _id = _key.pop() 
+        
+        while _key.length
+            _obj = (_obj[_key.shift()]={})
+        
+        _obj[_id] = value
+        
+        return _obj
+        
+        
     ##
     ## replaces the method with a wrapper which calls the interceptor 
     ## the interceptor gets passed all arguments plus the replaced super-method
     ##    
-    ##  # 1. given some random api object  
+    ##  # 1. given some random api object method. This one is saying hello to you.
     ##  test =
-    ##      calculate: (x, fn)->
+    ##      helloMyNameIs: (name, fn)->
     ##    
-    ##          fn null, x * x
+    ##          fn null, 'Hello ' + name + '!'
     ##  
-    ##  # 2. this intercepts the trigger method, 
-    ##  # modifies x and calls the super method  
-    ##  floyd.tools.objects.intercept test, 'trigger', (x, fn, calculate)->
+    ##  # 2. this intercepts the method by adding 'how are you feeling today?'
+    ##  floyd.tools.objects.intercept test, 'helloMyNameIs', (name, fn, helloMyNameIs)->
     ##    
-    ##      calculate x * 2, fn
+    ##      helloMyNameIs name + ' How are you today?', fn
     ##    
-    ##  # 3. usage. this will display (2x)² = 400
-    ##  test.calculate 10, (err, res)->
+    ##  # 3. usage. this will display 'Hello Floyd! How are you feeling today?'
+    ##  test.helloMyNameIs 'Floyd', (err, res)->
     ##    
-    ##      console.log '(2x)² =', res
+    ##      console.log res
     ##        
     ##
     intercept: (obj, method, interceptor)->
@@ -357,6 +410,41 @@ module.exports = objects =
         obj[method]._super = _super
         
         return obj
+        
+    
+    ##
+    ## this is an coffeescript adaption of Object.identical by Chris O'Brien
+    ###
+        Original script title: "Object.identical.js"; version 1.12
+        Copyright (c) 2011, Chris O'Brien, prettycode.org
+        http://github.com/prettycode/Object.identical.js
+    
+        Permission is hereby granted for unrestricted use, modification, and redistribution of this
+        script, only under the condition that this code comment is kept wholly complete, appearing
+        directly above the script's code body, in all original or modified non-minified representations
+    ###
+    ##
+    identical: (a, b, sortArrays)->
+    
+        sort = (obj)->
+            
+            if sortArrays && floyd.tools.objects.isArray obj
+                return obj.sort()
+            
+            else if typeof obj isnt 'object' || obj is null
+                return obj
+                
+            result = []
+            
+            for key in floyd.tools.objects.keys(obj).sort()
+                result.push 
+                    key: key
+                    value: sort obj[key]
+        
+            return result
+        
+        return JSON.stringify(sort a) is JSON.stringify(sort b)
+        
 ##
 ##
 ##
@@ -381,19 +469,18 @@ _resolve = (item, base)->
 
 ##
 ## private static helper to recursively merge objects
-##			
+##          
 _extend = (target, source)->
     
     if !objects.isArray(target) && objects.isArray(source)
         for _source in source
-            _extend target, source
+            _extend target, _source
             
     else if objects.isArray source
         
-        t_index=0
         for item in source
             
-            if objects.isObject(item) || objects.isArray(item)
+            if objects.isObject(item) # || objects.isArray(item)
                 
                 value = null
                 if item.id
@@ -401,11 +488,13 @@ _extend = (target, source)->
                         if item.id is _item.id
                             value = _item
                             break;
-                else				
-                    if value = target[t_index++]	
-                        
-                        while value.id
-                            value = target[t_index++] ?= {}
+                ## removed this to prevent element merging if id attribute is not present
+                ##else              
+                ##    t_index ?= 0
+                ##    if value = target[t_index++]  
+                ##        
+                ##        while value.id
+                ##            value = target[t_index++]
                     
                 if !value
                     value = if objects.isArray(item) then [] else {}
@@ -424,7 +513,9 @@ _extend = (target, source)->
         for key, item of source
         
             if objects.isObject(item) || objects.isArray(item)
-            
+                if typeof target?[key] isnt typeof item
+                    delete target[key]  
+                
                 target[key] ?= if objects.isArray(item) then [] else {}
             
                 _extend target[key], item

@@ -15,7 +15,7 @@ module.exports =
     data:
         port: 9035
         debug: true
-
+        
     children: [
     
         ## mixing static files and dynamic routes

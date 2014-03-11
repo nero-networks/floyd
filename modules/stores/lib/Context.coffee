@@ -6,41 +6,29 @@ module.exports =
     ##
     class StoreContext extends floyd.Context
         
-        configure: (config)->
-            roles = config.permissions?.adminRoles || ['admin']
-            
-            super new floyd.Config
-            
-                data:
-                    permissions:
-                        set: (roles: roles)							
-                        remove: (roles: roles)
-                        clear: (roles: roles)
-                        clear_expired: (roles: roles)						
-                    
-            
-            , config
+        init: (config, done)->
+            super config, (err)=>
+                return done(err) if err
         
-        constructor: (config, parent)->
-            super config, parent
-        
-            ## instantiate store engine
-            if !@data.type
-                @_engine = new floyd.stores.Store()
-                if config.data
-                    @_engine._memory = config.memory
+                # instantiate store engine
+                if (type = @data.type || 'Store') is 'Store'
+                    @_engine = new floyd.stores.Store()
+                    if config.memory
+                        @_engine._memory = config.memory
 
-            else
-                type = floyd.tools.strings.capitalize(@data.type)+'Store'
+                else
+                    type = floyd.tools.strings.capitalize(type)+'Store'
                 
-                if !floyd.stores.engines[type]
-                    return fn new floyd.error.Exception 'Invalid store type '+@data.type
+                    if !floyd.stores.engines[type]
+                        return @logger.error new floyd.error.Exception 'Invalid store type '+type
 
-                @_engine = new floyd.stores.engines[type]()
+                    @_engine = new floyd.stores.engines[type]()
             
-            @_settings = 
-                type: type||'Store'
-                pk: @data.pk||'id'
+                @_settings = 
+                    type: type
+                    pk: @data.pk||'id'
+                    
+                done()
             
             
         ##
@@ -117,10 +105,26 @@ module.exports =
         ## Iterate with fn(val, key), then callback done() when finished.
         ##
         each: (fn, done)->
-            @_engine.each(fn, done)
-
-        distinct: (field, fn)->
-            @_engine.distinct(field, fn)
+            @_engine.each fn, done
+        
+        
+        ##
+        ##
+        ##
+        keys: (fn)->
+            @_engine.keys fn
+            
+            
+        ##
+        ##
+        ##
+        distinct: (field, query, fn)->
+            if typeof query is 'function'
+                fn = query
+                query = null
+                
+            @_engine.distinct(field, query, fn)
+            
         ##
         ## Find all entities where its field values matching corresponding query,
         ## then callback fn(err, entities).
@@ -133,6 +137,8 @@ module.exports =
             if typeof fields is 'function'
                 fn ?= fields
                 fields = null
+            
+            options.limit = null if options.limit is -1
             
             @_find query, options, fields, fn
             

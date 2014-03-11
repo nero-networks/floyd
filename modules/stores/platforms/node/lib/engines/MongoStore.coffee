@@ -11,7 +11,7 @@ module.exports =
         init: (options, fn)->
             mongoq = require 'mongoq'
             
-            @_db = mongoq 'mongodb://localhost/'+options.name
+            @_db = mongoq 'mongodb://'+(options.host || 'localhost')+'/'+options.name
             @_client = @_db.collection options.collection
             
             if !floyd.tools.objects.isArray(list = options.index)
@@ -72,8 +72,8 @@ module.exports =
                 done?()
 
         
-        distinct: (field, fn)->
-            @_client.distinct field, fn
+        distinct: (field, query, fn)->
+            @_client.distinct field, query, fn
 
         find: (query, options, fields, fn)->			
             query ?= {}
@@ -82,6 +82,8 @@ module.exports =
             q.count (err, size)=>
                 
                 options ?= {}		
+                
+                options.skip = options.offset
                 
                 for method in __OPTIONS
                     if options[method] && q[method]

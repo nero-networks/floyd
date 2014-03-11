@@ -19,8 +19,6 @@ module.exports = new floyd.Config 'config.gui.server', 'config.dnode.server',
         
         data:
             ports: [
-                parent: true
-            ,
                 port: 8031
             ]
     
@@ -41,7 +39,7 @@ module.exports = new floyd.Config 'config.gui.server', 'config.dnode.server',
     ]
     
     
-    ##	
+    ##    
     remote:
         
         ##
@@ -51,38 +49,48 @@ module.exports = new floyd.Config 'config.gui.server', 'config.dnode.server',
         data:
             debug: true
         
-        logout: ->
-            @_getAuthManager().logout ()=>
-            
-                location.reload()
             
         ##
         started: ->
             
-            console.floyd = @
-            
-            @identity.once 'login', ()=>
+            if floyd.system.platform is 'remote'
                 
-                display = $ 'input[name=display]'
-                refresh = $ 'button[name=refresh]'
+                ##
+                @identity.once 'login', ()=>
+                    
+                    $('div.gui').show()
+                    
+                    display = $ 'input[name=display]'
+                    refresh = $ 'button[name=refresh]'
+                    logout = $ 'button[name=logout]'
+                    
+                    @lookup 'backend.test', @identity, (err, ctx)=>
+                        return @logger.error(err) if err
+                        
+                        refresh.click ()=>
+                        
+                            ctx.echo +new Date(), (err, data)=>
+                                return @logger.error(err) if err
+                                
+                                display.val data
+                        
+                        logout.click ()=>
+                        
+                            @_getAuthManager().logout (err)=>
+                                return @logger.error(err) if err
+                                
+                                location.reload()
+                    
                 
-                @lookup 'frontend.backend.test', @identity, (err, ctx)=>
-                    return @logger.error(err) if err
-                    
-                    refresh.click ()=>
-                    
-                        ctx.echo +new Date(), (err, data)=>
-                            return @logger.error(err) if err
-                            
-                            display.val data
-            
-            if !@identity.login()
-                    
-                if (user=prompt('username')) && (pass=prompt('password'))
-
+                ##
+                if !@identity.login()
+    
+                    user=prompt('username')
+                    pass=prompt('password')
+    
                     @_getAuthManager().login user, pass, (err)=>
                         
                         if err
                             alert 'login failed!'
                             location.reload()
-                        
+                            

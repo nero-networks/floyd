@@ -25,7 +25,8 @@ module.exports =
             
             if !@_model.remote && @_model.local
                 @_model.remote = {}
-
+            
+            
             if typeof (route = config.data.route) is 'function'
                 config.data.route = ()=>
                     route.apply @, arguments
@@ -54,7 +55,7 @@ module.exports =
                             
                             @_createRemote req, res, (err, remote)=>
                                 return next(err) if err || !remote
-                                
+                                                                
                                 if remote.length > 512
                                     res.compress()
                             
@@ -64,8 +65,7 @@ module.exports =
                 
                         
                     ##					
-                    if @data.route	
-                                
+                    if @data.route
                         @delegate '_addRoute', @data.route, (req, res, next)=>
                         
                             req.uri = req.uri.replace @data.route, '/'
@@ -93,18 +93,22 @@ module.exports =
             ##
             if @data.rewrite 
             
-                for expr, repl of @data.rewrite
+                for expr, replacement of @data.rewrite
                     if !(expr instanceof RegExp)
                         expr = new RegExp expr
-                    
+                                        
                     if expr.exec req.uri
                         
-                        _uri = req.uri.replace expr, repl
+                        req.rewrittenUri = req.uri
+                        req.rewrittenUrl = req.url
+                        
+                        _uri = req.uri.replace expr, replacement
                 
                         req.url = req.url.replace new RegExp(req.uri+'(([?].*)?$)'), _uri+'$1'
                         
                         req.uri = _uri
-                
+            
+            
             ##
             @_process @_middleware,
             
@@ -208,7 +212,7 @@ module.exports =
                         
                         if req.session.user
                             model.USER = req.session.user
-                
+
                 fn null, model
             
             
@@ -297,6 +301,8 @@ __boot__ = (config)->
     ##
     window.addEventListener 'load', ()->
         
+        window.__initTime__ = +new Date()
+        
         process.nextTick ()->
         
             ctx = floyd.init config, (err)->
@@ -318,7 +324,7 @@ __boot__ = (config)->
                 
                 next()
                                     
-                return null
+                return undefined
                 
             
             

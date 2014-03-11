@@ -1,8 +1,10 @@
 
-LOGLEVEL = 'INFO' 	## try STATUS or DEBUG be carefull with FINE, FINER, FINEST
+## try STATUS or DEBUG be carefull with FINE, FINER, FINEST
+LOGLEVEL = 'INFO' 	
 
-DEBUG = true		## disabeling the debug mode triggers uglify-ing /floyd.js... 
-                    ## this takes serveral seconds on the very first reguest after app restart
+## disabeling the debug mode triggers uglify-ing /floyd.js... 
+## this takes serveral seconds on the very first reguest after app restart
+DEBUG = true		
 
 ##
 ## dnode example...
@@ -33,7 +35,6 @@ module.exports =
             
         ]			
             
-        ##
         remote:
         
             type: 'dnode.Bridge'
@@ -45,7 +46,7 @@ module.exports =
             
             booted: ()->
             
-                @lookup 'dnode.test.echo', @identity, (err, ctx)=>				
+                @lookup 'test.echo', @identity, (err, ctx)=>				
                     return console.error(err) if err
 
                     $('button').click ()=>	
@@ -54,5 +55,5 @@ module.exports =
                         ctx.echo @ID, (err, res)=>
                             txt = res + ' roundtrip: ' + (+new Date() - start)
                             console.log txt
-                            $('body').append '<p>'+txt+'ms</p>'
+                            $('.display').html '<p>'+txt+'ms</p>'
                                 

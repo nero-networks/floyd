@@ -12,15 +12,11 @@ module.exports =
         constructor: (@ID, @parent)->
             
             @_hiddenKeys = ['constructor', 'identity', 'parent', 'logger', 'destroy']
-                        
-            @logger = @_createLogger @ID
             
-            @identity = @createIdentity()
+            if @ID
+                @logger = @_createLogger @ID
             
-            for k, fn of @
-                if typeof fn is 'function'
-                    fn.identity = @identity		
-                        
+                @identity = @_createIdentity()
             
 
         ##
@@ -41,7 +37,7 @@ module.exports =
         ##
         ## 
         ##
-        createIdentity: (id)->
+        _createIdentity: (id)->
             if @identity
                 id = @identity.id+'.'+id
             else 
@@ -117,7 +113,6 @@ module.exports =
                                     _checkAccess key, _args, ()=>
                                         
                                         ## EXPERIMENTAL bind the identity to the method... 
-                                        
                                         value.identity = identity
                                         
                                         try					

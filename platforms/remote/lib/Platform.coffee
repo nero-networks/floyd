@@ -20,6 +20,9 @@ module.exports =
             ## platform ident string
             settings.ident = navigator?.userAgent || 'RemotePlatform'
             
+            ## origin hostname
+            settings.hostname = location?.hostname.split('.').shift()
+            
             ## os type
             if (_probe = (navigator?.oscpu || 'unknown')).match /[L]inux/
                 settings.os = 'linux'
@@ -31,6 +34,10 @@ module.exports =
                 settings.os = _probe
             
             super settings
+            
+            window.process ?=
+                nextTick: (fn)->
+                    setTimeout fn, 1
 
         
         ##

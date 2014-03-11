@@ -3,7 +3,6 @@ module.exports =
 
     new floyd.Config 'config.gui.server',
     
-        ##
         data:
             port: 9033
             
@@ -19,15 +18,13 @@ module.exports =
                 
                 file: '/index.html'
         
-            ##	
             remote:				
                 
                 children: [
                     
                     type: 'gui.ViewContext'
                 
-                    data:
-                        content: 'Hello World!'
+                    content: '## Hello World!'
                 
                 ]
         ]

@@ -33,27 +33,28 @@ module.exports =
                     
                     modules:		['crypto']
                     
-                    node_modules:	['path', 'events', 'http', 'url', 'floyd/node_modules/sprintf', 'floyd/node_modules/dateformatjs']
+                    node_modules:	['path', 'events', 'http', 'url', 'floyd/node_modules/sprintf', 'floyd/node_modules/sanitizer']
                     
                     aliases: 		
                         sprintf: '/node_modules/floyd/node_modules/sprintf'
-                        dateformatjs: '/node_modules/floyd/node_modules/dateformatjs'
-                        
+                        sanitizer: '/node_modules/floyd/node_modules/sanitizer'
                                         
             , config
 
         ##
         ##
         ##
-        constructor: (config, parent)->
-            super config, parent				
+        init: (config, done)->
+            super config, (err)=>				
+                return done(err) if err
+                debug = @data.find('debug')
             
-            debug = @data.find('debug')
+                ## set the uglify-js minifier as the default filter except for debug mode
+                @data.filter ?= (if !debug then 'uglify-js' else '')
             
-            ## set the uglify-js minifier as the default filter except for debug mode
-            @data.filter ?= (if !debug then 'uglify-js' else '')
-            
-            @_started = new Date().toString()
+                @_started = new Date()
+                
+                done()
             
         ##
         ##
@@ -63,7 +64,7 @@ module.exports =
             
             if !@data.find('debug')
                 process.nextTick ()=>
-                    @_getCached (err)=>
+                    @getCompiledCode (err)=>
                         @logger.error(err) if err
             
         ##
@@ -75,7 +76,7 @@ module.exports =
             
             req.cache.lastModified @_started, ()=>
             
-                @_getCached (err, data)=>
+                @getCompiledCode (err, data)=>
                     return next(err) if err
                                         
                     ## activate gzip compression
@@ -86,7 +87,7 @@ module.exports =
         ##
         ##
         ##
-        _getCached: (fn)->
+        getCompiledCode: (fn)->
         
             ## prepare the memory cache for the compiled result
             @__cache ?= 
@@ -181,6 +182,8 @@ module.exports =
             ##
             bundle = floyd.tools.strings.sprintf '/*!\n * floyd %s | (c) 2012 - https://github.com/nero-networks/floyd/LICENSE | compiled on %s\n */\n', floyd.system.version, new Date()
             
+            bundle += '\nvar __initTime__;\n'
+            
             ##
             ## prepend unprocessed files 
             ##
@@ -188,7 +191,7 @@ module.exports =
                 if debug
                     bundle += '\n/* ' + file + ' */\n'
                     
-                bundle += __read__(file) + '\n'
+                bundle += 'try {\n'+__read__(file) + '\n} catch(e) {'+(if @data.showErrors then 'console.error(e);' else '')+'};\n'
             
             if debug
                 bundle += '\n/* floyd lib - browserify bundle */\n\n'
@@ -244,7 +247,7 @@ module.exports =
                 if debug
                     bundle += '\n/* ' + file + ' */\n'
                     
-                bundle += __read__(file) + '\n'
+                bundle += 'try {\n'+__read__(file) + '\n} catch(e) {'+(if @data.showErrors then 'console.error(e);' else '')+'};\n'
             
             ##
             fn null, bundle

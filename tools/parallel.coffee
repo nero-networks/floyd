@@ -4,7 +4,9 @@
 ##
 
 module.exports = (threads..., done)->
-
+    if typeof threads[0] isnt 'function'
+        threads = threads[0]
+        
     if !(count = threads.length)
         return done()
 

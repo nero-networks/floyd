@@ -1,11 +1,11 @@
 
 md = require 'markdown'
 
-ALLOWEDTAGS = ['br', 'div', 'section', 'article', 'nav', 'address']
+ALLOWEDTAGS = ['a', 'b', 'table', 'tr', 'th', 'td', 'br', 'span', 'div', 'header', 'footer', 'section', 'article', 'nav', 'address']
 
-FINDTAGS = /(<p>)?&lt;([\/]?)(br|div|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/g
+FINDTAGS = /(<p>)?&lt;([\/]?)(a|b|table|tr|th|td|br|span|div|header|footer|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/g
 
-REPLACETAG = /(<p>)?&lt;([\/]?)(br|div|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/
+REPLACETAG = /(<p>)?&lt;([\/]?)(a|b|table|tr|th|td|br|span|div|header|footer|section|article|nav|address)(.*?)( [\/])?&gt;(<\/p>)?/
 
 MODIFIER = /^{:([ ]+)?([a-z]+)?(\.|#)?(.*?)}/
 
@@ -71,4 +71,6 @@ module.exports = parse = (input, _options, fn)->
     #console.log html
     
     fn null, html
+    
+    return html
     

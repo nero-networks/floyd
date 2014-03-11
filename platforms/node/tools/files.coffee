@@ -20,55 +20,74 @@ module.exports = files =
     ##
     ##
     mkdir: (dir)->
-
-        parts = dir.split('/'); 
+        parts = normpath(dir).split('/'); 
         
+        temp = '/'
         while parts.length > 0
-            if !files.exists ( temp = path.join temp, parts.shift() )
+            if !fs.existsSync( temp = path.join temp, parts.shift() )
                 fs.mkdirSync temp
         
-        return dir
-    
+        return dir    
         
     
     ##
     ##
     exists: (name)->
     
-        return fs.existsSync normpath name			
-
+        return fs.existsSync normpath name            
+    
+    
     ##
     ##
     stat: (name)->
 
-        return fs.lstatSync normpath name			
+        return fs.lstatSync normpath name            
     
     ##
     ##
     is_dir: (name)->
         
-        files.stat(name).isDirectory()
+        files.stat(normpath name).isDirectory()
     
     ##
     ##
     list: (dir)->
         
-        fs.readdirSync normpath(dir)			
+        fs.readdirSync normpath(dir)            
     
     
     ##
     ##
-    write: (name, data, enc='utf-8')->
+    write: (name, data, enc='utf8')->
         
         fs.writeFileSync normpath(name), data, enc
     
     ##
     ##
-    read: (name, enc='utf-8')->
-        
+    read: (name, enc='utf8')->
+            
         fs.readFileSync normpath(name), enc
     
-
+    
+    ##
+    ##
+    cp: (srcFile, destFile) ->
+        buff = new Buffer BUF_LENGTH = 64*1024
+         
+        fdr = fs.openSync srcFile, 'r' 
+        fdw = fs.openSync destFile, 'w'
+         
+        bytesRead = 1
+        pos = 0
+        while bytesRead > 0
+          bytesRead = fs.readSync fdr, buff, 0, BUF_LENGTH, pos 
+          fs.writeSync fdw,buff,0,bytesRead 
+          pos += bytesRead
+          
+        fs.closeSync fdr 
+        fs.closeSync fdw 
+        
+    
     ##
     ##
     mv: (old_name, new_name...)->
@@ -85,8 +104,9 @@ module.exports = files =
         if floyd.tools.objects.isArray name
             name = _join name
         
-        if files.exists name
+        name = normpath name
         
+        if files.exists name
             if files.is_dir name
         
                 if recursive
@@ -108,9 +128,9 @@ module.exports = files =
     
     ##
     ##
-    chmod: (name, uid, gid)->
+    chmod: (name, mode)->
     
-        fs.chmodSync normpath(name), uid, gid
+        fs.chmodSync normpath(name), mode
         
     
     ##
@@ -124,11 +144,14 @@ module.exports = files =
     
     ##
     ## watch files
-    watch: (name, options, fn)->		
+    watch: (name, options, fn)->        
+    
+        ## TODO huch?? warum werden die options nicht verwendet??
+        
         if typeof options is 'function' 
             fn = options 
             options = 
-                persistent: false
+                persistent: false  
             
         fs.watch normpath(name), fn
         
@@ -142,12 +165,12 @@ module.exports = files =
 ##
 normpath = (dir)->
 
-    if typeof dir is 'object'			
+    if typeof dir is 'object'            
         dir = _join dir
                     
-    dir = dir.replace floyd.appdir, ''
+    dir = dir.replace floyd.system.appdir, ''
     
-    path.join floyd.system.appdir, path.normalize(dir)	
+    path.join floyd.system.appdir, path.normalize(dir)    
 
 ##
 ##

@@ -1,6 +1,4 @@
 
-dnode = if typeof DNode isnt 'undefined' then DNode else require('dnode')
-
 module.exports = 
 
     class DNodeBridge extends floyd.Context
@@ -10,53 +8,58 @@ module.exports =
         ##
         ##
         configure: (config)->
-            
+
             ##
             ##
             config = super new floyd.Config
             
                 data:
+                    parent: false
                     ports: []
                     gateways: (if floyd.system.platform is 'remote' then [{}] else [])
 
             , config 
             
+            if config.data.parent
+                config.data.ports.push parent: true
             
             ## hack to delegate lookups to origin 
             
             if origin = config.ORIGIN
-                _lookup = @lookup
-                
-                @lookup = (name, identity, fn)=>
+            
+                floyd.tools.objects.intercept @, 'lookup', (name, identity, fn, lookup)=>
                     
-                    #console.log 'lookup', name, origin
+                    #console.log 'lookup', name
                     
-                    _lookup.call @, name, identity, (err, ctx)=>					
+                    lookup name, identity, (err, ctx)=>					
                         if ctx
                             fn(null, ctx)
                         
                         else
-                            _lookup.call @, origin+'.'+name, identity, fn
+                            #console.log 'retry lookup', origin+'.'+name, err.message
+                            
+                            lookup origin+'.'+name, identity, fn
                     
                 
 
             ## hack to connect us before our children are booted 
             
-            _boot = @boot								
-            
-            @boot = (done)=>
+            floyd.tools.objects.intercept @, 'boot', (done, boot)=>
             
                 @_connect (err)=>
                     return done(err) if err
                     
-                    ##		
-                    if config.TOKEN
-                        @_getAuthManager().authorize config.TOKEN
-                        
                     @_listen (err)=>
                         return done(err) if err
                         
-                        _boot.call @, done 
+                        ##		
+                        if config.TOKEN
+                            @_getAuthManager().authorize config.TOKEN, (err)=>
+                                return done(err) if err
+                                
+                                boot done
+                        else
+                            boot done 
 
             return config	
     
@@ -160,6 +163,8 @@ module.exports =
         _createLocal: (fn)->
             
             ##
+            dnode = if typeof DNode isnt 'undefined' then DNode else require('dnode')
+
             dnode (proxy, conn)=>
 
                 @_createRemote proxy, conn, fn
@@ -174,57 +179,61 @@ module.exports =
             root = @parent || @
             
             ##
-            child = new floyd.dnode.Remote (id:conn.id, type:'dnode.Remote'), root
-
-            ##			
-            child.boot (err)=>
-                return fn(err) if err
+            child = new floyd.dnode.Remote root
             
-                ##
-                _first = false	
-                conn.on 'remote', (remote)=>
+            child.init (id:conn.id, type:'dnode.Remote'), (err)=>
+                return fn(err) if err
+                
+                ##			
+                child.boot (err)=>
+                    return fn(err) if err
+            
+                    ##
+                    _first = false	
+                    conn.on 'remote', (remote)=>
                     
-                    #console.log child.ID, 'conn remote', conn.id
+                        #console.log child.ID, 'conn remote', conn.id
 
-                    child._useProxy remote
+                        child._useProxy remote
                     
-                    #console.log 'add %s to %s', child.ID, root.ID
+                        @logger.debug 'adding remote %s', child.ID
                     
-                    root.children.push child
+                        root.children.push child
                     
-                    child.start (err)=>
-                        return fn(err) if err
+                        child.start (err)=>
+                            return fn(err) if err
                         
-                        if !_first && ( _first = true )
-                            fn() 
+                            if !_first && ( _first = true )
+                                fn() 
                                 
                     
-                ##
-                conn.on 'end', ()=>
+                    ##
+                    conn.on 'end', ()=>
                     
-                    #console.log child.ID, 'conn end', conn.id
+                        #console.log child.ID, 'conn end', conn.id
                     
-                    child.stop (err)=>
+                        child.stop (err)=>
                     
-                        root.children.delete child
+                            root.children.delete child
 
-                        #console.log 'conn destroy'
-                        child.destroy fn
+                            #console.log 'conn destroy'
+                            child.destroy fn
 
                             
-                ##
-                conn.on 'error', (err)=>
+                    ##
+                    conn.on 'error', (err)=>
                     
-                    console.log 'conn error!', err
+                        console.log 'conn error!', err
                     
-                    fn err			
+                        fn err			
                             
                                 
             ## remote api
             
-            ID: child.ID
+            ID: root.ID+'.'+conn.id
 
-            lookup: (args...)=> child.lookup.apply child, args
+            lookup: (args...)=> 
+                #console.log 'remote api lookup:', args[0]
+                child.lookup.apply child, args
             
-            ping: (fn)->
-                fn new Date()
+            ping: (fn)-> fn()

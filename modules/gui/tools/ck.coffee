@@ -38,13 +38,11 @@ nest = (arg) ->
         indent += '    ' if options.format
         arg = arg.call options.context
         indent = indent.slice(0, -4) if options.format
+        html += "#{newline}#{indent}"
 
     if arg && !(typeof arg is 'object')
         html += if options.autoescape then esc arg else arg
 
-    
-    
-    html += "#{newline}#{indent}"
 
 compileTag = (tag, selfClosing) ->
     scope[tag] = (args...) ->
@@ -118,7 +116,7 @@ module.exports = (code, cached=true)->
             
             handler.call options.context, scope
             
-            fn null, html
+            fn null, html.trim()
             
                         
             

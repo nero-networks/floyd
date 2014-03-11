@@ -29,6 +29,18 @@ module.exports =
                     
                 children: [
                 
+                    id: 'sessions'
+                    
+                    data:
+                        registry:
+                            type: 'http.sessions.PersisedRegistry'
+                    
+                    shutdown: ->
+                        if @_registry
+                            @_registry.persist()
+                                          
+                ,
+                
                     id: 'lib'
                     
                     type: 'http.LibLoader'
@@ -38,6 +50,10 @@ module.exports =
                 ]
             
             , config
+            
+            ## require the module instance with the configured module
+            if typeof (@_module = config.data.module) is 'string'
+                @_module = require @_module
                 
             #console.log config.children
             return config
@@ -47,14 +63,8 @@ module.exports =
         ##
         ## @override
         _createServer: (handler)->
-            
-            ## create a server instance with the configured module
-            if typeof (module = @data.module) is 'string'
-                module = require(@data.module)
                 
-            server = module.createServer(handler)
-                                
-            return server
+            @_module.createServer(handler)
                 
         ##
         ##
@@ -92,7 +102,7 @@ module.exports =
         ##
         ##
         _createContent: (req, res, next)->
-            super req, res, (err, content)=>			
+            super req, res, (err, content)=>
                 return next(err, content) if err or content
                 
                 ## load file only if no content until here

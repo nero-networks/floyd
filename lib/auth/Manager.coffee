@@ -41,12 +41,14 @@ module.exports = (handler)->
     ##
     ##
     authorize: __authorize = (token, fn)->
-        manager.emit 'authorizing', __token = token
+        manager.emit 'authorizing', token
         
-        #console.log 'authorizing', __user, handler.x
+        #console.log 'authorizing', __user, token
         
         handler.authorize token, (err, user)=>
             #console.log 'post authorizing', user
+            
+            manager.emit 'authorized', __token = token
             
             if !err && __user = user
                 #console.log 'authorized user', user
@@ -74,7 +76,7 @@ module.exports = (handler)->
     ##
     ##
     ##
-    destroyIdentity: (identity)->		
+    destroyIdentity: (identity, done)->
         id = identity.id
         
         if pool[id] 
@@ -87,8 +89,10 @@ module.exports = (handler)->
             
         else
             console.warn 'unmanaged identity', id 
-    
-    
+
+        done?()
+        
+
     ##
     ##
     ##
@@ -97,11 +101,11 @@ module.exports = (handler)->
             #console.log 'LOGIN:', user
             return fn(err) if err 
             
-            __authorize __token
+            __authorize __token, ()=>
             
-            if fn
-                process.nextTick ()=>
-                    fn null, true
+                if fn
+                    process.nextTick ()=>
+                        fn null, true
              
     
     
@@ -110,7 +114,10 @@ module.exports = (handler)->
     ##
     ##
     logout: (fn)->
-        manager.emit 'logout'
+        #console.log manager, typeof manager.emit
+        
+        if manager.emit
+            manager.emit 'logout'
 
         __user = null
         

@@ -10,8 +10,8 @@ module.exports =
     ## 
     class AbstractHttpServer extends floyd.http.Context
         
-        constructor: (config, parent)->
-            super config, parent
+        constructor: (parent)->
+            super parent
             
             @_hiddenKeys.push 'server'
         
@@ -36,7 +36,7 @@ module.exports =
                     ctype: 'text/html'
                     
                     ## a directory relative to floyd.appdir
-                    public: './public'
+                    public: ['./public']
                     
                     ## the default index file
                     index: 'index.html'
@@ -47,7 +47,7 @@ module.exports =
                 
                     id: 'sessions'
                     
-                    type: 'http.Sessions'
+                    type: 'http.sessions.Sessions'
                     
                     data: config?.data?.sessions || {}
                     
@@ -57,7 +57,9 @@ module.exports =
 
                     type: 'http.Cache'
                     
-                    data: config?.data?.cache || {}
+                    data: floyd.tools.objects.extend 
+                        permissions: false
+                    , config?.data?.cache
                     
                 ,			
                         
@@ -65,19 +67,21 @@ module.exports =
 
                     type: 'stores.Context'
                     
-                    data: config?.data?.users || {}
+                    data: floyd.tools.objects.extend 
+                        permissions: false
+                    , config?.data?.users
                     
                 ]
                 
                 
-            ,config
+            , config
         
         
         boot: (done)->
             
             ##
             @server = @_createServer (req, res)=>
-        
+            
                 ##
                 @_handleRequest req, res, (err)=>
                     
@@ -89,21 +93,31 @@ module.exports =
             
                 @_addMiddleware mw
             
-            @on 'booted', ()=>
+            ## call super to boot the actual floyd.Context instance
+            super (err)=>
+                return done(err) if err
                 
                 ## bind to tcp-port
                 @server.listen @data.port, @data.host
-                    
+                
+                
+                
                 ## log a small "i'm alive" message
-                @logger.info '%s is now listening on %s:%s', @data.public, (@data.host||''), @data.port
+                @logger.info '%s is now listening on %s:%s', @_loginfo(), (@data.host||''), @data.port
         
                 @_emit 'listening', @data.port, @data.host
                 
+                done()
+        
+        ##
+        _loginfo:()->
             
-            ## call super to boot the actual floyd.Context instance
-            super done
-        
-        
+            data = []
+            for p in @data.public
+                data.push p.replace floyd.system.libdir, 'floyd:'
+                
+            return data
+            
         ##
         ##
         ##
@@ -116,8 +130,24 @@ module.exports =
         ##
         ##
         _prepareRequest: (req, res, done)->
-        
+            
+            ##
             req.uri = req.url.split('?').shift()
+            
+            ##
+            if @data.vhosts
+                _ex = @data.vhosts._exclude
+                _uri = req.uri
+                if !@data.vhosts._exclude || (_ex.indexOf(_uri) is -1 && _ex.indexOf(_uri.substr 0, _uri.lastIndexOf('/')+1) is -1)
+                    
+                    hostname = req.headers.host
+                    for vhost, prefix of @data.vhosts
+                        if hostname.substr(0, vhost.length) is vhost
+                            req.uri = prefix + req.uri
+                            req.url = prefix + req.url
+                            req.vhostpath = prefix
+                        
+            #console.log req.headers.host, req.uri
             
             ## 
             ## send handler
@@ -163,6 +193,15 @@ module.exports =
         ##
         ##
         _handleError: (req, res, err)->
+            if !res.err
+                if err.status is 302
+                    return req.redirect err.message
+                        
+                res.ctype = 'text/plain'
+                res.code = err.status
             
-            @_send req, res, err.message+'\n', (err.status||500), 'text/plain'
+                @_send req, res, err.message+'\n'
             
+                res.err = err
+            else
+                @logger.error err 

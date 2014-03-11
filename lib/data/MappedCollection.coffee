@@ -36,3 +36,9 @@ module.exports =
                 @splice idx, 1
                 delete @[child[_id]]
                 
+        
+        ##
+        ##
+        ##
+        values: ()->
+            child for child in @

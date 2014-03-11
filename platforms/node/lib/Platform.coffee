@@ -13,7 +13,10 @@ module.exports =
             
             ## platform type
             settings.platform ?= 'node'
-            settings.version = require('package.json').version
+            settings.version = require(settings.libdir+'/package.json').version
+            
+            ## platform hoistname
+            settings.hostname = require('os').hostname()
             
             ## platform ident string
             settings.ident ?= 'NodeJS'
@@ -41,9 +44,11 @@ module.exports =
                 ##
                 process.on 'exit', ()=>
                     
-                    for file in files.list @system.tmpdir
-                    
-                        files.rm files.path.join(@system.tmpdir, file), true
+                    for _file in files.list @system.tmpdir
+                        file = files.path.join @system.tmpdir, _file
+                        
+                        if files.exists file
+                            files.rm file, true
             
         
             
@@ -76,9 +81,12 @@ module.exports =
                     ## getter delegation delays the require 'till its really needed
                     Object.defineProperty target, name,
                         get: ()->							
-                            require path
+                            try 
+                                require path 
+                            catch e
+                                console.error 'error in file '+path
                         set: ()->
-                            console.log 'reset', path
+                            #console.log 'reset', path
                         
             ##
             return @
@@ -129,6 +137,15 @@ module.exports =
             if !config.id
                 config.id = @system.appdir.split('/').pop()
             
+            
+            if !config.UID || !config.GID
+                stat = floyd.tools.files.stat '.'
+                config.UID ?= stat.uid
+                config.GID ?= stat.gid                          
+            
+            @system.UID = config.UID
+            @system.GID = config.GID
+            
             ##
             ## create and start Context instance
             ctx = super config, fn
@@ -147,11 +164,6 @@ module.exports =
             ##
             ctx.on 'after:booted', ()=>
 
-                if !config.UID || !config.GID
-                    stat = floyd.tools.files.stat '.'
-                    config.UID ?= stat.uid
-                    config.GID ?= stat.gid 							
-                    
                 if process.getuid() is 0
                     
                     ## chown tmpdir
@@ -166,7 +178,7 @@ module.exports =
                     ## out of previously required module exports.
                     
                     ## I decided to delete everything to be sure at all.
-                    ## I did mesured the startup time with and without the cache 
+                    ## I messured the startup time with and without the cache 
                     ## the overhead is about 55 to 60 milliseconds, tollerable in my oppinion
                     
                     #___start = +new Date()
