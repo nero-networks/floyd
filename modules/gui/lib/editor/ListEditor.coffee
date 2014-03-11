@@ -8,6 +8,7 @@ module.exports =
             
             super new floyd.Config 
                 data:
+                    class: 'ListEditor'
                     itemSelector: '> ul > li'
                     
                 children: [
@@ -16,6 +17,7 @@ module.exports =
                         type: 'gui.editor.Editor'
                         
                         data:
+                            class: 'each'
                             events:
                                 delegate: true
                                 
@@ -34,12 +36,12 @@ module.exports =
                             .mouseenter (event)=>
                                 @parent._allow event, ()=>
                                     $(event.currentTarget).append @__root
-                                    @_show()
+                                    @_show(event)
                                     
                                 
                             .mouseleave (event)=>
                                 @parent.__root.append @__root
-                                @_hide()
+                                @_hide(event)
                                 
                         ##
                         _show: ()->
@@ -61,6 +63,7 @@ module.exports =
                         type: 'gui.editor.Editor'
                         
                         data:
+                            class: 'add'
                             events:
                                 delegate: true
                                 
