@@ -31,12 +31,22 @@ module.exports =
 
                 config.children.push new floyd.Config
 
-                    id: 'browse'
-                    type: 'musiknetz.views.widgets.ListBrowser'
+                    type: 'gui.widgets.ListBrowser'
 
                     data:
                         selector: 'div.browse'
-
+                    
+                    events:
+                        browse: (e)->
+                            @parent._loadData e.offset, e.limit, (err, items, data)=>
+                                return done(err) if err
+                                @parent._display items, data
+                    
+                    booted: ->
+                        @parent.on 'display', (e)=>
+                            @_display e.items, e.data
+                        
+                        
                 , config.browse
 
             @_widget = floyd.tools.gui.ck config.widget
@@ -45,15 +55,8 @@ module.exports =
 
 
         start: (done)->
-
             super (err)=>
                 return done(err) if err
-
-                if @children.browse
-                    @children.browse.on 'browse', (e)=>
-                        @_loadData e.offset, e.limit, (err, items, data)=>
-                            return done(err) if err
-                            @_display items, data
                 
                 if typeof (_sel = @data.listSelector) is 'function'
                     @_ul = _sel.apply @, []
@@ -124,10 +127,7 @@ module.exports =
                         items: items
                         data: data
 
-                    if @children.browse
-                        @children.browse._display items, data, fn
-
-                    else fn?()
+                    fn?()
         ##
         ##
         ##
