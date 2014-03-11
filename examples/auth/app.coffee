@@ -42,16 +42,16 @@ module.exports =
         ## and loggings to point you with your nose into ;-)
         booted: ()->
             if process.getuid() isnt 0
-                @logger.error 'FATAL: you are not root! run sudo floyd start'
+                @logger.error new Error 'FATAL: you are not root! run sudo floyd start'
         
         ##
         started: ->			
-            
+
             if _secret = floyd.tools.files.exists './private/secret.txt'
-                @logger.error 'FATAL: the file ./private/secret.txt is readable'
+                @logger.error new Error 'FATAL: the file ./private/secret.txt is readable'
             
             if _users = floyd.tools.files.exists './private/users.data'
-                @logger.error 'FATAL: the file ./private/users.data is readable', if _secret then 'too!' else ''
+                @logger.error new Error 'FATAL: the file ./private/users.data is readable', if _secret then 'too!' else ''
             
             if !_secret && !_users
                 @logger.info 'SUCCESS: userdata and secret are protected propperly.'
