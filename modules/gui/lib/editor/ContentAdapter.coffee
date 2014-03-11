@@ -18,9 +18,9 @@ module.exports =
         ##
         ##
         ##
-        wire: (done)->
+        start: (done)->
             super (err)=>
-                return done(err) if err
+                return done(err) if err || floyd.system.platform isnt 'remote'
                 
                 @_loadUser (err, user)=>
                     @_adapt @parent, user, done
