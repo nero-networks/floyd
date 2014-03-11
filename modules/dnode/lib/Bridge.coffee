@@ -179,55 +179,58 @@ module.exports =
             root = @parent || @
             
             ##
-            child = new floyd.dnode.Remote (id:conn.id, type:'dnode.Remote'), root
-
-            ##			
-            child.boot (err)=>
-                return fn(err) if err
+            child = new floyd.dnode.Remote root
             
-                ##
-                _first = false	
-                conn.on 'remote', (remote)=>
+            child.init (id:conn.id, type:'dnode.Remote'), (err)=>
+                return fn(err) if err
+                
+                ##			
+                child.boot (err)=>
+                    return fn(err) if err
+            
+                    ##
+                    _first = false	
+                    conn.on 'remote', (remote)=>
                     
-                    #console.log child.ID, 'conn remote', conn.id
+                        #console.log child.ID, 'conn remote', conn.id
 
-                    child._useProxy remote
+                        child._useProxy remote
                     
-                    @logger.debug 'adding remote %s', child.ID
+                        @logger.debug 'adding remote %s', child.ID
                     
-                    root.children.push child
+                        root.children.push child
                     
-                    child.start (err)=>
-                        return fn(err) if err
+                        child.start (err)=>
+                            return fn(err) if err
                         
-                        if !_first && ( _first = true )
-                            fn() 
+                            if !_first && ( _first = true )
+                                fn() 
                                 
                     
-                ##
-                conn.on 'end', ()=>
+                    ##
+                    conn.on 'end', ()=>
                     
-                    #console.log child.ID, 'conn end', conn.id
+                        #console.log child.ID, 'conn end', conn.id
                     
-                    child.stop (err)=>
+                        child.stop (err)=>
                     
-                        root.children.delete child
+                            root.children.delete child
 
-                        #console.log 'conn destroy'
-                        child.destroy fn
+                            #console.log 'conn destroy'
+                            child.destroy fn
 
                             
-                ##
-                conn.on 'error', (err)=>
+                    ##
+                    conn.on 'error', (err)=>
                     
-                    console.log 'conn error!', err
+                        console.log 'conn error!', err
                     
-                    fn err			
+                        fn err			
                             
                                 
             ## remote api
             
-            ID: child.ID
+            ID: root.ID+'.'+conn.id
 
             lookup: (args...)=> 
                 #console.log 'remote api lookup:', args[0]

@@ -29,8 +29,18 @@ module.exports =
         ## * children
         ## * parent
         ##
-        constructor: (config={}, @parent)->			
+        constructor: (@parent)->
+            super null, @parent
+            
             @_status = []
+        
+            @_hiddenKeys.push 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate', 'data', 'parent', 'children'
+            
+        
+        ##
+        ##
+        ##
+        init: (config={}, done)->         
             
             config = @configure config
 
@@ -38,29 +48,29 @@ module.exports =
                     
             @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
             
-            if typeof (@type = config.type) is 'function'
-                @type = @ID+'.'+(@type.name || 'DynContext')					
-            
             @data = new floyd.data.SearchableMap config.data, @parent?.data
             
-            super @ID, @parent
+            if typeof (@type = config.type) is 'function'
+                @type = @ID+'.'+(@type.name || 'DynContext')
+            
+            @identity = @_createIdentity()
+            
+            @logger = @_createLogger @ID
             
             @_emitter = @_createEmitter config
-            
-            @_hiddenKeys.push 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate', 'data', 'parent', 'children'
             
             @children = new floyd.data.MappedCollection()
 
             @_changeStatus 'configured'
-
-            @_process config.children,
-                
-                each: (child, next)=>
+            
+            process.nextTick ()=>
+                @_process config.children,
                     
-                    @_createChild child, next			
+                    each: (child, next)=>
                         
-                done: (err)=>
-                    @error(err) if err				
+                        @_createChild child, next
+                            
+                    done: done
 
         ##
         ##
@@ -86,22 +96,25 @@ module.exports =
             done ?= (err)=> @error(err) if err
                 
             if ctor 
-                @children.push ctx = new ctor config, @
-
-                if @_status.indexOf('booting') != -1
+                ctx = new ctor @
+                
+                ctx.init config, (err)=>
+                    return done(err) if err
+                    @children.push ctx
+                
+                    if @_status.indexOf('booting') != -1
                     
-                    ctx.boot (err)=>
-                        return done(err) if err
-                        
-                        if @_status.indexOf('started') != -1                            
-                            ctx.start (err)=>
-                                done err, ctx
+                        ctx.boot (err)=>
+                            return done(err) if err
+                            if @_status.indexOf('started') != -1                            
+                                ctx.start (err)=>
+                                    done err, ctx
                             
-                        else
-                            done null, ctx
+                            else
+                                done null, ctx
                     
-                else
-                    done null, ctx
+                    else
+                        done null, ctx
                 
             else
                 done new Error 'Unknown Context-Type: '+config.type
@@ -118,7 +131,7 @@ module.exports =
     
         ##
         ## base configuration
-        ##		
+        ##
         configure: (config)->
         
             if typeof config is 'string'
@@ -161,7 +174,7 @@ module.exports =
                     return @logger.warning 'context not stopped!'
                 
                 @_init 'destroy', null, (err)=>
-                    done?(err) if err					
+                    done?(err) if err
                     
                     if !destroy
                         done?()
@@ -170,7 +183,7 @@ module.exports =
                     
                         destroy (err)=>
                         
-                            @_changeStatus 'destroyed'	
+                            @_changeStatus 'destroyed'
                             
                             done? err
             
@@ -229,14 +242,14 @@ module.exports =
                                     @logger.warning 'authentication failed!\n\terror: %s\n\tfor: %s', \
                                         (err?.message ? 'noauth'), identity.id
                                     
-                                    fn (err ? new Error 'unauthorized')
+                                    fn (err ? new Error 'authentication failed!')
                             
-                                else	
+                                else
                                     @logger.debug 'delegate authenticate to: %s for: %s', auth.ID, identity.id
                                     auth.authenticate identity, fn
             
                         ##
-                        login: (token, user, pass, fn)=>							
+                        login: (token, user, pass, fn)=>
                             #console.log 'using manager for login', user
                             
                             _auth (err, auth)=>
@@ -265,7 +278,7 @@ module.exports =
                                 
                                     fn? err
                         
-                ##		
+                ##
                 if config.TOKEN
                     @_getAuthManager().authorize config.TOKEN
 
@@ -367,13 +380,17 @@ module.exports =
             @_process @children,
             
                 ##
-                each: (child, next)->			
+                each: (child, next)->
                     if child[level]
-                        child[level] next
+                        if level is 'stop' || level is 'destroy'
+                            child[level] next
+                        
+                        else process.nextTick ()->
+                            child[level] next
                             
                     else next()
 
-                ##				
+                ##
                 done: (err)=>
                     
                     if !__first && ( __first = true )
@@ -389,7 +406,7 @@ module.exports =
         ## * instanciates its children recursively
         ## * emits booting and booted
         ##
-        boot: (done)->			
+        boot: (done)->
             @_errorHandler = (err)=>
                 done(err) if err
             
@@ -539,12 +556,12 @@ module.exports =
         
                                 child.lookup name.substr(id.length+1), identity, _try
                             
-                            else								
+                            else
                                 next()
                         
                     ##
                     ## self lookup
-                    ##						
+                    ##
                     else if name is @id
                         
                         # 4. last but not least it happens that 
@@ -574,7 +591,7 @@ module.exports =
                         
                         @logger.debug 'delegate to parent', @parent.ID, name
                         
-                        process.nextTick ()=>					
+                        process.nextTick ()=>
                             @parent.lookup name, identity, _try
                     
                     
@@ -652,7 +669,7 @@ module.exports =
             
             type = @type
 
-            logger = new floyd.logger.Logger "#{id} - (#{type})"			
+            logger = new floyd.logger.Logger "#{id} - (#{type})"
             
             if (level = @data.find 'logger.level')
             
@@ -663,7 +680,7 @@ module.exports =
         
         ## 
         ## triggers a status change emits status event
-        ##	
+        ##
         _changeStatus: (status)->
             
             if status
@@ -687,13 +704,13 @@ module.exports =
         ##
         on: ()->
             @addListener.identity = @on.identity
-            @addListener.apply @, arguments					
+            @addListener.apply @, arguments
         
         off: ()->
-            @removeListener.apply @, arguments					
+            @removeListener.apply @, arguments
         
         addListener: (action, handler)->
-            @_emitter.addListener.apply @_emitter, arguments							
+            @_emitter.addListener.apply @_emitter, arguments
             if @addListener.identity
                 if !handler
                     console.log 'no handler', arguments
@@ -705,10 +722,10 @@ module.exports =
                 
         
         removeListener: (action)->
-            @_emitter.removeListener.apply @_emitter, arguments							
+            @_emitter.removeListener.apply @_emitter, arguments
         
         once: ()->
-            @_emitter.once.apply @_emitter, arguments	
+            @_emitter.once.apply @_emitter, arguments
         
         
         ##
@@ -724,7 +741,7 @@ module.exports =
                 do(action)=>
                     if typeof (handler = @[action]) is 'function'
                         
-                        @once action, (event)=>							
+                        @once action, (event)=>
                             handler.apply @, [event]
                             
             if config.events
@@ -748,14 +765,14 @@ module.exports =
             
             if typeof (event ?= {}) is 'string'
                 event: 
-                    topic: event			
+                    topic: event
             
             event.origin ?=
                 type: @type
                 id: @id
                 ID: @ID
                 forIdentity: (identity, fn)=>
-                    @forIdentity identity, fn					
+                    @forIdentity identity, fn
             
             #console.log @id+': emitting floyd event:', event, actions
             
@@ -772,7 +789,7 @@ module.exports =
                 ## delegation is always suppressed for lifecycle-events        
                 if !stop && (@data.events?.delegate is true || @data.events?.delegate?.indexOf action) && ACTIONS.indexOf(action) is -1
                     
-                    @parent._emit action, event, args	
+                    @parent._emit action, event, args
                 
             return @
         

@@ -12,10 +12,11 @@ module.exports =
         constructor: (@ID, @parent)->
             
             @_hiddenKeys = ['constructor', 'identity', 'parent', 'logger', 'destroy']
-                        
-            @logger = @_createLogger @ID
             
-            @identity = @_createIdentity()
+            if @ID
+                @logger = @_createLogger @ID
+            
+                @identity = @_createIdentity()
             
 
         ##

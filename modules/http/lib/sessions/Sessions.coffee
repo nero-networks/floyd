@@ -8,13 +8,11 @@ module.exports =
     ##
     class HttpSessions extends floyd.Context
         
-        constructor: (config, parent)->
-            super config, parent
-            @_hiddenKeys.push 'Registry', 'Session'
-            
-        
         configure: (config)->
+        
+            @_hiddenKeys.push 'Registry', 'Session'
             @_TOKENS = config.tokens
+  
             super new floyd.Config
             
                 data:
@@ -44,10 +42,15 @@ module.exports =
         ##
         ##
         start: (done)->
-                        
+            
+            exclude = @data.find 'no-session-routes', []
+            
             ## use the next HttpContext (idealy our parent) to connect req handler
             @delegate '_addMiddleware', (req, res, next)=>
                 return next() if @data.disabled				
+                
+                for expr in exclude
+                    return next() if req.url.match expr
                 
                 @_load @_getSID(req), (err, sess)=>
                     return next(err) if err
@@ -106,7 +109,7 @@ module.exports =
                 
                 _dbq && console.log 'check', hash is data?.pass
                 
-                if data.pass isnt hash
+                if data.pass isnt hash || data.active is false
                     console.warn 'access denied for %s@%s', user, sid
                      
                     fn new Error 'login failed' 
@@ -174,11 +177,17 @@ module.exports =
                 else
                     fn()
                     
-
-            else 
-                #console.warn 'user failure', identity.id, sess, sess?.user
+            
+            ## a static token has to be of the length of 40 plus the key in @_TOKENS
+            ## e.g. 8b804dd8-7a88-4142-8b33-913a586d67b4----backend so that the following comes true
+            ## @_TOKENS['backend'] is '8b804dd8-7a88-4142-8b33-913a586d67b4----backend'
+            else if @_TOKENS[sid] is token
+                fn()
+            
+            else
+                #console.log 'session failure', sid, sess, sess?.user
                 
-                fn new Error 'unauthorized'
+                fn new Error 'unauthorized sessionID'
                 
         ##
         ##
@@ -191,7 +200,7 @@ module.exports =
                 if err || !token
                     @logger.debug 'session authenticate NO TOKEN', identity.id
                      
-                    return fn(err || new Error 'unauthorized') 
+                    return fn(err || new Error 'session authenticate NO TOKEN') 
                 
                 ##
                 if @_TOKENS && @_TOKENS[identity.id.split('.').shift()] is token
@@ -219,7 +228,7 @@ module.exports =
                         else
                             @logger.debug 'session authenticate FAILURE', identity.id 
                             
-                            fn new Error 'unauthorized'
+                            fn new Error 'session authenticate FAILURE'
                             
         
         

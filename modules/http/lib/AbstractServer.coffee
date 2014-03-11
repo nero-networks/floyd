@@ -10,8 +10,8 @@ module.exports =
     ## 
     class AbstractHttpServer extends floyd.http.Context
         
-        constructor: (config, parent)->
-            super config, parent
+        constructor: (parent)->
+            super parent
             
             @_hiddenKeys.push 'server'
         

@@ -60,10 +60,11 @@ module.exports =
             fn ?= (err)->
                 console.error('platform error:', err) if err				
             
-            ctx = new ctor new floyd.Config(config)
+            ctx = new ctor()
             
-            process.nextTick ()=>
-
+            ctx.init new floyd.Config(config), (err)=>
+                return fn(err) if err
+                
                 if config.NOBOOT || !ctx.boot
                     #console.log 'no boot...'
                     fn null, ctx

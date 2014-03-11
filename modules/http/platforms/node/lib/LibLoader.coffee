@@ -44,15 +44,17 @@ module.exports =
         ##
         ##
         ##
-        constructor: (config, parent)->
-            super config, parent				
+        init: (config, done)->
+            super config, (err)=>				
+                return done(err) if err
+                debug = @data.find('debug')
             
-            debug = @data.find('debug')
+                ## set the uglify-js minifier as the default filter except for debug mode
+                @data.filter ?= (if !debug then 'uglify-js' else '')
             
-            ## set the uglify-js minifier as the default filter except for debug mode
-            @data.filter ?= (if !debug then 'uglify-js' else '')
-            
-            @_started = new Date().toString()
+                @_started = new Date()
+                
+                done()
             
         ##
         ##
