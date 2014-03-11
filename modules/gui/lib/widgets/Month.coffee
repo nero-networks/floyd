@@ -79,8 +79,11 @@ module.exports =
                     @_emit 'select',
                         date: new Date td.data 'date'
                         td: td
-                    
-        
+                
+                ##    
+                done()
+                
+                
         ##
         ##
         ##
