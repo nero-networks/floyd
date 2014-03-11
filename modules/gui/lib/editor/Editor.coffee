@@ -28,6 +28,8 @@ module.exports =
                 
                 @_buildButtons @__buttons
                 @_wireMouse()
+                
+                done()
                
                 
         ##
@@ -46,7 +48,7 @@ module.exports =
         ##
         _buildButtons: (buttons)->
             
-            _popup = (editor)=>
+            _popup = (editor, fn)=>
                 floyd.tools.gui.popup @,
                     type: editor.popup || 'gui.widgets.Popup'
                     
@@ -55,7 +57,8 @@ module.exports =
                     
                     view: 
                         children: [ editor ]
-            
+                , fn
+                
             for action, conf of buttons
                 do(action, conf)=>
                                     
