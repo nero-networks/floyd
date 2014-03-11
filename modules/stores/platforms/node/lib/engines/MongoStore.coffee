@@ -11,7 +11,7 @@ module.exports =
         init: (options, fn)->
             mongoq = require 'mongoq'
             
-            @_db = mongoq 'mongodb://localhost/'+options.name
+            @_db = mongoq 'mongodb://'+(options.host || 'localhost')+'/'+options.name
             @_client = @_db.collection options.collection
             
             if !floyd.tools.objects.isArray(list = options.index)
