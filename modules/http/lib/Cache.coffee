@@ -17,7 +17,7 @@ module.exports =
                 
                 if !@data.disabled
                     
-                    if req.session.user
+                    if req.session?.user
                         storage = req.session.HttpCacheStorage ?= {__name: 'private'}
                         
                     else
@@ -133,7 +133,7 @@ module.exports =
                             ## finish the request with cached contents
                             return @_end data.body,
                                 'Content-Type': data.ctype
-                                'Last-Modified': data.date
+                                'Last-Modified': data.date.toUTCString()
                                 'Expires': data.expires
                                 'ETag': data.ETag
                                 
@@ -172,7 +172,7 @@ module.exports =
                     
                     #console.log 'check', date , @req.headers['if-modified-since'], date && date.toString() is @req.headers['if-modified-since']
                     
-                    if date && date.toString() is @req.headers['if-modified-since']
+                    if date && date.toUTCString() is @req.headers['if-modified-since']
                         #console.log 'res 304', date , @req.headers['if-modified-since']
                     
                         return @_end null, 304
@@ -181,7 +181,7 @@ module.exports =
                     
                         #console.log 'next create', date , @req.headers['if-modified-since']
                         
-                        headers['Last-Modified'] = date
+                        headers['Last-Modified'] = date.toUTCString()
                         
                         next body, headers, status
                         
