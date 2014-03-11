@@ -95,15 +95,29 @@ I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
 
 ## More
 
-Take a look into the [examples](/nero-networks/floyd/tree/master/examples/) folder. There are many examples including
+Take a look into the [examples](examples/) folder. There are many examples including
 
-- [**basics**](/nero-networks/floyd/tree/master/examples/basics/) - a very basic configuration. this is the HelloWorld example
-- [**auth**](/nero-networks/floyd/tree/master/examples/auth/) - uses http, gui and dnode to realise an authenticated environment
-- [**chat**](/nero-networks/floyd/tree/master/examples/chat/) - a tiny pubsub chat. made with dnode Bridges
-- [**connect**](/nero-networks/floyd/tree/master/examples/connect/) - a demonstration how to use the connect module with floyd
-- [**dnode**](/nero-networks/floyd/tree/master/examples/dnode/) - a simple dnode Bridge demo
-- [**gui**](/nero-networks/floyd/tree/master/examples/gui/) - a serverside-rendered gui HelloWorld
-- [**modules**](/nero-networks/floyd/tree/master/examples/modules/) - the helloworldHelloWorld module demo
-- [**platforms**](/nero-networks/floyd/tree/master/examples/platforms/) - simple platform dependent code demo
-- [**privileged**](/nero-networks/floyd/tree/master/examples/privileged/) - changes the UID/GID if started as root
-- [**webserver**](/nero-networks/floyd/tree/master/examples/webserver/) - a basic webserver with statics, E-Tags and gzip compression
+### basic floyd features
+- [**basics**](examples/basics/) - a very basic configuration. this is the HelloWorld example
+- [**modules**](examples/modules/) - the helloworldHelloWorld module demo
+- [**platforms**](examples/platforms/) - simple platform dependent code demo
+- [**privileged**](examples/privileged/) - changes the UID/GID if started as root
+
+### webservers
+- [**webserver**](examples/webserver/) - a basic webserver with statics, E-Tags and gzip compression
+- [**ssl-webserver**](examples/ssl-webserver/) - https protected webserver
+- [**connect**](examples/connect/) - a demonstration how to use the connect module with floyd
+
+### html gui generator
+- [**gui**](examples/gui/) - a serverside-rendered gui HelloWorld
+
+### (remote-)inter process commiunication with dnode
+- [**dnode**](examples/dnode/) - a simple dnode Bridge demo
+
+### server with gui and dnode
+- [**auth**](examples/auth/) - uses http, gui and dnode to realise an authenticated environment
+- [**chat**](examples/chat/) - a tiny pubsub chat. made with dnode bridges
+- [**cluster**](examples/cluster/) - communication of two floyd processes with dnode bridges
+
+### RpcServer communicates by simple http requests
+- [**omarpc**](examples/omarpc/) - RPC Server with simple protocoll
