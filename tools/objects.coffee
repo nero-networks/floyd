@@ -22,28 +22,36 @@ module.exports = objects =
     ##
     process: (obj, {each, done})->
         done ?= (err)-> console.error(err) if err
-
-        return done() if !obj
         
-        waiting = 0  
-        next = (err)->                                                  
-            if --waiting <= 0 || err
-                return done(err)
+        _array = false
         
+        _iter = []
+        
+        ##
+        next = (err)->
+            done(err) if err
+            
+            return done() if !_iter.length
+            
+            if _array
+                each _iter.shift(), next
+            
+            else
+                each (key=_iter.shift()), obj[key], next
+        
+        
+        ##
         if floyd.tools.objects.isArray obj
-            return done() if !obj.length
+            _array = true
             
-            waiting = obj.length
-            
-            for item in obj
-                each item, next
-        
-        else
-            return done() if !( waiting = floyd.tools.objects.keys(obj).length )
-            
-            for key, item of obj
-                each key, item, next        
-        
+            _iter.push item for item in obj
+             
+        else            
+            _iter.push key for key, val of obj
+                
+        ##
+        next()
+    
         
     
     ##
