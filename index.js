@@ -3,12 +3,7 @@
 */
 
 // link the coffee-script compiler into the require toolchain
-require('coffee-script'); 
-
-// re-wire some signals
-process.on('SIGKILL', function() { process.exit(1) });
-process.on('SIGINT', function() { process.exit() });
-process.on('SIGTERM', function() { process.exit() });    
+require('coffee-script/register');
 
 // Catch uncaught errors
 process.on('uncaughtException', function(err) {                    
@@ -16,7 +11,6 @@ process.on('uncaughtException', function(err) {
 });
 
 // boot the node platform
-
 floyd = {AbstractPlatform: require('./lib/AbstractPlatform')}
 floyd.Platform = require('./platforms/node/lib/Platform');
 
