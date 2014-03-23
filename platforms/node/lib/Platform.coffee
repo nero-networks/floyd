@@ -22,7 +22,7 @@ module.exports =
             settings.ident ?= 'NodeJS'
             settings.ident += ' ('+(p+'-'+v for p, v of process.versions).join(', ')+')'
             
-            super settings			
+            super settings            
             
             
         ##
@@ -35,22 +35,6 @@ module.exports =
             if @system.appdir isnt @system.libdir
                 _dirs.push @system.appdir 
                 
-                files = floyd.tools.files			
-                ## create tmp folder and remove on exit
-                @system.tmpdir ?= files.path.join '.floyd', 'tmp'
-                
-                files.mkdir @system.tmpdir
-                
-                ##
-                process.on 'exit', ()=>
-                    
-                    for _file in files.list @system.tmpdir
-                        file = files.path.join @system.tmpdir, _file
-                        
-                        if files.exists file
-                            files.rm file, true
-            
-        
             
             ## load lib
             
@@ -74,13 +58,13 @@ module.exports =
                 ##
                 module: (target, name, path)=>
                 
-                    target[name] ?= null					
+                    target[name] ?= null            		
 
                     #console.log name, path
                                         
                     ## getter delegation delays the require 'till its really needed
                     Object.defineProperty target, name,
-                        get: ()->							
+                        get: ()->                        	
                             try 
                                 require path 
                             catch e
@@ -147,6 +131,27 @@ module.exports =
             @system.GID = config.GID
             
             ##
+            ## extend floyd.system with settings from config
+            if config.system
+            	floyd.tools.objects.extend floyd.system, config.system
+            
+            files = floyd.tools.files            
+            ## create tmp folder and remove on exit
+            @system.tmpdir ?= files.path.join '.floyd', 'tmp'
+            
+            files.mkdir @system.tmpdir
+            
+            ##
+            process.on 'exit', ()=>
+                
+                for _file in files.list @system.tmpdir
+                    file = files.path.join @system.tmpdir, _file
+                    
+                    if files.exists file
+                        files.rm file, true
+            
+        
+            ##
             ## create and start Context instance
             ctx = super config, fn
             
@@ -183,7 +188,7 @@ module.exports =
                     
                     #___start = +new Date()
                     
-                    for id, mod of require.cache										
+                    for id, mod of require.cache                                    	
                         delete require.cache[id]
                     
                     #ctx.on 'after:running', ->
@@ -203,7 +208,7 @@ module.exports =
             destroyed = !ctx.destroy
             
             ## shutdown recursive on exit
-            process.once 'exit', shutdown = (err)=>
+            shutdown = (err)=>
                 fn(err) if err
                 
                 ##
@@ -213,6 +218,12 @@ module.exports =
                 ##
                 else if !destroyed && destroyed = true
                     ctx.destroy shutdown
+                    
+                else
+                	process.exit()
+            
+            process.on 'SIGINT', ()=> shutdown()
+            process.on 'SIGTERM', ()=> shutdown()
             
             ##
             ## async return! ctx is not booted yet...
