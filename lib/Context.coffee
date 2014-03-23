@@ -1,7 +1,7 @@
 
 events = require 'events'
 
-ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped', 'message']
+ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped']
 
 USELOOKUPSCACHE = false
 LOOKUPSCACHE = {}
@@ -550,7 +550,7 @@ module.exports =
                                 child.forIdentity identity, _try
                             
                             # 2. the prefix of name matches child.id
-                            else if name.substr(0, id.length) is id
+                            else if name.substr(0, name.indexOf '.') is id
                                 
                                 @logger.debug 'searching for %s in %s', name.substr(id.length+1), child.ID
         
@@ -575,7 +575,7 @@ module.exports =
                     ##
                     ##
                     ##
-                    else if name.substr(0, @id.length) is @id
+                    else if name.substr(0, name.indexOf '.') is @id
                     
                         @lookup name.substr(@id.length + 1), identity, _try
                     
@@ -794,12 +794,3 @@ module.exports =
             return @
         
         
-        ##
-        ##
-        ##
-        _message: (msg)->
-            
-            @logger.info 'message recived:', msg
-
-            @_emit 'message:'+msg.topic
-
