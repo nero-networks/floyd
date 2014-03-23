@@ -31,6 +31,8 @@ module.exports =
                 config.data.route = ()=>
                     route.apply @, arguments
             
+            @_content = config.content
+            
             return config
 
             
@@ -160,8 +162,10 @@ module.exports =
         ##
         ##
         _createContent: (req, res, fn)->
-            
-            if typeof (content = @data.content) is 'function'
+            if @data.content
+                @logger.warn 'config.data.content is deprecated! use config.content instead'
+                
+            if typeof (content = @_content) is 'function'
                 content.apply @, [req, res, fn]
                 
             else
