@@ -1,4 +1,7 @@
 
+shoe = require('shoe')
+dnode = require('dnode')
+
 module.exports = 
 
     class DNodeBridge extends floyd.Context
@@ -16,7 +19,8 @@ module.exports =
                 data:
                     parent: false
                     ports: []
-                    gateways: (if floyd.system.platform is 'remote' then [{}] else [])
+                    gateways: (if floyd.system.platform is 'remote' then ['remote'] else [])
+                    route: '/dnode'
 
             , config 
             
@@ -107,11 +111,17 @@ module.exports =
                             
                             @_emit 'reconnect', conf
                     
-                        
                     
-                    @_createLocal(connected).connect conf,
-                        'sync disconnect on unload': false
-                                                
+                    d = @_createLocal connected
+                    
+                    if conf is 'remote'
+                        c = shoe @data.route
+                    
+                    else
+                        c = require('net').connect conf
+                        
+                    d.pipe(c).pipe d
+                        
         
         ##
         ##
@@ -134,28 +144,37 @@ module.exports =
                         while parent && !(server = parent.server) && parent.parent
                             parent = parent.parent
                          
-                        @_createLocal(handler).listen 
-                            server: parent.server
-                            webserver: true
-                
+                        @_createServerSocket parent.server, handler
+                        
                     else if conf.child 
                         
-                        @_createLocal(handler).listen 
-                            server: @children[conf.child]
-                            webserver: true
-                    
+                        @_createServerSocket @children[conf.child], handler
+                        
                     else if conf.ctx
                         
                         @lookup conf.ctx, @identity, (err, ctx)=>
-                            @_createLocal(handler).listen 
-                                server: ctx.server
-                                webserver: true
-                        
+
+                            @_createServerSocket ctx.server, handler
+                            
                     else
                         @_createLocal(handler).listen conf	
                     
                     ##
                     next()
+        
+        ##
+        ##
+        ##
+        _createServerSocket: (server, handler)->
+        
+            sock = shoe (stream)=>
+                d = @_createLocal handler
+                
+                d.pipe(stream).pipe d
+                
+            sock.install server, @data.route
+            
+           
             
         ##
         ##
@@ -163,8 +182,6 @@ module.exports =
         _createLocal: (fn)->
             
             ##
-            dnode = if typeof DNode isnt 'undefined' then DNode else require('dnode')
-
             dnode (proxy, conn)=>
 
                 @_createRemote proxy, conn, fn
