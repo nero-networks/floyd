@@ -18,7 +18,7 @@ Install with [npm](http://github.com/isaacs/npm):
 
 #### Prepare your System for the git installation
 
-* You'll need the [node](http://nodejs.org/) engine **>= 0.8.0 ** to run floyd
+* You'll need the [node](http://nodejs.org/) engine **>= 0.10.26 ** to run floyd
 
 * Symlink `~/projects/floyd/bin/floyd` somehow into $PATH (e.g. /usr/local/bin/)
 
@@ -54,7 +54,7 @@ I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
         [K]ill          [C]lear         _/_/_/    _/  _/    _/  _/    _/  _/    _/  
         [B]uild         [D]ump log     _/        _/  _/    _/  _/    _/  _/    _/   
         [U]pdate                      _/        _/    _/_/      _/_/_/    _/_/_/    
-                        [Q]uit           (c) 2012 molkex.org       _/               
+                        [Q]uit           (c) 2012 Nero Networks    _/               
                                                                 _/_/
     
 * then press `s` and you'll get something like this:

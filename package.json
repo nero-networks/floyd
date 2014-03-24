@@ -2,13 +2,13 @@
     "name":                "floyd",
     "author":              "Roman De Meo",
     "description":         "floyd - hierarchical app containers",
-    "version":             "0.3.0",
+    "version":             "0.4.0",
 
     "main":                "./index",
 
     "maintainer": {
         "name":            "Roman De Meo",
-        "email":           "nero-networks@molkex.org"
+        "email":           "rdemeo@nero-networks.de"
     },
 
     "repository": {
@@ -17,26 +17,27 @@
     },
 
     "engines": {
-        "node":            ">= 0.8.0"
+        "node":            ">= 0.10.26"
     },
 
     "dependencies": {
         "browserify":       "1.12.1",
         "cheerio":          ">= 0.13.1",
-        "coffee-script":    ">= 1.6.2",
-        "cookies":          ">= 0.3.6",
-        "dnode":            "0.9.12",
-        "formidable":       ">= 1.0.13",
-        "htmlparser":       ">= 1.7.6",
+        "coffee-script":    ">= 1.7.0",
+        "cookies":          ">= 0.4.0",
+        "dnode":            ">= 1.2.0",
+        "formidable":       ">= 1.0.14",
+        "htmlparser":       ">= 1.7.7",
         "imagemagick":      ">= 0.1.3",
-        "jsdom":            ">= 0.6.0",
-        "markdown":         ">= 0.4.0",
-        "mime":             ">= 1.2.5",
+        "jsdom":            ">= 0.10.3",
+        "markdown":         ">= 0.5.0",
+        "mime":             ">= 1.2.11",
         "mongoq":           ">= 0.2.3",
-        "nodemailer":       ">= 0.4.1",
-        "sprintf":          ">= 0.1.1",
-        "sanitizer":        ">= 0.0.15",
-        "stylus":           ">= 0.32.1",
+        "nodemailer":       ">= 0.6.1",
+        "sanitizer":        ">= 0.1.1",
+        "shoe":             ">= 0.0.15",
+        "sprintf":          ">= 0.1.3",
+        "stylus":           ">= 0.42.3",
         "uglify-js":        "1.2.6"
     }
 
