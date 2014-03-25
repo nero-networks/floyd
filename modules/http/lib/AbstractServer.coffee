@@ -109,12 +109,6 @@ module.exports =
                 
                 done()
         
-        ##
-        ##
-        ##
-        stop: (done)->
-            @server.close done
-            
         
         ##
         _loginfo:()->
