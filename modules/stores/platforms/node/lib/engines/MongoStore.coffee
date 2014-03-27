@@ -11,11 +11,8 @@ module.exports =
         init: (options, fn)->
             mongoq = require 'mongoq'
             
-            @_db = mongoq 'mongodb://'+(options.host || 'localhost')+'/'+options.name
+            @_db = mongoq 'mongodb://'+(options.host || 'localhost')+'/'+options.name, (options.options || w:1)
             @_client = @_db.collection options.collection
-            
-            if !floyd.tools.objects.isArray(list = options.index)
-                list = [list]
             
             if (list = options.index)
                 if !floyd.tools.objects.isArray list 
@@ -32,7 +29,10 @@ module.exports =
             
             fn()
                 
-
+        close: (fn)->
+            @_db.close()
+            fn?()
+        
         get: (key, fn)->
             @_client.findOne _id:key, fn
 
@@ -75,12 +75,13 @@ module.exports =
         distinct: (field, query, fn)->
             @_client.distinct field, query, fn
 
-        find: (query, options, fields, fn)->			
-            query ?= {}
-            
+        find: (query, options, fields, fn)->	
+    
+            #console.log 'query', query, options, fields
             q = @_client.find(query)
             q.count (err, size)=>
-                
+                return fn(err) if err
+                #console.log 'size', size
                 options ?= {}		
                 
                 options.skip = options.offset
@@ -96,5 +97,7 @@ module.exports =
                 options.size = size
                 
                 q.toArray (err, items)=>				
-                    
-                    fn err, @_filterFields(items, fields), options, fields
+                    return fn(err) if err
+                    process.nextTick ()=>
+                        fn null, @_filterFields(items, fields), options, fields
+                        
