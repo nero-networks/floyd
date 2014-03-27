@@ -289,7 +289,8 @@ module.exports =
                         
                     
                     ##    
-                    require('vm').runInContext "(#{__boot_cheerio__})(#{model})", ctx    
+                    #require('vm').runInContext "(#{__boot_cheerio__})(#{model})", ctx    
+                    ctx.run "(#{__boot_cheerio__})(#{model})"
             
 
             
@@ -300,14 +301,18 @@ module.exports =
             vm = require('vm')
             
             ##
-            ctx = vm.createContext 
+            #ctx = vm.createContext 
+            ctx = 
                 window: {}
                 process: process
                 console: console
                 setTimeout: setTimeout
             
+            require('contextify') ctx
+            
             ##
-            vm.runInContext @__SCRIPT+"var floyd = require('floyd');", ctx
+            #vm.runInContext @__SCRIPT+"var floyd = require('floyd');", ctx
+            ctx.run @__SCRIPT+"var floyd = require('floyd');", ctx
             
             ctx.floyd.__parent = 
                 lookup: (name, identity, fn)=>                      
@@ -339,7 +344,7 @@ module.exports =
         ##
         ##
         _releaseContext: (ctx)->
-            persistentKeys = ['floyd', 'require', '_modules', 'process', 'console']
+            persistentKeys = ['run', 'getGlobal', 'dispose', 'setTimeout', 'floyd', 'require', '_modules', 'process', 'console']
             
             if @__POOL__.length < @data.poolsize
                 for key, value of ctx
@@ -349,6 +354,9 @@ module.exports =
                 ## check again... just for the case
                 if @__POOL__.length < @data.poolsize
                     @__POOL__.push ctx
+                
+                else
+                    ctx.dispose()
         
 
         ##
