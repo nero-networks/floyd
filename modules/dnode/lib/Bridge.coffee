@@ -41,8 +41,10 @@ module.exports =
                         
                         else
                             #console.log 'retry lookup', origin+'.'+name, err.message
-                            
-                            lookup origin+'.'+name, identity, fn
+                            if name.substr(0, origin.length) is origin
+                                lookup name, identity, fn
+                            else
+                                lookup origin+'.'+name, identity, fn
                     
                 
 
