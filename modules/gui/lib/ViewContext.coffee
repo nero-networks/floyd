@@ -8,7 +8,10 @@ module.exports =
         ##
         ##
         configure: (config)->
+            @_hiddenKeys.push 'wire', 'wiring'
+
             @_template ?= config.template
+            
             
             floyd.tools.objects.intercept @, 'boot', (done, boot)=>
                
@@ -18,6 +21,15 @@ module.exports =
                     boot done                
                 
                 
+            
+            floyd.tools.objects.intercept @, 'start', (done, start)=>
+                start (err)=>
+                    return done(err) if err
+                    if floyd.system.platform is 'remote'
+                        @wire done
+                    
+                    else done()
+                    
             config = super new floyd.Config
             
                 data: 
@@ -40,16 +52,6 @@ module.exports =
         ##
         ##
         boot: (done)->
-            @_hiddenKeys.push 'wire', 'wiring'
-            
-            floyd.tools.objects.intercept @, 'start', (done, start)=>
-                start (err)=>
-                    return done(err) if err
-                    if floyd.system.platform is 'remote'
-                        @wire done
-                    
-                    else done()
-                    
             
             super done
 
