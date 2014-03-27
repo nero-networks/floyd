@@ -18,7 +18,8 @@ Install with [npm](http://github.com/isaacs/npm):
 
 #### Prepare your System for the git installation
 
-* You'll need the [node](http://nodejs.org/) engine **>= 0.10.26 ** to run floyd
+* You'll need the [node](http://nodejs.org/) engine **>= 0.10.0 ** to run floyd.
+  (tested until 0.10.26)
 
 * Symlink `~/projects/floyd/bin/floyd` somehow into $PATH (e.g. /usr/local/bin/)
 
