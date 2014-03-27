@@ -48,7 +48,10 @@ module.exports =
         stop: (fn)->
             super (err)=>
                 if @_engine
-                    @_engine.persist fn
+                    @_engine.persist ()=>
+                        @_engine.close?()
+                        
+                        process.nextTick fn if fn
             
                 fn? err if err
             

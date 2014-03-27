@@ -26,7 +26,9 @@ module.exports =
                 clearInterval @_cleanup_interval
                 
             fn?()
-            
+        
+        close: (fn)->
+            fn?()
 
         get: (key, fn)->
             fn null, @_memory[key]
