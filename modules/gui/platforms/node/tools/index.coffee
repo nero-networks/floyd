@@ -5,7 +5,10 @@ module.exports = tools =
     ##
     ##
     page: (route, config)->
-        
+        if typeof config.content is 'object'
+            console.warn config.id, 'config.content creates conflicts! use config.gui instead'
+            config.gui = floyd.tools.objects.cut config, 'content'
+            
         new floyd.Config
             type: 'gui.HttpContext'
             
@@ -24,7 +27,7 @@ module.exports = tools =
                         data:
                             selector: 'body'
                     
-                    , config.content
+                    , config.gui
                         
                 ]
                 
