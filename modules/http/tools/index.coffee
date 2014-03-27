@@ -87,10 +87,12 @@ module.exports = tools =
             
             req.on 'data', (chunk)=> 
                 data += chunk if chunk
-            
-        req.on 'end', ()=>
-            fn null, req.body = qs.parse data
-            
+        
+            req.on 'end', ()=>
+                fn null, req.body = qs.parse data
+        
+        else
+            fn null, req.body = qs.parse data      
     
     ##
     ##
