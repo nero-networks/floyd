@@ -24,6 +24,7 @@
         "browserify":       "1.12.1",
         "cheerio":          ">= 0.13.1",
         "coffee-script":    ">= 1.7.0",
+        "contextify":       ">= 0.1.7",
         "cookies":          ">= 0.4.0",
         "dnode":            ">= 1.2.0",
         "formidable":       ">= 1.0.14",
