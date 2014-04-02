@@ -77,7 +77,7 @@ module.exports =
         ## @param identity - 
         ##
         forIdentity: (identity, fn)->
-
+            
             @logger.debug 'forIdentity', identity.id
             
             @_allowAccess identity, (err)=>
@@ -134,10 +134,10 @@ module.exports =
                 
                 
                     ##
-                    done: (err)=>
+                    done: (err)->
                         return fn(err) if err
-                        
-                        fn null, wrapper
+                        process.nextTick ()-> ## this is to prevent loooong stack traces
+                            fn null, wrapper
                         
                         
         
