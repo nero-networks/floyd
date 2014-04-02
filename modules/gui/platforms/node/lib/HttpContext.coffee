@@ -134,6 +134,134 @@ module.exports =
         
             
         
+
+
+
+
+        ## ----------- cheerio ------------- ##
+        
+        
+        ##
+        ##
+        ##
+        _processContent_cheerio: (req, res, content, model, fn)->
+            
+            ##
+            @_getContext (err, ctx)=>
+                return fn(err) if err
+                
+                ##
+                @_initContext req, res, ctx, (err)=>
+                    
+                    ##
+                    ctx.$ = require('cheerio').load content
+                    
+                    ctx.__initTime__ = +new Date()
+                    
+                    ##
+                    _released = false
+                    ctx.__done__ = (err, result)=>
+                        if !_released && _released = true
+                            @_releaseContext ctx
+
+                        if err                            
+                            fn err
+                            
+                        else
+                            fn null, result
+                        
+                    
+                    ##    
+                    ctx.run "(#{__boot_cheerio__})(#{model})"
+            
+
+            
+        ##
+        ##
+        ##
+        _createContext: (fn)->
+
+            ctx = 
+                window: {}
+                console: console                
+                process:
+                    nextTick: process.nextTick
+            
+            require('contextify') ctx            
+
+            ctx.run @__SCRIPT+"var floyd = require('floyd');"
+            
+            ctx.floyd.system.platform = 'cheerio'
+            ctx.floyd.system.os = floyd.system.os
+            ctx.floyd.system.libdir = floyd.system.libdir
+            ctx.floyd.system.appdir = floyd.system.appdir
+            ctx.floyd.tools.files = floyd.tools.files            
+            
+            ctx.floyd.__parent = 
+                lookup: (name, identity, fn)=>                      
+                    @lookup name, identity, fn
+            
+            ##
+            fn null, ctx
+        
+        
+        ##
+        ##
+        ##
+        _getContext: (fn)->
+            
+            if @__POOL__.length
+                fn null, @__POOL__.pop()
+                
+            else
+                @_createContext fn
+            
+        ##
+        ##
+        ##
+        _releaseContext: (ctx)->
+            persistentKeys = ['run', 'getGlobal', 'dispose', 'process', 'console', 'setTimeout', 'floyd', 'require', '_modules']
+            
+            if @__POOL__.length < @data.poolsize
+                for key, value of ctx
+                    if persistentKeys.indexOf(key) is -1
+                        delete ctx[key]
+                
+                @__POOL__.push ctx
+                
+            else
+                ctx.dispose()
+        
+
+        ##
+        ##
+        ##
+        _initContext: (req, res, ctx, done)->    
+            
+            ##
+            url = (req.rewrittenUrl || req.url).substr (req.vhostpath||'').length
+            ctx.location = require('url').parse 'http://'+req.headers.host+url
+        
+            ## fake the protocol while forwarded from https proxy
+            if req.headers['x-forwarded-proto'] is 'https'
+                ctx.location.protocol = 'https:'
+                ctx.location.href = ctx.location.href.replace /^http\:/, 'https:'                
+            
+            ##
+            ctx.document =
+                referer: req.referer
+                cookie: 'FSID='+req.session.SID+'; path=/; httponly'    
+            
+            ##
+            ctx.window = ctx.getGlobal()
+            
+            ##
+            done()
+
+
+
+
+
         ## ------------ JSDOM -------------- ##
         
         
@@ -151,7 +279,7 @@ module.exports =
                 #console.log 'create:', (+new Date()) - start
                 
                 ##
-                window.addEventListener 'unload', next = ()=>					
+                window.addEventListener 'unload', next = ()=>                   
                     #console.log 'run:', (+new Date()) - start
                     
                     window.removeEventListener 'unload', next
@@ -163,8 +291,8 @@ module.exports =
                     ## cleanup async!
                     process.nextTick ()=>
                         
-                        ## release the jsdom-window into the pool
-                        @_releaseWindow window	
+                        ## release the jsdom-window 
+                        @_releaseWindow window  
 
                 ##
                 window.addEventListener 'error', onerr = (e)=> 
@@ -225,7 +353,7 @@ module.exports =
                         
                         process.nextTick ()=>
                         
-                            window.floyd.system.platform = 'jsdom'	
+                            window.floyd.system.platform = 'jsdom'  
                             
                             window.floyd.system.libdir = floyd.system.libdir
                             window.floyd.system.appdir = floyd.system.appdir
@@ -233,7 +361,7 @@ module.exports =
                             window.floyd.tools.files = floyd.tools.files
                             
                             window.floyd.__parent = 
-                                lookup: (name, identity, fn)=>						
+                                lookup: (name, identity, fn)=>                      
                                     @lookup name, identity, (err, ctx)=>
                                         fn err, ctx
                                                             
@@ -253,149 +381,13 @@ module.exports =
         
 
 
-
-
-        ## ----------- cheerio ------------- ##
-        
-        
-        ##
-        ##
-        ##
-        _processContent_cheerio: (req, res, content, model, fn)->
-            
-            ##
-            @_getContext (err, ctx)=>
-                return fn(err) if err
-                
-                ##
-                @_initContext req, res, ctx, (err)=>
-                    
-                    ##
-                    ctx.$ = ctx.window.$ = require('cheerio').load content
-                    
-                    ctx.__initTime__ = +new Date()
-                    
-                    ##
-                    _released = false
-                    ctx.__done__ = (err, result)=>
-                        if !_released && _released = true
-                            @_releaseContext ctx
-
-                        if err                            
-                            fn err
-                            
-                        else
-                            fn null, result
-                        
-                    
-                    ##    
-                    #require('vm').runInContext "(#{__boot_cheerio__})(#{model})", ctx    
-                    ctx.run "(#{__boot_cheerio__})(#{model})"
-            
-
-            
-        ##
-        ##
-        ##
-        _createContext: (fn)->
-            vm = require('vm')
-            
-            ##
-            #ctx = vm.createContext 
-            ctx = 
-                window: {}
-                process: process
-                console: console
-                setTimeout: setTimeout
-            
-            require('contextify') ctx
-            
-            ##
-            #vm.runInContext @__SCRIPT+"var floyd = require('floyd');", ctx
-            ctx.run @__SCRIPT+"var floyd = require('floyd');", ctx
-            
-            ctx.floyd.__parent = 
-                lookup: (name, identity, fn)=>                      
-                    @lookup name, identity, (err, ctx)=>
-                        fn err, ctx
-            
-            ctx.floyd.system.platform = 'cheerio'
-            ctx.floyd.system.os = floyd.system.os
-            ctx.floyd.system.libdir = floyd.system.libdir
-            ctx.floyd.system.appdir = floyd.system.appdir
-            ctx.floyd.tools.files = floyd.tools.files
-            
-            ##
-            fn null, ctx
-        
-        
-        ##
-        ##
-        ##
-        _getContext: (fn)->
-            
-            if @__POOL__.length
-                fn null, @__POOL__.pop()
-                
-            else
-                @_createContext fn
-            
-        ##
-        ##
-        ##
-        _releaseContext: (ctx)->
-            persistentKeys = ['run', 'getGlobal', 'dispose', 'setTimeout', 'floyd', 'require', '_modules', 'process', 'console']
-            
-            if @__POOL__.length < @data.poolsize
-                for key, value of ctx
-                    if persistentKeys.indexOf(key) is -1
-                        delete ctx[key]
-                
-                ## check again... just for the case
-                if @__POOL__.length < @data.poolsize
-                    @__POOL__.push ctx
-                
-                else
-                    ctx.dispose()
-        
-
-        ##
-        ##
-        ##
-        _initContext: (req, res, ctx, done)->    
-            
-            ##
-            url = (req.rewrittenUrl || req.url).substr (req.vhostpath||'').length
-            ctx.location = require('url').parse 'http://'+req.headers.host+url
-        
-            ## fake the protocol while forwarded from https proxy
-            if req.headers['x-forwarded-proto'] is 'https'
-                ctx.location.protocol = 'https:'
-                ctx.location.href = ctx.location.href.replace /^http\:/, 'https:'                
-            
-            ##
-            ctx.document =
-                referer: req.referer
-                cookie: 'FSID='+req.session.SID+'; path=/; httponly'    
-            
-            ##
-            ctx.window = 
-                document:   ctx.document
-                location:   ctx.location
-                floyd:      ctx.floyd
-            
-            ##
-            done()
-
-
-
 ##
 
 ##
 ## remote code - gets evaluated into the cheerio context
 ##
 __boot_cheerio__ = (config)->
-
+    
     floyd.init config, (err, ctx)=>
         return __done__(err) if err
         
