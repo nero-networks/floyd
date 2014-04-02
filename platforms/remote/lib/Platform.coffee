@@ -1,6 +1,4 @@
 
-__MODULES__ = null
-
 module.exports =
 
     class RemotePlatform extends floyd.AbstractPlatform
@@ -44,11 +42,6 @@ module.exports =
         ##
         ##
         boot: (modules, attempt=0)->			
-            __MODULES__ ?= modules
-            
-            if !modules && !attempt
-                modules = __MODULES__
-                
                     
             delayed = {}		
             
@@ -86,7 +79,7 @@ module.exports =
                         err = e
                         delayed[path] = init
             
-            if ++attempt < 10 && _count = floyd.tools.objects.keys(delayed).length
+            if ++attempt < 10 && floyd.tools.objects.keys(delayed).length
                 #console.log 'delayed build', err, delayed
                 
                 @boot delayed, attempt
