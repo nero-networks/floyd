@@ -206,6 +206,7 @@ module.exports =
             ## prepare shutdown
             stopped = !ctx.stop
             destroyed = !ctx.destroy
+            exited = false
             
             ## shutdown recursive on exit
             shutdown = (err)=>
@@ -219,11 +220,15 @@ module.exports =
                 else if !destroyed && destroyed = true
                     ctx.destroy shutdown
                     
-                else
-                	process.exit()
+                else if !exited && exited = true
+                    process.exit()
+            
             
             process.on 'SIGINT', ()=> shutdown()
             process.on 'SIGTERM', ()=> shutdown()
+            process.on 'exit', ()=> 
+                exited = true
+                shutdown()
             
             ##
             ## async return! ctx is not booted yet...
