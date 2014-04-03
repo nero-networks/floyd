@@ -37,13 +37,7 @@ module.exports =
         ##
         isPageContext: ()->
             return true
-        
-        ##
-        ##
-        ##
-        boot: (done)->
-            
-            super done
+
         
         ##
         ##
@@ -73,8 +67,13 @@ module.exports =
         ##
         ##
         ##
-        stop: ()->
-            @_watcher?.close()
+        stop: (done)->
+            try
+                @_watcher?.close()
+            catch e
+                return done e
+                
+            super done
             
         
         
