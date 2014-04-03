@@ -109,7 +109,7 @@ module.exports =
                 return fn null, content
             
             ##
-            @_createLocalModel req, res, (err, model)=> 
+            @_createModel req, res, 'local', (err, model)=> 
                 return fn(err) if err
                 
                 if !model

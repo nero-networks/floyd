@@ -177,7 +177,7 @@ module.exports =
         ##
         _createRemote: (req, res, fn)->
             
-            @_createRemoteModel req, res, (err, model)=>
+            @_createModel req, res, (err, model)=>
                 return fn(err) if err
                 
                 @_createBoot req, res, model, (err, boot, model)=>
@@ -190,6 +190,9 @@ module.exports =
         ##
         ##
         _createModel: (req, res, type, fn)->
+            if typeof type is 'function'
+                fn = type
+                type = 'remote'
             
             next = (err, model)=>
                 return fn(err) if err
@@ -233,17 +236,19 @@ module.exports =
 
         
         ##
+        ## 
         ##
-        ##
-        _createLocalModel: (req, res, fn)->
+        _createLocalModel: (req, res, fn)-> ## DEPRECATED
+            @logger.warning 'DEPRECATED: _createLocalModel\n\tuse @_createModel(req, res, \'local\', fn)'
             @_createModel req, res, 'local', fn
                 
             
             
         ##
+        ## 
         ##
-        ##
-        _createRemoteModel: (req, res, fn)->
+        _createRemoteModel: (req, res, fn)-> ## DEPRECATED
+            @logger.warning 'DEPRECATED: _createRemoteModel\n\tuse @_createModel(req, res, \'remote\', fn)'
             @_createModel req, res, 'remote', fn
         
         
@@ -302,34 +307,34 @@ __boot__ = (config)->
     
     window.floyd = require 'floyd'
     
-    ##
-    window.addEventListener 'load', ()->
+    _INITIALIZED_ = false
+    init = ()->
+        return undefined if _INITIALIZED_ 
+        _INITIALIZED_= true
         
         window.__initTime__ = +new Date()
         
-        process.nextTick ()->
+        ctx = floyd.init config, (err)->
+            console.error(err) if err
+    
+    
+        stopped = !ctx.stop
+        destroyed = !ctx.destroy
         
-            ctx = floyd.init config, (err)->
-                console.error(err) if err
-        
-        
-            stopped = !ctx.stop
-            destroyed = !ctx.destroy
-            
-            window.onbeforeunload = ()->
-                next = (err)->
-                    console.error(err.stack||err) if err
+        window.onbeforeunload = ()->
+            next = (err)->
+                console.error(err.stack||err) if err
+                
+                if !stopped && stopped = true
+                    ctx.stop next
                     
-                    if !stopped && stopped = true
-                        ctx.stop next
-                        
-                    else if !destroyed && destroyed = true
-                        ctx.destroy next
-                
-                next()
-                                    
-                return undefined
-                
+                else if !destroyed && destroyed = true
+                    ctx.destroy next
             
+            next()
+                                
+            return undefined
             
-            
+    window.addEventListener 'DOMContentLoaded', init
+    window.addEventListener 'load', init
+              
