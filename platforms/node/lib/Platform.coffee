@@ -227,8 +227,7 @@ module.exports =
             process.on 'SIGINT', ()=> shutdown()
             process.on 'SIGTERM', ()=> shutdown()
             process.on 'exit', ()=> 
-                exited = true
-                shutdown()
+                shutdown() if !exited && exited = true
             
             ##
             ## async return! ctx is not booted yet...
