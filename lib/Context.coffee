@@ -171,7 +171,7 @@ module.exports =
             floyd.tools.objects.intercept @, 'destroy', (done, destroy)=>
             
                 if @stop && @_status.indexOf('stopped') is -1
-                    return @logger.warning 'context not stopped!'
+                    @logger.warning 'context not stopped!'
                 
                 @_init 'destroy', null, (err)=>
                     done?(err) if err
