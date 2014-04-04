@@ -21,13 +21,11 @@ module.exports =
                     
                 remote:
                     
-                    type: 'dnode.Bridge'
-                    
                     children: []
                                                     
                     booted: ->
                         
-                        ## gets called twice: 1. jsenv->obfuscate, 2. browser->rebuild
+                        ## gets called twice: 1. local->obfuscate, 2. remote->rebuild
                         floyd.tools.gui.email.obfuscate $ 'body'
                 
             , config
@@ -74,6 +72,23 @@ module.exports =
                 return done e
                 
             super done
+            
+        ##
+        ##
+        ##
+        _createModel: (req, res, type, fn)->
+            if typeof type is 'function'
+                fn = type
+                type = 'remote'
+            
+            super req, res, type, (err, model)=>
+                return fn(err) if err
+                
+                if req.session.user
+                    model.type ?= 'dnode.Bridge'
+                
+                fn null, model
+                
             
         
         
