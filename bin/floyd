@@ -9,7 +9,7 @@ USER=`whoami`
 ##
 ##
 SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink -m "$SOURCE")"; done
 
 ##
 FLOYD_ROOT="$( cd -P "$( dirname "$SOURCE" )"; cd .. && pwd -P )"
@@ -353,10 +353,15 @@ function log_viewer() {
 }
 
 
-##
-## http://patorjk.com/software/taag/#p=display&f=Lean&t=Floyd
-##
-HELP_BANNER_CODE=$(coffee -sc << EOFCS
+COFFEECMD=`which coffee`
+test -e "$COFFEECMD" || COFFEECMD=$FLOYD_ROOT/node_modules/coffee-script/bin/coffee
+
+if [ "$COFFEECMD" != "" ]
+then
+    ##
+    ## http://patorjk.com/software/taag/#p=display&f=Lean&t=Floyd
+    ##
+    HELP_BANNER_CODE=$($COFFEECMD -sc << EOFCS
 
 TEMPLATE = """
      _/_/_/_/  _/                            _/
@@ -401,7 +406,9 @@ TEMPLATE = """
 )(args) 
     
 EOFCS
-)
+    )
+fi
+
 
 ##
 ##
