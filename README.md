@@ -32,8 +32,8 @@ Install with [npm](http://github.com/isaacs/npm):
 * Put a symbolic link to `~/projects/floyd/bin/floyd` into your execution PATH.  
   I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
 
-    cd /usr/local/bin/
-    sudo ln -s ~/projects/floyd/bin/floyd 
+        cd /usr/local/bin/
+        sudo ln -s ~/projects/floyd/bin/floyd 
 
 * You need a `node_modules` folder somewhere above or within your projects folder  
   with the floyd folder symlinked into.
