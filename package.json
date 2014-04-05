@@ -1,7 +1,7 @@
 {
     "name":                "floyd",
     "author":              "Roman De Meo",
-    "description":         "floyd - hierarchical app containers",
+    "description":         "Floyd! - hierarchical app containers",
     "version":             "0.4.1",
 
     "main":                "./index",
