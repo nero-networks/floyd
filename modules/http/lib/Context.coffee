@@ -58,7 +58,7 @@ module.exports =
                             @_createRemote req, res, (err, remote)=>
                                 return next(err) if err || !remote
                                                                 
-                                if remote.length > 512
+                                if res.compress && remote.length > 512
                                     res.compress()
                             
                                 res.send remote+'\n'
@@ -146,7 +146,7 @@ module.exports =
                             
                             res.ctype ?= @data.ctype
                             
-                            if content.length > 512
+                            if res.compress && content.length > 512
                                 #console.log 'compressing', req.url
                                 res.compress()								
                             
