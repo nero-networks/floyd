@@ -69,7 +69,7 @@ module.exports =
         ##
         ##
         ##
-        _prepareRequest: (req, res, done)->
+        _prepareRequest: (req, res, next)->
             
             ##
             ## there is a sneaky gzip module created in 2010 by TJ @Sencha
