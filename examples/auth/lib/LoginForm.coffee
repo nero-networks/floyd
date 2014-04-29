@@ -48,7 +48,7 @@ module.exports =
         ##
         ##
         ##	
-        wire: (done)->
+        start: (done)->
             super (err)=>
                 
                 @identity.on 'login', ()=>
@@ -58,11 +58,18 @@ module.exports =
                 @identity.on 'logout', ()=>
                     @_update()
                     @_emit 'logout'
+                
+                done()
                     
+                
+        ##
+        ##
+        ##  
+        wire: (done)->
+            super (err)=>
                 
                 user = @find 'input[name="user"]'
                 pass = @find 'input[name="pass"]'
-                                
                 
                 @find('button[name="login"]').click ()=>
                         

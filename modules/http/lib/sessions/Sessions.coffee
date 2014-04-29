@@ -93,10 +93,6 @@ module.exports =
         
             sess = @_registry.get(sid)
             
-            _dbq = false
-            
-            _dbq && console.log 'login %s@%s pass:', user, sid, !!pass
-            
             return fn(new Error 'login failed') if !sess || !user || !pass
             
             users = @parent.children.users
@@ -105,33 +101,52 @@ module.exports =
 
                 return fn(err || new Error 'login failed') if err || !data
                 
-                hash = floyd.tools.crypto.password pass, data?.pass.substr(40)	
-                
-                _dbq && console.log 'check', hash is data?.pass
-                
-                if data.pass isnt hash || data.active is false
+                if data.active is false || !floyd.tools.crypto.password.verify pass, data.pass
                     console.warn 'access denied for %s@%s', user, sid
                      
                     fn new Error 'login failed' 
                 
                 else
-                    _dbq && console.log 'access granted %s@%s', user, sid 
-                    
                     data.lastlogin = +new Date()
                     
-                    users.set user, data, (err)=>
+                    @_checkPasswordHash user, pass, data, (err, data)=>
+                        return fn(err) if err
+                        
+                        users.set user, data, (err)=>
                     
-                        data = floyd.tools.objects.clone data,	
-                            login: user
+                            data = floyd.tools.objects.clone data,	
+                                login: user
                         
-                        delete data.pass
+                            delete data.pass
                         
-                        sess.public.user = data
+                            sess.public.user = data
                         
-                        ##
-                        fn null, data
+                            ##
+                            fn null, data
                     
+        
+        ##
+        ##
+        ##
+        _checkPasswordHash: (user, pass, data, fn)->
+            
+            cfg = floyd.tools.crypto.password._options
 
+            parts = data.pass.split '-'
+            
+            if parts.length is 1 \          ## check for old-style password hash 
+            or cfg.hasher isnt parts[1] \   ## check for new hash config
+            or cfg.keySize isnt (parseInt parts[2]) \
+            or cfg.iterations isnt (parseInt parts[3])
+                
+                data.pass = floyd.tools.crypto.password.create pass
+            
+                console.warn 'replacing password hash', data.pass
+                
+                
+            ##
+            fn null, data
+        
         ##
         ##
         ##
