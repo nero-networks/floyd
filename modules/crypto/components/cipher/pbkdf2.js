@@ -1,7 +1,7 @@
 /*
-CryptoJS v3.0.2
+CryptoJS v3.1.2
 code.google.com/p/crypto-js
-(c) 2009-2012 by Jeff Mott. All rights reserved.
+(c) 2009-2013 by Jeff Mott. All rights reserved.
 code.google.com/p/crypto-js/wiki/License
 */
 (function () {
@@ -11,23 +11,23 @@ code.google.com/p/crypto-js/wiki/License
     var Base = C_lib.Base;
     var WordArray = C_lib.WordArray;
     var C_algo = C.algo;
-    var MD5 = C_algo.MD5;
+    var SHA1 = C_algo.SHA1;
+    var HMAC = C_algo.HMAC;
 
     /**
-     * This key derivation function is meant to conform with EVP_BytesToKey.
-     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+     * Password-Based Key Derivation Function 2 algorithm.
      */
-    var EvpKDF = C_algo.EvpKDF = Base.extend({
+    var PBKDF2 = C_algo.PBKDF2 = Base.extend({
         /**
          * Configuration options.
          *
          * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
-         * @property {Hasher} hasher The hash algorithm to use. Default: CryptoJS.algo.MD5
+         * @property {Hasher} hasher The hasher to use. Default: SHA1
          * @property {number} iterations The number of iterations to perform. Default: 1
          */
         cfg: Base.extend({
             keySize: 128/32,
-            hasher: MD5,
+            hasher: SHA1,
             iterations: 1
         }),
 
@@ -38,16 +38,16 @@ code.google.com/p/crypto-js/wiki/License
          *
          * @example
          *
-         *     var kdf = CryptoJS.algo.EvpKDF.create();
-         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
-         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+         *     var kdf = CryptoJS.algo.PBKDF2.create();
+         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8 });
+         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8, iterations: 1000 });
          */
         init: function (cfg) {
             this.cfg = this.cfg.extend(cfg);
         },
 
         /**
-         * Derives a key from a password.
+         * Computes the Password-Based Key Derivation Function 2.
          *
          * @param {WordArray|string} password The password.
          * @param {WordArray|string} salt A salt.
@@ -62,32 +62,45 @@ code.google.com/p/crypto-js/wiki/License
             // Shortcut
             var cfg = this.cfg;
 
-            // Init hasher
-            var hasher = cfg.hasher.create();
+            // Init HMAC
+            var hmac = HMAC.create(cfg.hasher, password);
 
             // Initial values
             var derivedKey = WordArray.create();
+            var blockIndex = WordArray.create([0x00000001]);
 
             // Shortcuts
             var derivedKeyWords = derivedKey.words;
+            var blockIndexWords = blockIndex.words;
             var keySize = cfg.keySize;
             var iterations = cfg.iterations;
 
             // Generate key
             while (derivedKeyWords.length < keySize) {
-                if (block) {
-                    hasher.update(block);
-                }
-                var block = hasher.update(password).finalize(salt);
-                hasher.reset();
+                var block = hmac.update(salt).finalize(blockIndex);
+                hmac.reset();
+
+                // Shortcuts
+                var blockWords = block.words;
+                var blockWordsLength = blockWords.length;
 
                 // Iterations
+                var intermediate = block;
                 for (var i = 1; i < iterations; i++) {
-                    block = hasher.finalize(block);
-                    hasher.reset();
+                    intermediate = hmac.finalize(intermediate);
+                    hmac.reset();
+
+                    // Shortcut
+                    var intermediateWords = intermediate.words;
+
+                    // XOR intermediate with block
+                    for (var j = 0; j < blockWordsLength; j++) {
+                        blockWords[j] ^= intermediateWords[j];
+                    }
                 }
 
                 derivedKey.concat(block);
+                blockIndexWords[0]++;
             }
             derivedKey.sigBytes = keySize * 4;
 
@@ -96,7 +109,7 @@ code.google.com/p/crypto-js/wiki/License
     });
 
     /**
-     * Derives a key from a password.
+     * Computes the Password-Based Key Derivation Function 2.
      *
      * @param {WordArray|string} password The password.
      * @param {WordArray|string} salt A salt.
@@ -108,11 +121,11 @@ code.google.com/p/crypto-js/wiki/License
      *
      * @example
      *
-     *     var key = CryptoJS.EvpKDF(password, salt);
-     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
-     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+     *     var key = CryptoJS.PBKDF2(password, salt);
+     *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8 });
+     *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8, iterations: 1000 });
      */
-    C.EvpKDF = function (password, salt, cfg) {
-        return EvpKDF.create(cfg).compute(password, salt);
+    C.PBKDF2 = function (password, salt, cfg) {
+        return PBKDF2.create(cfg).compute(password, salt);
     };
 }());

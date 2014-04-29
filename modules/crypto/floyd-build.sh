@@ -12,7 +12,7 @@ SOURCE="components/"
 
 TARGET="tools/CryptoJS.js"
 
-ZIPFILE="http://code.google.com/p/crypto-js/downloads/detail?name=CryptoJS%20v3.0.2.zip"
+ZIPFILE="http://code.google.com/p/crypto-js/downloads/detail?name=CryptoJS%20v3.1.2.zip"
 
 lastmod=$(date -d @$(find $SOURCE -type f -printf '%A@\t%p\n' | sort -r -k1 | head -n1 | cut -f1) +%s)
 
@@ -32,7 +32,7 @@ then
 
     echo -e "\n(function() {"
     
-    cat core.js
+    cat core.js lib-typedarrays.js hmac.js
     
     for file in $(find ./modules -type f)
     do
@@ -42,7 +42,7 @@ then
         
     done
     
-    cat evpkdf.js cipher-core.js
+    cat cipher-core.js
     
     for file in $(find ./cipher -type f)
     do
