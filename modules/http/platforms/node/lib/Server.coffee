@@ -95,7 +95,7 @@ module.exports =
             ##
             req.cookies = res.cookies = new Cookies req, res
             
-            super req, res, done
+            super req, res, next
             
 
         ##
