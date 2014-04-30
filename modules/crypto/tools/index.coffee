@@ -9,11 +9,10 @@ module.exports =
         floyd.tools.crypto.CryptoJS[algo](str).toString()
     
     
-    
     ##
-    ##
+    ## @deprecated - far too weak...
     ##  
-    password: (pass, salt)->
+    password_old: (pass, salt)->
         crypto = floyd.tools.crypto
         
         if !salt

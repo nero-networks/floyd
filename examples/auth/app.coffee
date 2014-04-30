@@ -134,11 +134,14 @@ module.exports =
                         button style:'display: none', 'click for secret'
                     
                     ##
-                    wiring: ->
+                    running: ->
                     
                         @identity.on 'login', ()=>
-                            @__root.show()
+                            @__root.removeAttr 'style'
                         
+                    ##
+                    wiring: ->
+                    
                         @identity.on 'logout', ()=>
                             @__root.hide()
                 
