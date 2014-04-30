@@ -3,6 +3,9 @@ events = require 'events'
 
 ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped']
 
+## EXPERIMENTAL identity based lookups cache -> nero
+## it is working! still deactivated by default. to use
+## put USELOOKUPSCACHE: true into the base config object
 USELOOKUPSCACHE = false
 LOOKUPSCACHE = {}
 
@@ -43,7 +46,14 @@ module.exports =
         init: (config={}, done)->         
             
             config = @configure config
-
+            
+            # --> EXPERIMENTAL identity based lookups cache -> nero
+            
+            if config.USELOOKUPSCACHE
+                USELOOKUPSCACHE = true
+            
+            # <-- EXPERIMENTAL 
+            
             @id = config.id
                     
             @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
@@ -436,8 +446,16 @@ module.exports =
         ## * emits shutdown and stopped
         ##
         stop: (done)->
-            
             @_changeStatus 'shutdown'
+            
+            # --> EXPERIMENTAL identity based lookups cache -> nero
+
+            if USELOOKUPSCACHE
+                for ident in floyd.tools.objects.keys LOOKUPSCACHE
+                    LOOKUPSCACHE[ident]._off()
+                    delete LOOKUPSCACHE[ident]
+
+            # <-- EXPERIMENTAL
             
             @_init 'stop', 'stopped', done
 
@@ -457,25 +475,15 @@ module.exports =
             _parent = !!(@parent && @parent.lookup)
             _global = !!(!@parent && floyd.__parent?.lookup)
             
-            @logger.debug 'lookup:', name, identity.id
+            @logger.debug 'lookup:', name, __ident
             
             # --> EXPERIMENTAL identity based lookups cache -> nero
             
             if USELOOKUPSCACHE # inactive if false here
-                if !(lookupscache = LOOKUPSCACHE[__ident])
-                    @logger.info 'create lookups cache for', __ident
-                    
-                    lookupscache = LOOKUPSCACHE[__ident] = {}
-                        
-                    identity.on 'destroyed', ()=>
-                        @logger.info 'destroy lookups cache for', __ident
-                        delete LOOKUPSCACHE[__ident]
-                    
-                    
-                        
-                        
+
                 ## interrupt search here and return lookup from cache
-                if lookupscache[name]
+
+                if (lookupscache = LOOKUPSCACHE[__ident]) && lookupscache[name]
                     @logger.debug 'found cached:', name, identity.id
                     return done(null, lookupscache[name]) 
                 
@@ -504,10 +512,26 @@ module.exports =
                         # --> EXPERIMENTAL identity based lookups cache -> nero
                         
                         if USELOOKUPSCACHE # inactive if false here
+                            if !(lookupscache = LOOKUPSCACHE[__ident])
+                                @logger.debug 'create lookups cache for', __ident
+                    
+                                lookupscache = LOOKUPSCACHE[__ident] = {}                                
+                                
+                                identity.on 'destroyed', _destroy = ()=>                                    
+                                    @logger.debug 'destroy lookups cache for', __ident
+                                    delete LOOKUPSCACHE[__ident]
+                    
+                                lookupscache._off = ()->
+                                    identity.off 'destroyed', _destroy
+
                             if !lookupscache[name]
-                                @logger.info 'add %s to cache for', name, __ident
+                                @logger.debug 'add %s to cache for', name, __ident
                             
                                 lookupscache[name] = ctx
+                                
+                                ctx.on 'destroyed', ()=>
+                                    @logger.debug 'delete %s from cache for', name, __ident
+                                    delete lookupscache[name]
                         
                         # <-- EXERIMENTAL
                         
