@@ -15,7 +15,7 @@ module.exports =
             settings.platform ?= 'node'
             settings.version = require(settings.libdir+'/package.json').version
             
-            ## platform hoistname
+            ## platform hostname
             settings.hostname = require('os').hostname()
             
             ## platform ident string
@@ -172,11 +172,11 @@ module.exports =
                 if process.getuid() is 0
                     
                     ## chown tmpdir
-                    floyd.tools.files.chown @system.tmpdir, config.UID, config.GID
+                    floyd.tools.files.chown @system.tmpdir, @system.UID, @system.GID
                     
                     ## chown process
-                    process.setgid(config.GID) # GID first ;-)
-                    process.setuid(config.UID)
+                    process.setgid(@system.GID) # GID first ;-)
+                    process.setuid(@system.UID)
                     
                     ## EXPERIMENTAL! --> delete the require cache to prevent
                     ## unprivileged users from reading sensitive data
@@ -196,9 +196,9 @@ module.exports =
                     
                     ## <-- EXPERIMENTAL
                     
-                else if (config.UID && config.UID isnt process.getuid()) || (config.GID && config.GID isnt process.getgid())
+                else if (@system.UID && @system.UID isnt process.getuid()) || (@system.GID && @system.GID isnt process.getgid())
                     ctx.logger.warning 'WARNING: running unprivileged!'
-                    ctx.logger.warning '         changing UID/GID to %s/%s is impossible', (config.UID || config.GID), (config.GID || config.UID)
+                    ctx.logger.warning '         changing UID/GID to %s/%s is impossible', (@system.UID || @system.GID), (@system.GID || @system.UID)
                     ctx.logger.warning '         current UID/GID settings: %s/%s', process.getuid(), process.getgid()
                     
                          
