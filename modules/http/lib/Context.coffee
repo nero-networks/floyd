@@ -177,7 +177,7 @@ module.exports =
         ##
         _createRemote: (req, res, fn)->
             
-            @_createModel req, res, (err, model)=>
+            @_createModel req, res, 'remote', (err, model)=>
                 return fn(err) if err
                 
                 @_createBoot req, res, model, (err, boot, model)=>
@@ -190,10 +190,7 @@ module.exports =
         ##
         ##
         _createModel: (req, res, type, fn)->
-            if typeof type is 'function'
-                fn = type
-                type = 'remote'
-            
+
             next = (err, model)=>
                 return fn(err) if err
                 
