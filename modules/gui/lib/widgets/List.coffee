@@ -62,7 +62,7 @@ module.exports =
                     @_ul = _sel.apply @, []
                 else
                     @_ul = @find _sel
-
+                
                 if !@_ul.children().length
                     @_reload done
 
@@ -85,8 +85,11 @@ module.exports =
                 else
                     _items = _items.slice offset
 
-                for image in _items
-                    items.push floyd.tools.objects.clone image
+                for item in _items
+                    if typeof item is 'string'
+                        items.push item
+                    else
+                        items.push floyd.tools.objects.clone item
 
             fn null, items,
                 offset: offset
