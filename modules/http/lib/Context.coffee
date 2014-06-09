@@ -40,7 +40,7 @@ module.exports =
         ##
         ##
         start: (done)->
-            
+
             @_router = new floyd.http.Router @ID
         
             super (err)=>			
@@ -147,7 +147,6 @@ module.exports =
                             res.ctype ?= @data.ctype
                             
                             if res.compress && content.length > 512
-                                #console.log 'compressing', req.url
                                 res.compress()								
                             
                             res.send content
@@ -200,9 +199,6 @@ module.exports =
                     model.id =  floyd.tools.strings.uuid()
                     
                     if @data.find 'authProxy'
-                        _parent = @
-                        while _parent.parent
-                            _parent = _parent.parent
                         
                         model.data ?= {} 
                         model.data.authManager ?= @data.find 'authManager'
@@ -210,12 +206,16 @@ module.exports =
                         if @data.find 'debug'
                             model.data.debug = true
                         
+                        _parent = @
+                        while _parent.parent && !_parent.data.authProxy
+                            _parent = _parent.parent
+
                         model.ORIGIN = _parent.id
                         
                         model.TOKEN = req.session.TOKEN
                         
-                        if req.session.user
-                            model.USER = req.session.user
+                        #if req.session.user
+                        #    model.USER = req.session.user
 
                 fn null, model
             
