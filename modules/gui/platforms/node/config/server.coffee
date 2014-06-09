@@ -4,15 +4,16 @@ module.exports = new floyd.Config
     type: 'http.Server'
     
     data:
-        public: ['./public', floyd.system.libdir+'/modules/gui/public/']
+        public: [floyd.system.libdir+'/modules/gui/public/']
         
         lib:
-            modules: ['gui', 'http']
+            modules: ['gui', 'crypto']
             
-            node_modules: ['floyd/node_modules/markdown']
+            node_modules: ['floyd/node_modules/markdown', 'floyd/node_modules/sanitizer']
             
             aliases: 		
                 markdown: '/node_modules/floyd/node_modules/markdown'
+                sanitizer: '/node_modules/floyd/node_modules/sanitizer'
                         
             
             prepend: [
@@ -21,4 +22,3 @@ module.exports = new floyd.Config
                 floyd.system.libdir+'/modules/gui/public/js/jquery.highlight-3.min.js'
             ]
     
-  
