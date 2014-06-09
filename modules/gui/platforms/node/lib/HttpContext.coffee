@@ -405,8 +405,7 @@ __boot_cheerio__ = (config)->
                 
             else if !destroyed && destroyed = true
 
-                ctx.destroy()
-                    
+                ctx.destroy next
         
         next()
 
