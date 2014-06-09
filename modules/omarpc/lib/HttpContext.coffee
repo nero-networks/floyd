@@ -62,29 +62,29 @@ module.exports =
         ##
         _createContent: (req, res, fn)->
                 
-            floyd.tools.http.parseData req, (err)=>
-                return fn(err) if err
+            ##                
+            if !(_ident = @_IDENTITIES[SID = req.session.SID])
+                #console.log 'creating _ident'
                 
-                ##                
-                if !(_ident = @_IDENTITIES[SID = req.session.SID])
-                    #console.log 'creating _ident'
+                manager = new floyd.auth.Manager @_createAuthHandler()
+                
+                @_IDENTITIES[SID] = _ident = 
+                    manager: manager
+                    identity: manager.createIdentity @identity.id+'.'+SID
+                
+                req.session.on 'destroy', ()=>
+                    _ident.manager.destroyIdentity _ident.identity
+                    delete @_IDENTITIES[SID]
+                
+                manager.authorize req.session.TOKEN, (err)=>
+                    @_createContent req, res, fn
                     
-                    manager = new floyd.auth.Manager @_createAuthHandler()
-                    
-                    @_IDENTITIES[SID] = _ident = 
-                        manager: manager
-                        identity: manager.createIdentity @identity.id+'.'+SID
-                    
-                    req.session.on 'destroy', ()=>
-                        _ident.manager.destroyIdentity _ident.identity
-                        delete @_IDENTITIES[SID]
-                    
-                    manager.authorize req.session.TOKEN, (err)=>
-                        @_createContent req, res, fn
-                        
-                else
-                    #console.log 'using _ident', _ident.identity.id
-                    
+            else
+                #console.log 'using _ident', _ident.identity.id
+
+	            floyd.tools.http.parseData req, (err)=>
+	                return fn(err) if err
+	                
                     res.cache?.etag()
                     
                     ##
