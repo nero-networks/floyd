@@ -56,6 +56,7 @@ module.exports =
                 link.html text
             else
                 link.append $('<img class="icon" alt="'+text+'">').attr('src', '/img/arrow-'+@data.color+'-'+type+'.png')
+
             
             return link
         
@@ -91,7 +92,7 @@ module.exports =
                     each: (i, next)=>
                         href[linkdepth] = i
                         
-                        link = @_createLink href.join('/'), 'page', i + 1, 'page'
+                        link = @_createLink href.join('/'), 'page', ''+(i + 1), 'page'
                     
                         if i is curr
                             link.addClass 'actual'

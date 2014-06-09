@@ -35,34 +35,38 @@ module.exports =
                             if user then @data.strings.logout else @data.strings.login
             
             
-                wiring: ->
-                
-                    hint = @find '.hint'
-        
-                    login = @find('form.gui.widgets.LoginForm')
-                    
-                    user = login.find('input[name=user]')    
-                    pass = login.find('input[name=pass]')
-                                                
-                    login.on 'submit', ()=>
-                        
-                        if @identity.login()
-                            
-                            @_getAuthManager().logout (err)=> location.reload()                                        
-                            
-                        else            
-                                                
-                            @_getAuthManager().login user.val(), pass.val(), (err)=>                                    
-                                if err
-                                    pass.val ''
-                                    hint.addClass('error').text(err.message)
-                                 
-                                else
-                                     location.reload()
-                         
-                        return false
-            
             , config
         
         
+        ##
+        ##
+        ##
+        wire: (done)->
+            super (err)=>
+                return done(err) if err
                 
+                hint = @find '.hint'
+    
+                login = @find('form.gui.widgets.LoginForm')
+                
+                user = login.find('input[name=user]')    
+                pass = login.find('input[name=pass]')
+                                            
+                login.on 'submit', ()=>
+                    
+                    if @identity.login()
+                        
+                        @_getAuthManager().logout (err)=> location.reload()                                        
+                        
+                    else            
+                                            
+                        @_getAuthManager().login user.val(), pass.val(), (err)=>                                    
+                            if err
+                                pass.val ''
+                                hint.addClass('error').text(err.message)
+                             
+                            else
+                                 location.reload()
+                     
+                    return false
+            
