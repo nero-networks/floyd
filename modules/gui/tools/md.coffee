@@ -1,5 +1,6 @@
 
 md = require 'markdown'
+sanitizer = require 'sanitizer'
 
 ALLOWEDTAGS = ['a', 'b', 'table', 'tr', 'th', 'td', 'br', 'span', 'div', 'header', 'footer', 'section', 'article', 'nav', 'address']
 
@@ -67,6 +68,9 @@ module.exports = parse = (input, _options, fn)->
                 html = html.replace REPLACETAG, '<$2$3$4$5>'
     else 
         html = ''
+    
+    html = sanitizer.sanitize html, (uri)->
+        return uri
     
     #console.log html
     
