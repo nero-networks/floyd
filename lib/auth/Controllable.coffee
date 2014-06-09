@@ -23,9 +23,14 @@ module.exports =
         ##
         ##
         destroy: (done)->
-            #@logger.info 'destroy', @identity.id
-            @_getAuthManager().destroyIdentity @identity, done
+            #@logger.info 'destroy', @identity.id, done
+            @_getAuthManager().destroyIdentity @identity, (err)=>
+                return done(err) if err
             
+                if @__authManager
+                    @_getAuthManager().destroy done
+                
+                else done()
         ##
         ##
         ##
@@ -52,20 +57,19 @@ module.exports =
         ##
         ##
         _getAuthManager: ()->
-            if !( manager = @parent?._getAuthManager?() ) 
-                manager = @__authManager ?= @_createAuthManager() 
+            if ( manager = @__authManager || @parent?._getAuthManager?() ) 
+                return manager
+
+            @__authManager = @_createAuthManager() 
         
-            return manager
             
                 
         ##
         ##
         ##
         _createAuthManager: ()->
-            if !( manager = @parent?._getAuthManager?() )
-                manager = new floyd.auth.Manager @_createAuthHandler()
+            new floyd.auth.Manager @_createAuthHandler()
 
-            return manager
             
         ##
         ##
@@ -85,17 +89,6 @@ module.exports =
                 
                 @logger.debug 'allowed access for', identity.id
                 
-                ## calls _permitAccess with the current identity
-                _checkAccess = (key, args=[], ok)=>
-                    @_permitAccess identity, key, args, (err)=>	
-                        if err
-                            if typeof (fn = args.pop()) is 'function'
-                                fn err
-                            else
-                                throw err
-                                
-                        else ok()
-                
                 wrapper = {}
                 
                 ##				
@@ -110,18 +103,28 @@ module.exports =
                                 
                                 wrapper[key] = (_args...)=>
                                     
-                                    _checkAccess key, _args, ()=>
+                                    @_permitAccess identity, key, _args, (err)=>
+                                        if err
+                                            if typeof (_fn = _args.pop()) is 'function'
+                                                return _fn err
+                                            else
+                                                throw err                                
                                         
                                         ## EXPERIMENTAL bind the identity to the method... 
                                         value.identity = identity
                                         
                                         try					
                                             res = value.apply @, _args
+                                            value.identity = @identity
+
                                         catch err
+                                            value.identity = @identity
+
                                             if typeof (_fn = _args.pop()) is 'function'
-                                                _fn err												
+                                                return _fn err                                            
+                                            else
+                                                throw err											
                                             
-                                        value.identity = @identity
                                         
                                         return res
                                 

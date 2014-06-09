@@ -57,15 +57,8 @@ module.exports =
                     
                     @_listen (err)=>
                         return done(err) if err
-                        
-                        ##		
-                        if config.TOKEN
-                            @_getAuthManager().authorize config.TOKEN, (err)=>
-                                return done(err) if err
-                                
-                                boot done
-                        else
-                            boot done 
+
+                        boot done 
 
             return config	
     
@@ -229,7 +222,7 @@ module.exports =
                     ##
                     conn.on 'end', ()=>
                     
-                        #console.log child.ID, 'conn end', conn.id
+                        console.log child.ID, 'conn end', conn.id
                     
                         child.stop (err)=>
                     

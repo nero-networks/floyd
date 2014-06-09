@@ -21,14 +21,14 @@ module.exports = (handler)->
     
     ##
     ##
-    manager = new events.EventEmitter()
-    manager.setMaxListeners 100
+    emitter = new events.EventEmitter()
+    emitter.setMaxListeners 100
 
     ##
     ##
-    _on = manager.addListener
-    manager.addListener = (action, listener)->
-        _on.apply manager, arguments
+    _on = emitter.addListener
+    emitter.addListener = (action, listener)->
+        _on.apply emitter, arguments
         
         if action is 'login' && __user
             listener __user
@@ -41,22 +41,26 @@ module.exports = (handler)->
     ##
     ##
     authorize: __authorize = (token, fn)->
-        manager.emit 'authorizing', token
+        #console.log 'authorizing', token
         
-        #console.log 'authorizing', __user, token
-        
+        emitter.emit 'authorized', __token = token
+
         handler.authorize token, (err, user)=>
-            #console.log 'post authorizing', user
+    
+            if !err 
+                #console.log 'post authorizing', token
+    
+    
+                if __user = user
+                    #console.log 'authorized user', __user
             
-            manager.emit 'authorized', __token = token
-            
-            if !err && __user = user
-                #console.log 'authorized user', user
-            
-                manager.emit 'login', __user 
+                    emitter.emit 'login', __user 
+                
         
-            #else if err
-            #	console.log 'authorize error', err
+            else if err
+                emitter.emit 'unauthorized'
+                
+                #console.log 'authorize error', err
             
             fn? err 
     
@@ -67,7 +71,7 @@ module.exports = (handler)->
         #console.log floyd.tools.objects.keys(pool).length, 'create', id
         
         if !pool[id]
-            return pool[id] = new floyd.auth.Identity id, manager			
+            return pool[id] = new floyd.auth.Identity id, emitter			
             
         else
             throw new Error 'duplicate identity: '+id
@@ -84,8 +88,8 @@ module.exports = (handler)->
             
             #console.log floyd.tools.objects.keys(pool).length, 'destroy', id
             
-            if manager.emit
-                manager.emit 'destroy:'+id
+            if emitter.emit
+            	emitter.emit 'destroy:'+id
             
         else
             console.warn 'unmanaged identity', id 
@@ -114,11 +118,11 @@ module.exports = (handler)->
     ##
     ##
     logout: (fn)->
-        #console.log manager, typeof manager.emit
+        #console.log emitter, typeof emitter.emit
         
-        if manager.emit
-            manager.emit 'logout'
-
+        if emitter.emit
+        	emitter.emit 'logout'
+        
         __user = null
         
         handler.logout __token, fn
@@ -136,4 +140,11 @@ module.exports = (handler)->
         else
             #console.log 'try handler for identity', identity.id
             handler.authenticate identity, fn
+    
+    ##
+    ##
+    ##
+    destroy: (done)->
+        #console.log 'manager.destroy', done
+        done()
         
