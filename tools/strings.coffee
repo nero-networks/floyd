@@ -3,8 +3,6 @@
 ## sprintf() for JavaScript -> http://www.diveintojavascript.com/projects/javascript-sprintf
 sprintf = require 'sprintf'
 
-sanitizer = require 'sanitizer'
-
 ##
 ##
 module.exports = 
@@ -78,7 +76,7 @@ module.exports =
     ##
     ##
     sanitize: (str)->
-        sanitizer.sanitize str
+        require('sanitizer').sanitize str
         
 
     ##
