@@ -8,7 +8,7 @@ module.exports =
         ##
         ##
         configure: (config)->
-            @_hiddenKeys.push 'wire', 'wiring'
+            @_hiddenKeys.push 'wire', 'wiring', 'build', 'building'
 
             @_template ?= config.template
             
@@ -18,18 +18,15 @@ module.exports =
                 @_build (err)=>
                     return done(err) if err
                     
-                    boot done                
-                
-                
-            
-            floyd.tools.objects.intercept @, 'start', (done, start)=>
-                start (err)=>
-                    return done(err) if err
-                    if floyd.system.platform is 'remote'
-                        @wire done
+                    boot (err)=>                    
+                        return done(err) if err
+                        if floyd.system.platform is 'remote'
+                            @wire done
                     
-                    else done()
-                    
+                        else 
+                            @build done
+                            
+                        
             config = super new floyd.Config
             
                 data: 
@@ -69,6 +66,16 @@ module.exports =
             @wiring?()
             
             done()
+        
+        ##
+        ##
+        ##
+        build: (done)->
+            if @building
+                @building done
+                
+            else
+                done()
         
         ##
         ##
@@ -241,10 +248,12 @@ module.exports =
             item = if @data.key then data[@data.key] else data
             
             @_item item, (err, html)=>
-                return fn(err) if err && fn
+                return fn?(err) if err
                 
                 if html
                     @__root.append html
+                    
+                fn?()
                 
                 
         ##
