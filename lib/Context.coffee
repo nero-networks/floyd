@@ -37,7 +37,7 @@ module.exports =
             
             @_status = []
         
-            @_hiddenKeys.push 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate', 'data', 'parent', 'children'
+            @_hiddenKeys.push 'data', 'parent', 'children', 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
             
         
         ##
@@ -46,13 +46,6 @@ module.exports =
         init: (config={}, done)->         
             
             config = @configure config
-            
-            # --> EXPERIMENTAL identity based lookups cache -> nero
-            
-            if config.USELOOKUPSCACHE
-                USELOOKUPSCACHE = true
-            
-            # <-- EXPERIMENTAL 
             
             @id = config.id
                     
@@ -68,6 +61,14 @@ module.exports =
             @logger = @_createLogger @ID
             
             @_emitter = @_createEmitter config
+            
+            # --> EXPERIMENTAL identity based lookups cache -> nero
+            
+            if config.USELOOKUPSCACHE
+                USELOOKUPSCACHE = true
+                @logger.debug 'init lookups cache'
+            
+            # <-- EXPERIMENTAL 
             
             @children = new floyd.data.MappedCollection()
 
@@ -177,9 +178,9 @@ module.exports =
                                     
             
             ##
-            ##           
+            ##         
             floyd.tools.objects.intercept @, 'destroy', (done, destroy)=>
-            
+
                 if @stop && @_status.indexOf('stopped') is -1
                     @logger.warning 'context not stopped!'
                 
@@ -197,6 +198,8 @@ module.exports =
                             
                             done? err
             
+            ##
+            ##
             if manager = config.data.authManager
                 
                 if config.ORIGIN
@@ -204,12 +207,18 @@ module.exports =
                 
                 #console.log 'prepare _createAuthHandler', manager
                 
-                __user = config.USER
+                if config.TOKEN
+                    floyd.tools.objects.intercept @, 'boot', (done, boot)=>
+
+                        @_getAuthManager().authorize config.TOKEN, (err)=>
+                            return done(err) if err
+
+                            boot done
                 
                 ##
                 @_createAuthHandler = ()=>
                     
-                    #console.log '_createAuthHandler', manager, __user
+                    #console.log '_createAuthHandler', manager
                     
                     _auth = (fn)=>
                         # EXPERIMENTAL shortcut. use child if found
@@ -223,75 +232,31 @@ module.exports =
                     
                     new floyd.auth.Handler
 
-                        #
+                        ##
                         authorize: (token, fn)=>
-                            
-                            #console.log 'autorizazion request', __user, @id
-                            
-                            if !@identity
-                                #console.log 'no identity', __user?.login
-                                
-                                fn null, __user
-
-                            else
-                                #console.log 'using manager for authorize'
-                                _auth (err, auth)=>
-                                    return fn(err) if err
-
-                                    #console.log 'delegate authorize', @identity.id
-                                    auth.authorize token, (err, user)=>
-                                            
-                                        fn err, __user = user
+                            _auth (err, auth)=>
+                                return fn(err) if err
+                                auth.authorize token, fn
                             
                         ##
                         authenticate: (identity, fn)=>
-                            #console.log 'using manager for authenticate', identity.id
-                            
                             _auth (err, auth)=>
-                                if err || !auth
-                                    @logger.warning 'authentication failed!\n\terror: %s\n\tfor: %s', \
-                                        (err?.message ? 'noauth'), identity.id
-                                    
-                                    fn (err ? new Error 'authentication failed!')
-                            
-                                else
-                                    @logger.debug 'delegate authenticate to: %s for: %s', auth.ID, identity.id
-                                    auth.authenticate identity, fn
+                                return fn(err) if err
+                                auth.authenticate identity, fn
             
                         ##
                         login: (token, user, pass, fn)=>
-                            #console.log 'using manager for login', user
-                            
                             _auth (err, auth)=>
                                 return fn(err) if err
-                                
-                                #console.log 'delegate login', token
-                            
-                                auth.login token, user, pass, (err)=>
-                                    
-                                    #console.log 'login granted', _user, @id
-                                    
-                                    fn err
+                                auth.login token, user, pass, fn
                             
                             
                         ##
                         logout: (token, fn)=>
-                                
-                            #console.log 'using manager for logout'
                             _auth (err, auth)=>
                                 return fn(err) if err
-                                
-                                #console.log 'delegate logout', token
-                                auth.logout  token, (err)=>
-
-                                    __user = null
-                                
-                                    fn? err
+                                auth.logout token, fn
                         
-                ##
-                if config.TOKEN
-                    @_getAuthManager().authorize config.TOKEN
-
                     
             if typeof config?.configure is 'function'
                 config = config.configure.apply @, [config]
