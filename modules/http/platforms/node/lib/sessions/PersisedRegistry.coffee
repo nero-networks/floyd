@@ -22,8 +22,10 @@ module.exports =
                 each: (id, data, next)=>
 
                     sess = new (floyd.tools.objects.resolve @_config.sessions.type) id, @_config.sessions
-                    
+
                     floyd.tools.objects.extend sess, data
+                    
+                    sess.touch()
                     
                     @add sess
                     
