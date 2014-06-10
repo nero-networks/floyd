@@ -69,4 +69,6 @@ module.exports =
                                  location.reload()
                      
                     return false
-            
+                
+                done()
+                
