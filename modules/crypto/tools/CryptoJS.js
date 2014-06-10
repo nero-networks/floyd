@@ -728,6 +728,68 @@ code.google.com/p/crypto-js
 code.google.com/p/crypto-js/wiki/License
 */
 (function () {
+    // Check if typed arrays are supported
+    if (typeof ArrayBuffer != 'function') {
+        return;
+    }
+
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var WordArray = C_lib.WordArray;
+
+    // Reference original init
+    var superInit = WordArray.init;
+
+    // Augment WordArray.init to handle typed arrays
+    var subInit = WordArray.init = function (typedArray) {
+        // Convert buffers to uint8
+        if (typedArray instanceof ArrayBuffer) {
+            typedArray = new Uint8Array(typedArray);
+        }
+
+        // Convert other array views to uint8
+        if (
+            typedArray instanceof Int8Array ||
+            typedArray instanceof Uint8ClampedArray ||
+            typedArray instanceof Int16Array ||
+            typedArray instanceof Uint16Array ||
+            typedArray instanceof Int32Array ||
+            typedArray instanceof Uint32Array ||
+            typedArray instanceof Float32Array ||
+            typedArray instanceof Float64Array
+        ) {
+            typedArray = new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+        }
+
+        // Handle Uint8Array
+        if (typedArray instanceof Uint8Array) {
+            // Shortcut
+            var typedArrayByteLength = typedArray.byteLength;
+
+            // Extract bytes
+            var words = [];
+            for (var i = 0; i < typedArrayByteLength; i++) {
+                words[i >>> 2] |= typedArray[i] << (24 - (i % 4) * 8);
+            }
+
+            // Initialize this word array
+            superInit.call(this, words, typedArrayByteLength);
+        } else {
+            // Else call normal init
+            superInit.apply(this, arguments);
+        }
+    };
+
+    subInit.prototype = WordArray;
+}());
+/*
+CryptoJS v3.1.2
+code.google.com/p/crypto-js
+(c) 2009-2013 by Jeff Mott. All rights reserved.
+code.google.com/p/crypto-js/wiki/License
+*/
+(function () {
     // Shortcuts
     var C = CryptoJS;
     var C_lib = C.lib;
@@ -1559,6 +1621,130 @@ code.google.com/p/crypto-js/wiki/License
      *     var hmac = CryptoJS.HmacSHA1(message, key);
      */
     C.HmacSHA1 = Hasher._createHmacHelper(SHA1);
+}());
+
+
+
+/* ./modules/evpkdf.js */
+
+
+/*
+CryptoJS v3.0.2
+code.google.com/p/crypto-js
+(c) 2009-2012 by Jeff Mott. All rights reserved.
+code.google.com/p/crypto-js/wiki/License
+*/
+(function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var WordArray = C_lib.WordArray;
+    var C_algo = C.algo;
+    var MD5 = C_algo.MD5;
+
+    /**
+     * This key derivation function is meant to conform with EVP_BytesToKey.
+     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+     */
+    var EvpKDF = C_algo.EvpKDF = Base.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+         * @property {Hasher} hasher The hash algorithm to use. Default: CryptoJS.algo.MD5
+         * @property {number} iterations The number of iterations to perform. Default: 1
+         */
+        cfg: Base.extend({
+            keySize: 128/32,
+            hasher: MD5,
+            iterations: 1
+        }),
+
+        /**
+         * Initializes a newly created key derivation function.
+         *
+         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+         *
+         * @example
+         *
+         *     var kdf = CryptoJS.algo.EvpKDF.create();
+         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
+         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+         */
+        init: function (cfg) {
+            this.cfg = this.cfg.extend(cfg);
+        },
+
+        /**
+         * Derives a key from a password.
+         *
+         * @param {WordArray|string} password The password.
+         * @param {WordArray|string} salt A salt.
+         *
+         * @return {WordArray} The derived key.
+         *
+         * @example
+         *
+         *     var key = kdf.compute(password, salt);
+         */
+        compute: function (password, salt) {
+            // Shortcut
+            var cfg = this.cfg;
+
+            // Init hasher
+            var hasher = cfg.hasher.create();
+
+            // Initial values
+            var derivedKey = WordArray.create();
+
+            // Shortcuts
+            var derivedKeyWords = derivedKey.words;
+            var keySize = cfg.keySize;
+            var iterations = cfg.iterations;
+
+            // Generate key
+            while (derivedKeyWords.length < keySize) {
+                if (block) {
+                    hasher.update(block);
+                }
+                var block = hasher.update(password).finalize(salt);
+                hasher.reset();
+
+                // Iterations
+                for (var i = 1; i < iterations; i++) {
+                    block = hasher.finalize(block);
+                    hasher.reset();
+                }
+
+                derivedKey.concat(block);
+            }
+            derivedKey.sigBytes = keySize * 4;
+
+            return derivedKey;
+        }
+    });
+
+    /**
+     * Derives a key from a password.
+     *
+     * @param {WordArray|string} password The password.
+     * @param {WordArray|string} salt A salt.
+     * @param {Object} cfg (Optional) The configuration options to use for this computation.
+     *
+     * @return {WordArray} The derived key.
+     *
+     * @static
+     *
+     * @example
+     *
+     *     var key = CryptoJS.EvpKDF(password, salt);
+     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
+     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+     */
+    C.EvpKDF = function (password, salt, cfg) {
+        return EvpKDF.create(cfg).compute(password, salt);
+    };
 }());
 /*
 CryptoJS v3.1.2
