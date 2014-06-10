@@ -300,38 +300,60 @@ module.exports =
 ##
 ##
 ##
-__boot__ = (config)->
+__boot__ = (config)->    
     
-    window.floyd = require 'floyd'
-    
+    ##    
     _INITIALIZED_ = false
-    init = ()->
+    _TERMINATED_ = false
+    ctx = null
+    
+    ##
+    attachEvent = (event, listener)->
+        if window.addEventListener
+            window.addEventListener event, listener, false # real browsers
+        else
+            document.attachEvent 'on' + event, listener # IE quirks
+            window.attachEvent 'on' + event, listener # IE8
+            
+    
+    ##
+    init = (e)->
         return undefined if _INITIALIZED_ 
         _INITIALIZED_= true
+
+        window.floyd = require 'floyd'
         
         window.__initTime__ = +new Date()
         
         ctx = floyd.init config, (err)->
-            console.error(err) if err
+            return console.error(err) if err    
+
+    attachEvent 'DOMContentLoaded', init
+    attachEvent 'load', init
     
-    
+    ##        
+    terminate = (e)->
+        return undefined if _TERMINATED_
+        _TERMINATED_ = true
+        
         stopped = !ctx.stop
         destroyed = !ctx.destroy
-        
-        window.onbeforeunload = ()->
-            next = (err)->
-                console.error(err.stack||err) if err
+
+        next = (err)->
+            console.error(err.stack||err) if err
+
+            if !stopped && stopped = true
+                ctx.stop next
+    
+            else if !destroyed && destroyed = true
+                ctx.destroy next
+
+        next()
                 
-                if !stopped && stopped = true
-                    ctx.stop next
-                    
-                else if !destroyed && destroyed = true
-                    ctx.destroy next
-            
-            next()
-                                
-            return undefined
-            
-    window.addEventListener 'DOMContentLoaded', init
-    window.addEventListener 'load', init
+        return undefined
+    
+    attachEvent 'beforeunload', terminate
+    attachEvent 'unload', terminate
+    
+    return undefined
               

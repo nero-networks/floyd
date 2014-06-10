@@ -222,7 +222,7 @@ module.exports =
                     ##
                     conn.on 'end', ()=>
                     
-                        console.log child.ID, 'conn end', conn.id
+                        #console.log child.ID, 'conn end', conn.id
                     
                         child.stop (err)=>
                     
