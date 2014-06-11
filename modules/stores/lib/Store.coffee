@@ -31,7 +31,7 @@ module.exports =
             fn?()
 
         get: (key, fn)->
-            fn null, @_memory[key]
+            fn null, floyd.tools.objects.clone @_memory[key]
 
 
         set: (key, item, fn)->
@@ -73,11 +73,11 @@ module.exports =
         each: (fn, done)->
             
             @find {}, {}, null, (err, items)=>
-            
-                for key, val of items
-                    fn val, key
+                return done(err) if err
 
-                done?()
+                floyd.tools.objects.process items,
+                    each: fn
+                    done: done
         
         
         keys: (fn)->
@@ -92,17 +92,19 @@ module.exports =
             throw new Error 'unimplemented'
         
         find: (query, options, fields, fn)->
+            _items = floyd.tools.objects.values(@_memory)
             
-            if query == {} || !query
-                items = floyd.tools.objects.values() #_(@_memory).values()
+            
+            if !query || floyd.tools.objects.isEmpty query 
+                items = _items 
             
             else 
-                items = []
-                #_(@_memory).select (item)->
-            
-                for key, value of query
-                    if item[key] && (item[key] != value || item[key].match value)
-                        items.push item
+                items = []                
+                
+                for item in _items
+                    for key, value of query
+                        if item[key] && (item[key] is value || item[key].match value)
+                            items.push item
         
             options ?= {}
             if items

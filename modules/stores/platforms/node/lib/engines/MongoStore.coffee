@@ -63,14 +63,6 @@ module.exports =
             query[@_options.cleanup.field] = $lte: +new Date()
             @_client.remove query, fn
 
-
-        each: (fn, done)->
-            @find {}, {}, null, (err, items)->
-                for doc in items
-                    fn doc, doc._id
-
-                done?()
-
         
         distinct: (field, query, fn)->
             @_client.distinct field, query, fn
