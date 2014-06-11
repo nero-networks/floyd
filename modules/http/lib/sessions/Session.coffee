@@ -6,7 +6,8 @@ module.exports =
     class Session extends events.EventEmitter
     
         constructor: (@SID, config)->
-        
+            super()
+            
             #console.log 'create session', @SID
             
             @token = floyd.tools.crypto.hash(floyd.tools.strings.uuid()+@SID)+@SID

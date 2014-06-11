@@ -50,7 +50,11 @@ module.exports =
                             #console.log 'check session', (sess.touched + @_config.timeout * 1000) < now, sess
                                     
                             if (sess.touched + @_config.timeout * 1000) < now
-                                sess.destroy()
+                                try
+                                    sess.destroy()
+                                catch e
+                                    console.warn e.message 
+                                    
                                 delete @_pool[sid]
                 
             , @_config.interval * 1000
