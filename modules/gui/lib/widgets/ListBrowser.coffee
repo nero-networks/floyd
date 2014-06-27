@@ -1,4 +1,6 @@
 
+qs = require('querystring')
+
 module.exports =
     
     class ListBrowser extends floyd.gui.ViewContext
@@ -37,9 +39,16 @@ module.exports =
             
             @find('a').each (i, link)=>
                 link = $(link).click ()=>
+                    href = link.attr('href')
+                    
+                    if search = @data.search
+                        offset = qs.parse(href.split('?')[1])[search]
+                    else
+                        offset = href.match(/([0-9]+)\/$/)[1]   
+                        
                     process.nextTick ()=>
                         @_emit 'browse',
-                            offset: data.limit * parseInt link.attr('href').match(/([0-9]+)\/$/)[1]   
+                            offset: data.limit * parseInt offset
                             limit: data.limit
                 
                     return false
@@ -49,7 +58,24 @@ module.exports =
         ##
         ##
         ##
-        _createLink: (href, type, text, _class, img)->
+        _createLink: (offset, type, text, _class, img)->
+            
+            if search = @data.search
+                href = location.pathname
+                @__query ?= if location.search then qs.parse location.search.substr 1 else {}
+                
+                @__query[search] = ''+offset
+                href = href+'?'+qs.stringify @__query
+                
+            else
+                linkdepth = @data.linkdepth || 1
+                @__href ?= location.pathname.split('/')
+                @__href[linkdepth] = offset
+                @__href[linkdepth + 1] = ''
+                
+                href = @__href.join '/'
+                
+
             link = $('<a>').attr('href', href).attr 'class', 'link '+_class
             
             if !img
@@ -77,22 +103,16 @@ module.exports =
                 if rest is 0
                     last -= 1
                 
-                linkdepth = @data.linkdepth || 1
-                href = location.pathname.split('/')
-                href[linkdepth + 1] = ''
+                @__root.append @_createLink 0, 'first', @data.text.first, 'first', @data.imageLinks
                 
-                href[linkdepth] = 0
-                @__root.append @_createLink href.join('/'), 'first', @data.text.first, 'first', @data.imageLinks
-                
-                href[linkdepth] = if curr > 0 then curr - 1 else last 
-                @__root.append @_createLink href.join('/'), 'left', @data.text.left, 'prev', @data.imageLinks
+                offset = if curr > 0 then curr - 1 else last 
+                @__root.append @_createLink offset, 'left', @data.text.left, 'prev', @data.imageLinks
                 
                 @_process [0..last],
     
                     each: (i, next)=>
-                        href[linkdepth] = i
-                        
-                        link = @_createLink href.join('/'), 'page', ''+(i + 1), 'page'
+                    
+                        link = @_createLink i, 'page', ''+(i + 1), 'page'
                     
                         if i is curr
                             link.addClass 'actual'
@@ -104,11 +124,10 @@ module.exports =
                     done: (err)=>
                         return done?(err) if err
                         
-                        href[linkdepth] = if curr < last then curr + 1 else 0 
-                        @__root.append @_createLink href.join('/'), 'right', @data.text.right, 'next', @data.imageLinks
+                        offset = if curr < last then curr + 1 else 0 
+                        @__root.append @_createLink offset, 'right', @data.text.right, 'next', @data.imageLinks
                         
-                        href[linkdepth] = last 
-                        @__root.append @_createLink href.join('/'), 'last', @data.text.last, 'last', @data.imageLinks
+                        @__root.append @_createLink last, 'last', @data.text.last, 'last', @data.imageLinks
                         
                         if floyd.system.platform is 'remote'
                             @_wireLinks data, done
