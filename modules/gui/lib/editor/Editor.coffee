@@ -9,7 +9,11 @@ module.exports =
         configure: (config)->
         
             config = super new floyd.Config
-
+                
+                data:
+                    popup:
+                        fade: false
+                
                 template: ->
                     div class:'editor Buttons floyd-loading', style:'opacity: .35'
                 
@@ -49,11 +53,14 @@ module.exports =
         _buildButtons: (buttons)->
             
             _popup = (editor, fn)=>
+                editor.type ?= 'gui.ViewContext'
+                
                 floyd.tools.gui.popup @,
                     type: editor.popup || 'gui.widgets.Popup'
                     
                     data:
                         class: editor.class || 'dialog'
+                        fade: @data.popup.fade
                     
                     view: 
                         children: [ editor ]
