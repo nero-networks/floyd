@@ -47,11 +47,7 @@ module.exports =
                     
                     wiring: ->
                         @view = @parent.children[0]
-                        
-                        #floyd.tools.objects.intercept @ '_emit', (args..., _emit)=>
-                        #    _emit.apply @, args
-                        #    @parent._emit.apply @parent, args
-                        
+                                                
                         @find('button, a').click (e)=>
                             action = $(e.currentTarget).attr('class').split(' ').shift()
 
@@ -105,6 +101,11 @@ module.exports =
                 
                 @find('button.close, a.close').click ()=> 
                     @close()
+                
+                $(document).keyup keyup = (e)=>
+                    if e.keyCode is 27 # ESC
+                        $(document).unbind 'keyup', keyup
+                        @close()
                 
                 setTimeout ()=>
                     
