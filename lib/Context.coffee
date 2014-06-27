@@ -37,7 +37,7 @@ module.exports =
             
             @_status = []
         
-            @_hiddenKeys.push 'data', 'parent', 'children', 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
+            @_hiddenKeys.push 'data', 'parent', 'children', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
             
         
         ##
@@ -211,7 +211,7 @@ module.exports =
                     floyd.tools.objects.intercept @, 'boot', (done, boot)=>
 
                         @_getAuthManager().authorize config.TOKEN, (err)=>
-                            return done(err) if err
+                            #return done(err) if err
 
                             boot done
                 
