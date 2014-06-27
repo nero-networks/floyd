@@ -34,6 +34,16 @@ module.exports =
             return str
     
     ##
+    substr: (str, from, to)->
+        to ?= str.length - 1
+        
+        if to < 0
+            to = (str.length - 1) + to
+            
+        str.substr from, to
+        
+    
+    ##
     capitalize: (str)->
         
         str.charAt(0).toUpperCase() + str.substr 1
