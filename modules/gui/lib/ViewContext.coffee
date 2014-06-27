@@ -287,7 +287,7 @@ module.exports =
         _getBackend: (fn)->
             return fn(null, @__BACKEND) if @__BACKEND
             
-            @lookup @data.find('backend', @data.find('origin')), @identity, (err, ctx)=>
+            @lookup @data.find('backend', 'backend'), @identity, (err, ctx)=>
                 return fn(err) if err
                 
                 fn null, @__BACKEND = ctx
