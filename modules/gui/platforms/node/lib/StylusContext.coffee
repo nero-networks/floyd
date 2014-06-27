@@ -8,7 +8,7 @@ module.exports =
         configure: (config)->
             super new floyd.Config
                 data:
-                    route: '/styles.css'
+                    route: '^/styles.css'
                     file: '/public/styles.styl'
                     
             , config
