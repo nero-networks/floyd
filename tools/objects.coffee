@@ -53,6 +53,18 @@ module.exports = objects =
         next()
     
         
+    ##
+    ## shuffle the order of an array randomly
+    ##
+    shuffle: (arr) ->
+        i = arr.length
+        while --i > 0
+            j = ~~(Math.random() * (i + 1))
+            temp = arr[j]
+            arr[j] = arr[i]
+            arr[i] = temp
+        
+        return arr
     
     ##
     ## extract an index out of an object (or array)
