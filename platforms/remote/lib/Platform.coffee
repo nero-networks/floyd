@@ -36,6 +36,10 @@ module.exports =
             window.process ?=
                 nextTick: (fn)->
                     setTimeout fn, 1
+            
+            window.setImmediate ?= (fn)->
+                setTimeout fn, 1
+                
 
         
         ##
