@@ -115,7 +115,7 @@ module.exports =
                         dir ?= 1
                         
                         items.sort (a, b)->
-                            console.log a[sortby], b[sortby]
+                            #console.log a[sortby], b[sortby]
                             if a[sortby] > b[sortby]
                                 return dir
                                 
