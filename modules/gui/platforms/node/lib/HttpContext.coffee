@@ -186,6 +186,7 @@ module.exports =
                 console: console                
                 process:
                     nextTick: process.nextTick
+                setImmediate: setImmediate
             
             require('contextify') ctx            
 
@@ -220,7 +221,7 @@ module.exports =
         ##
         ##
         _releaseContext: (ctx)->
-            persistentKeys = ['run', 'getGlobal', 'dispose', 'process', 'console', 'setTimeout', 'floyd', 'require', '_modules']
+            persistentKeys = ['run', 'getGlobal', 'dispose', 'process', 'console', 'setTimeout', 'setImmediate', 'floyd', 'require', '_modules']
             
             if @__POOL__.length < @data.poolsize
                 for key, value of ctx
