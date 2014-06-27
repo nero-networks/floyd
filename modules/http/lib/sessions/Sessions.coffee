@@ -158,7 +158,7 @@ module.exports =
             
             if (sess = @_registry.get(sid))
                 
-                sess.public.user = floyd.tools.objects.unlink sess.public.user
+                delete sess.public.user
                 
                 
             fn()
