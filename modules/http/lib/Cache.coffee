@@ -18,7 +18,7 @@ module.exports =
                 if !@data.disabled
                     
                     if req.session?.user
-                        storage = req.session.HttpCacheStorage ?= {__name: 'private'}
+                        storage = req.session.user.HttpCacheStorage ?= {__name: 'private'}
                         
                     else
                         storage = _storage
