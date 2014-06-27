@@ -34,16 +34,16 @@ module.exports =
             fn?()
         
         get: (key, fn)->
-            @_client.findOne _id:key, fn
+            @_client.findOne _id:key.toString(), fn
 
 
         set: (key, item, fn)->
-            item._id = key
+            item._id = key.toString()
             @_client.save item, fn
 
 
         remove: (key, fn)->
-            @_client.remove _id:key, fn
+            @_client.remove _id:key.toString(), fn
 
 
         has: (key, fn)->
