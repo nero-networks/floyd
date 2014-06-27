@@ -9,7 +9,11 @@ USER=`whoami`
 ##
 ##
 SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink -m "$SOURCE")"; done
+#while [ -h "$SOURCE" ] ; do SOURCE="$(readlink -m "$SOURCE")"; done
+#TODO macs don't support the readlink -m option! fix needed here
+#     for such installations where the source link is linked to a 
+#     path with symlinks in the middle!
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 
 ##
 FLOYD_ROOT="$( cd -P "$( dirname "$SOURCE" )"; cd .. && pwd -P )"
