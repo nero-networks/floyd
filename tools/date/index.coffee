@@ -46,4 +46,14 @@ module.exports =
             
         return d
         
-                
+    
+    ##
+    ##
+    ##
+    isToday: (date)->
+        now = new Date()
+        
+        return now.getDate() is date.getDate() \
+            && now.getMonth() is date.getMonth() \
+            && now.getYear() is date.getYear()
+        
