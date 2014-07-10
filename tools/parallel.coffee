@@ -39,25 +39,69 @@ module.exports = (threads..., done)->
     if typeof threads[0] isnt 'function'
         threads = threads[0]
     
-    if !(count = threads.length)
-        return done()
+    if !(threads instanceof floyd.tools.parallel.Stack)
+        threads = new floyd.tools.parallel.Stack threads
     
-    error = null
-    results = []
+    threads.run done
     
-    for i in [0..threads.length-1]
-        do (i)->
-            setImmediate ->
+
+module.exports.Stack = 
+    
+    class Stack extends Array
+        
+        ##
+        constructor: (threads)->
+            super()
+            @_count = 0
             
-                threads[i] (err, res)->
-                    
-                    if err
-                        error = err 
-                    
-                    else
-                        results[i] = res
-                        
-                    if --count is 0
-                        done error, results
+            if threads
+                for thread in threads
+                    @push thread
+        
+            @_error = null
+            @_results = []
+        
+        
+        ##
+        ##
+        run: (@_done)->        
+            if !@_count
+                return @_done()
+            
+            @_running = true
+            
+            for i in [0..@length-1]
+                @_exec i
+        
+            return undefined
+        
+        
+        ##
+        ##
+        push: (thread)->
+            super thread
+            @_count++
+
+            if @_running            
+                @_exec @length - 1
+            
+        
+        
+        ##    
+        _exec: (i)->
+            setImmediate =>
     
-    return undefined
+                @[i] (err, res)=>
+            
+                    if err
+                        @_error = err 
+            
+                    else
+                        @_results[i] = res
+                
+                    if --@_count is 0
+                        @_running = false
+                        @_done @_error, @_results
+        
+        
+    
