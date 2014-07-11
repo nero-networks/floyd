@@ -92,12 +92,12 @@ module.exports =
         ##
         _display: (items, data, done)->
             @__root.html ''
-                        
-            if (data?.size || 0) / (data?.limit || 5) <= 1
+            
+            if !data.limit || (data?.size || 0) / data.limit <= 1
                 done?() 
             
             else
-                curr = parseInt data.offset / data.limit
+                curr = (data.offset||0) / data.limit
                                 
                 last = (data.size - (rest = data.size % data.limit)) / data.limit
                 if rest is 0
@@ -113,7 +113,7 @@ module.exports =
                     each: (i, next)=>
                     
                         link = @_createLink i, 'page', ''+(i + 1), 'page'
-                    
+
                         if i is curr
                             link.addClass 'actual'
                         
