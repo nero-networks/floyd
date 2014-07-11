@@ -16,6 +16,8 @@ module.exports =
                         pass: 'Password'
                         login: 'Login'
                         logout:'Logout'
+                    
+                    minimized: false
                         
                         
                 content: ->
@@ -27,9 +29,10 @@ module.exports =
                         user = @identity.login()
                         
                         if !user
-                            input name:'user', value:'', placeholder: @data.strings.user
+                            div (if @data.minimized then style:'display:none' else {}), ->
+                                input name:'user', value:'', placeholder: @data.strings.user
                                                                         
-                            input name:'pass', value:'', type:'password', placeholder:@data.strings.pass
+                                input name:'pass', value:'', type:'password', placeholder:@data.strings.pass
                         
                         button type: 'submit', name:'button', ->
                             if user then @data.strings.logout else @data.strings.login
@@ -51,7 +54,9 @@ module.exports =
                 
                 user = login.find('input[name=user]')    
                 pass = login.find('input[name=pass]')
-                                            
+                
+                div = login.find('> div')
+                
                 login.on 'submit', ()=>
                     
                     if @identity.login()
@@ -59,15 +64,17 @@ module.exports =
                         @_getAuthManager().logout (err)=> location.reload()                                        
                         
                     else            
-                                            
-                        @_getAuthManager().login user.val(), pass.val(), (err)=>                                    
-                            if err
-                                pass.val ''
-                                hint.addClass('error').text(err.message)
+                        if div.is ':visible'                            
+                            @_getAuthManager().login user.val(), pass.val(), (err)=>                                    
+                                if err
+                                    pass.val ''
+                                    hint.addClass('error').text(err.message)
                              
-                            else
-                                 location.reload()
-                     
+                                else
+                                    location.reload()
+                        
+                        else div.show()
+                        
                     return false
                 
                 done()
