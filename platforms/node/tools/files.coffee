@@ -108,16 +108,14 @@ module.exports = files =
         
         if files.exists name
             if files.is_dir name
-        
                 if recursive
                     for file in files.list name
-                        files.rm [name, file]
+                        files.rm [name, file], true
                 
-                fs.rmdirSync normpath name
+                fs.rmdirSync name
             
             else
-            
-                fs.unlinkSync normpath name
+                fs.unlinkSync name
                             
     ##
     ##
