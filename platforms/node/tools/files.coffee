@@ -133,8 +133,11 @@ module.exports = files =
     
     ##
     ## tmp files
-    tmp: (name)->
+    tmp: (name, suffix)->
         name ?= floyd.tools.strings.uuid()
+        
+        if suffix
+            name+'.'+suffix
 
         ##
         normpath [floyd.system.tmpdir, name]
