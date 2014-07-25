@@ -26,7 +26,7 @@ module.exports =
                     ul()
 
             , config
-
+            
             if config.browse
 
                 config.children.push new floyd.Config
@@ -34,7 +34,7 @@ module.exports =
                     type: 'gui.widgets.ListBrowser'
 
                     data:
-                        selector: 'div.browse'
+                        selector: '> div.browse'
                     
                     events:
                         browse: (e)->
@@ -72,7 +72,7 @@ module.exports =
         _reload: (done)->
             @_loadData @data.offset, @data.limit, (err, items, data)=>
                 return done(err) if err
-                @_display.call @, items, data, done
+                @_display items, data, done
 
 
 
@@ -94,7 +94,7 @@ module.exports =
             fn null, items,
                 offset: offset
                 limit: limit
-                size: @data.items.length
+                size: @data.items?.length || 0
 
 
         ##
