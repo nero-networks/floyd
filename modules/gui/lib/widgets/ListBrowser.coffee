@@ -11,11 +11,16 @@ module.exports =
                 data:
                     color: 'white'
                     
+                    linkSelector: '> a'
+                    
                     text:
                         first: '|&lt;'
                         left: '&lt;'
                         right: '&gt;'
                         last: '&gt;|'
+                    
+                    pages: true
+                    maxima: true
                 
                 template: ->
                     div class:'browse'
@@ -34,10 +39,8 @@ module.exports =
         ##
         ##
         ##
-        _wireLinks: (data, done)->
-            
-            
-            @find('a').each (i, link)=>
+        _wireLinks: (data, done)->            
+            @find(@data.linkSelector).each (i, link)=>
                 link = $(link).click ()=>
                     href = link.attr('href')
                     
@@ -92,7 +95,7 @@ module.exports =
         ##
         _display: (items, data, done)->
             @__root.html ''
-            
+                                
             if !data.limit || (data?.size || 0) / data.limit <= 1
                 done?() 
             
@@ -103,12 +106,13 @@ module.exports =
                 if rest is 0
                     last -= 1
                 
-                @__root.append @_createLink 0, 'first', @data.text.first, 'first', @data.imageLinks
+                if @data.maxima
+                    @__root.append @_createLink 0, 'first', @data.text.first, 'first', @data.imageLinks
                 
                 offset = if curr > 0 then curr - 1 else last 
                 @__root.append @_createLink offset, 'left', @data.text.left, 'prev', @data.imageLinks
                 
-                @_process [0..last],
+                @_process (if @data.pages then [0..last] else []),
     
                     each: (i, next)=>
                     
@@ -127,7 +131,8 @@ module.exports =
                         offset = if curr < last then curr + 1 else 0 
                         @__root.append @_createLink offset, 'right', @data.text.right, 'next', @data.imageLinks
                         
-                        @__root.append @_createLink last, 'last', @data.text.last, 'last', @data.imageLinks
+                        if @data.maxima
+                            @__root.append @_createLink last, 'last', @data.text.last, 'last', @data.imageLinks
                         
                         if floyd.system.platform is 'remote'
                             @_wireLinks data, done
