@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             config = super new floyd.Config
                 template: ->
-                    section class:'upload Button floyd-loading', style: 'display:inline-block'
+                    div class:'upload Button floyd-loading', style: 'display:inline-block'
                     
                 data:
                     multiple: false
@@ -25,7 +25,7 @@ module.exports =
                         
                         for name, field of @data.fields
                             
-                            if !field || typeof field is 'string'
+                            if !field || !(typeof field is 'object')
                                 field = 
                                     value:field||''
                                     
@@ -112,7 +112,7 @@ module.exports =
                                 
                                 floyd.tools.gui.popup @, @_popup, (err, progress)=>                                
                                     
-                                    ctx.registerUpload
+                                    ctx.registerUpload @_prepareHandler
                                     
                                         connect: ()=>
                                             @_connect (err)=>
@@ -150,7 +150,20 @@ module.exports =
                                                 @error new Error err.message
                 ##  
                 done()  
-
+        
+        
+        ##
+        ##
+        ##
+        _backend: (fn)->
+            @_getBackend fn
+            
+        ##
+        ##
+        ##
+        _prepareHandler: (handler)->
+            return handler
+        
         ##
         ##
         ##
