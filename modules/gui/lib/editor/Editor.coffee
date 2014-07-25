@@ -30,10 +30,14 @@ module.exports =
             super (err)=>
                 return done(err) if err
                 
-                @_buildButtons @__buttons
-                @_wireMouse()
-                
-                done()
+                try
+                    @_buildButtons @__buttons
+                    @_wireMouse()
+                    done()
+                    
+                catch err
+                    done(err)
+                    
                
                 
         ##
@@ -65,16 +69,21 @@ module.exports =
                     view: 
                         children: [ editor ]
                 , fn
-                
-            for action, conf of buttons
-                do(action, conf)=>
+            
+            @_process buttons,
+                done: (err)=>
+                    if err
+                        throw err
+                        
+                each: (action, conf, next)=>    
                                     
                     if typeof conf is 'function'
                         conf =
                             handler: conf
                             
-                    @_createButton action, conf, (err, button)=>
-                                                
+                    @_createPermitedButton action, conf, (err, button)=>
+                        return next(err) if err || !button
+                                          
                         if typeof conf is 'string'
                             conf =
                                 text: conf
@@ -103,12 +112,26 @@ module.exports =
                                     parent: @__root.parent()
                                 
                             return false
-        
+                        
+                        next()
+                        
         ##
         ##
         ##
         _createButton: (action, conf, fn)->
             fn null, $('<button/>').addClass action
-                  
+            
         
+        ##
+        ##
+        ##
+        _createPermitedButton: (action, conf, fn)->
+            if conf.roles
+                @identity.hasRole conf.roles, (err, hasRole)=>  
+                    return fn(err) if err || !hasRole
+                    
+                    @_createButton action, conf, fn
+            
+            else @_createButton action, conf, fn
+                    
             
