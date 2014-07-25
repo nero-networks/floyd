@@ -97,7 +97,7 @@ module.exports =
                     $ selector, parent
                     
                 else
-                    selector.apply @, []
+                    selector.apply @, [parent]
             
             ##
             ## get the root element to represent the context
@@ -105,6 +105,7 @@ module.exports =
                 
                 ## element is already there, found by selector -> stage 1
                 if @data.selector && ( @__root = _sel @data.selector, @parent?.__root )?.length
+                    @__root.attr 'id', @id
                     
                     @_build done, 1
                 
@@ -277,8 +278,11 @@ module.exports =
         ##
         _prepare: (item, fn)->
             
-            fn null, floyd.tools.objects.clone item,
-                __data: @data
+            item = floyd.tools.objects.clone item
+            
+            item.__data = @data
+            
+            fn null, item
 
         
         ##
