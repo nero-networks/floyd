@@ -50,4 +50,12 @@ module.exports =
                     
                 _scale dimension.size, src, _dest, next
                 
-            
+    
+    ##
+    ##
+    ##
+    crop: (geometry, src, dest, done)->
+        
+        im.convert [src, '-region', geometry, dest], done
+    
+                
