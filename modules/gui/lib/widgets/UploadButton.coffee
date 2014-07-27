@@ -21,7 +21,7 @@ module.exports =
                         class: 'button'
                     
                 content: ->                    
-                    form action:@data.action, target:'upload-frame', method:'post', enctype:'multipart/form-data', style: 'width:0;height:0;visibility:hidden', ->
+                    form action:@data.action, target:'upload-frame-'+@id, method:'post', enctype:'multipart/form-data', style: 'width:0;height:0;visibility:hidden', ->
                         
                         for name, field of @data.fields
                             
@@ -43,12 +43,12 @@ module.exports =
                         input _attr
                     
                     if @data.button.type is 'link'
-                        a class:@data.button.class, href:'#', (@data.button.text)
+                        a class:@data.button.class, href:'#', (@data.button.html || @data.button.text)
                     
                     else
-                        button class:@data.button.class, (@data.button.text)
+                        button class:@data.button.class, (@data.button.html || @data.button.text)
                     
-                    iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0, style: 'width:0;height:0;visibility:hidden'
+                    iframe id:'upload-frame-'+@id, name:'upload-frame-'+@id, width:'0px', height:'0px', frameborder:0, style: 'width:0;height:0;visibility:hidden'
                     
                     
                 popup: 
@@ -97,7 +97,7 @@ module.exports =
 
                 files = form.find '[name=files]'                    
                 
-                @find('.button').click ()=> 
+                @find('.'+@data.button.class).click ()=> 
                     files.click()
                     return false    
                 
