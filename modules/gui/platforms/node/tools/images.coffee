@@ -56,6 +56,6 @@ module.exports =
     ##
     crop: (geometry, src, dest, done)->
         
-        im.convert [src, '-region', geometry, dest], done
+        im.convert ['-crop', geometry, src, dest], done
     
                 
