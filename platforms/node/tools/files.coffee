@@ -137,7 +137,7 @@ module.exports = files =
         name ?= floyd.tools.strings.uuid()
         
         if suffix
-            name+'.'+suffix
+            name = name+'.'+suffix
 
         ##
         normpath [floyd.system.tmpdir, name]
