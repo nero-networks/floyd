@@ -19,7 +19,7 @@ module.exports =
                     size src, dest, next
             
                 else            
-                    im.convert [src, '-resize', size+'\>', dest], next
+                    im.convert [src, '-resize', size, dest], next
         
         data =
             src: dest
