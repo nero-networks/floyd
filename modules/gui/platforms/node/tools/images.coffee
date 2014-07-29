@@ -58,4 +58,11 @@ module.exports =
         
         im.convert ['-crop', geometry, src, dest], done
     
-                
+    
+    ##
+    ##
+    ##
+    info: (file, fn)->
+        
+        im.identify file, fn
+        
