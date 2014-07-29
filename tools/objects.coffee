@@ -515,10 +515,7 @@ _extend = (target, source)->
                 _extend value, item
             
             else
-            
-                ## others are allways pushed if not already present
-                if target.indexOf(item) is -1
-                    target.push item
+                target.push item
     
     else
     
