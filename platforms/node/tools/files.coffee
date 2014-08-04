@@ -19,6 +19,13 @@ module.exports = files =
     
     ##
     ##
+    appdir: (args...)->
+        
+        normpath args
+
+
+    ##
+    ##
     mkdir: (dir)->
         parts = normpath(dir).split('/'); 
         
@@ -101,9 +108,6 @@ module.exports = files =
     ##
     rm: (name, recursive)->
         
-        if floyd.tools.objects.isArray name
-            name = _join name
-        
         name = normpath name
         
         if files.exists name
@@ -155,7 +159,7 @@ module.exports = files =
                 persistent: false  
             
         fs.watch normpath(name), fn
-        
+    
 
 ##
 ## private
@@ -167,17 +171,12 @@ module.exports = files =
 normpath = (dir)->
 
     if typeof dir is 'object'            
-        dir = _join dir
-                    
+        dir = path.join.apply path, dir
+    
     dir = dir.replace floyd.system.appdir, ''
     
     path.join floyd.system.appdir, path.normalize(dir)    
 
-##
-##
-##
-_join = (list)->
-    list.join '/' 
 
     
 ##
