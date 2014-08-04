@@ -6,6 +6,12 @@ module.exports =
     ##
     ##
     ##
+    convert: (args...)->
+        im.convert.apply im, args
+    
+    ##
+    ##
+    ##
     resize: (dimensions, src, dest, done)->
         
         if typeof dimensions is 'string'
