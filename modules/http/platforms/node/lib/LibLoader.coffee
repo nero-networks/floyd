@@ -222,7 +222,7 @@ module.exports =
                             
                     catch e
                         if !e.message.match 'Cannot find module' # e.code isnt 'MODULE_NOT_FOUND' ## > node 0.7
-                            console.error 'lib build error', e
+                            console.error 'lib build error', e.toString()
                             
                 ##
                 package: _module				
