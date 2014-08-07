@@ -59,15 +59,34 @@ module.exports =
             _popup = (editor, fn)=>
                 editor.type ?= 'gui.ViewContext'
                 
+                confirmClose = editor.confirmClose
+                clazz = editor.class || 'dialog'
+                fade = editor.fade || @data.popup.fade
+                
                 floyd.tools.gui.popup @,
                     type: editor.popup || 'gui.widgets.Popup'
                     
                     data:
-                        class: editor.class || 'dialog'
-                        fade: @data.popup.fade
+                        class: clazz
+                        fade: fade
                     
+                    ## TODO: check and if possible remove children and change to view: editor
                     view: 
                         children: [ editor ]
+                    
+                    confirmClose: (fn)->
+                        if confirmClose 
+                            if typeof confirmClose is 'function'
+                                @children[0].children[0].confirmClose fn
+                            
+                            else if typeof confirmClose is 'string'
+                                if confirm confirmClose
+                                    fn()
+                                
+                            else fn()                                
+                            
+                        else fn()
+                    
                 , fn
             
             @_process buttons,

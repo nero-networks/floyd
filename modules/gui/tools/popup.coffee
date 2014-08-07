@@ -32,19 +32,21 @@ module.exports = (parent, config, fn)->
             return fn(err) if err            
                 
             child.on 'close', (e)->
-        
-                child.__root.remove()
                 
-                child.stop ()-> 
-                    #console.log 'stopped', child.ID
+                child.confirmClose ()=>
+                
+                    child.__root.remove()
+                
+                    child.stop ()-> 
+                        #console.log 'stopped', child.ID
                     
-                    parent.children.delete child
+                        parent.children.delete child
                     
-                    parent.once 'destroyed', ()->
+                        parent.once 'destroyed', ()->
                     
-                        child.destroy ()->
+                            child.destroy ()->
                         
-                            #console.log 'destroyed', child.ID
+                                #console.log 'destroyed', child.ID
                 
                 return false
     

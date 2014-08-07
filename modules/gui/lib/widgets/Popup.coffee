@@ -132,6 +132,12 @@ module.exports =
         close: (fn)->
             @_emit 'close'
             fn?()
+        
+        ##
+        ##
+        ##
+        confirmClose: (fn)->
+            fn()
             
         ##
         ##
@@ -140,7 +146,7 @@ module.exports =
             @__root.fadeOut speed, ()=>
                 @close fn
                 
-                    
+        
         ##
         ##
         ##
