@@ -30,7 +30,7 @@ module.exports =
             fn()
                 
         close: (fn)->
-            @_db.close()
+            @_db?.close()
             fn?()
         
         get: (key, fn)->
