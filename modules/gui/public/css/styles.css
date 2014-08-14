@@ -57,6 +57,9 @@
 .gui.Popup .narrow .popup-box-wrapper {
   width: 550px;
 }
+.gui.Popup .wide .popup-box-wrapper {
+  width: 960px;
+}
 .gui.Popup .popup-box-wrapper {
   margin: auto;
   position: relative;
