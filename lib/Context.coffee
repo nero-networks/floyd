@@ -37,7 +37,7 @@ module.exports =
             
             @_status = []
         
-            @_hiddenKeys.push 'data', 'parent', 'children', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
+            @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
             
         
         ##
@@ -51,15 +51,21 @@ module.exports =
                     
             @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
             
-            @data = new floyd.data.SearchableMap config.data, @parent?.data
-            
             if typeof (@type = config.type) is 'function'
                 @type = @ID+'.'+(@type.name || 'DynContext')
             
-            @identity = @_createIdentity()
-            
+            @data = new floyd.data.SearchableMap config.data, @parent?.data
+
             @logger = @_createLogger @ID
             
+            if @data.permissions
+                @logger.warning '@data.permissions is deprecated use config.permissions instead'
+                config.permissions = @data.permissions
+            
+            @permissions = config.permissions
+            
+            @identity = @_createIdentity()
+
             @_emitter = @_createEmitter config
             
             # --> EXPERIMENTAL identity based lookups cache -> nero
@@ -278,8 +284,8 @@ module.exports =
                 
                 checks = [
                     (next)=>
-                        if @data.permissions?.__checks
-                            for check in @data.permissions.__checks
+                        if @permissions?.__checks
+                            for check in @permissions.__checks
                                 do(check)=>
                                     checks.push (next)=>
                                         check.apply @, [identity, key, args, next]
@@ -291,13 +297,13 @@ module.exports =
 
                     (next)=> # check for general remote restriction
                         
-                        next (@data.permissions?[key] || @data.permissions) isnt false
+                        next (@permissions?[key] || @permissions) isnt false
                         
                 ,
 
                     (next)=> # check for login restriction
                         
-                        if (@data.permissions?[key]?.login || @data.permissions?.login)
+                        if (@permissions?[key]?.login || @permissions?.login)
                             
                             identity.login (err, login)=>
                                 next !!login
@@ -307,7 +313,7 @@ module.exports =
 
                      (next)=> # check for user restriction and test identity.login
                         
-                        if user = (@data.permissions?[key]?.user || @data.permissions?.user)
+                        if user = (@permissions?[key]?.user || @permissions?.user)
                             
                             identity.login (err, login)=>
                                 next login is user
@@ -316,7 +322,7 @@ module.exports =
                 ,
 
                     (next)=> # check for roles restriction and test identity.hasRole
-                        if roles = (@data.permissions?[key]?.roles || @data.permissions?.roles)
+                        if roles = (@permissions?[key]?.roles || @permissions?.roles)
                             
                             identity.hasRole roles, (err, ok)=>
                                 next ok
@@ -326,7 +332,7 @@ module.exports =
                 ,
                 
                     (next)=> # custom check function - must callback true to permit!
-                        if typeof (check = @data.permissions) is 'function' || typeof (check = @data.permissions?[key]) is 'function' || check = (@data.permissions?[key]?.check || @data.permissions?.check)
+                        if typeof (check = @permissions) is 'function' || typeof (check = @permissions?[key]) is 'function' || check = (@permissions?[key]?.check || @permissions?.check)
                             
                             check identity, key, args, next                            
                             
