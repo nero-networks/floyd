@@ -53,8 +53,9 @@ module.exports =
 
             return config
 
-
-        start: (done)->
+        
+        ##
+        boot: (done)->
             super (err)=>
                 return done(err) if err
                 
@@ -63,12 +64,20 @@ module.exports =
                 else
                     @_ul = @find _sel
                 
+                done()
+        
+        ##        
+        start: (done)->
+            super (err)=>
+                return done(err) if err
+                
                 if !@_ul.children().length
                     @_reload done
 
                 else done()
 
-
+        
+        ##
         _reload: (done)->
             @_loadData @data.offset, @data.limit, (err, items, data)=>
                 return done(err) if err
