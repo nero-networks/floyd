@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             super new floyd.Config
                 data:
-                    route:'./upload'
+                    route:'upload'
                     
                     accept: '.*'
                     
