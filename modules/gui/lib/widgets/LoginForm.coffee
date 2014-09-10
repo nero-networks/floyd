@@ -23,19 +23,31 @@ module.exports =
                 content: ->
                     
                     form method:'post', action:'#', class:'gui widgets LoginForm', ->
-
-                        p class:'hint'
-                        
-                        user = @identity.login()
-                        
-                        if !user
+                                            
+                        if !(user = @identity.login())
+                            p class:'hint'
+    
                             div (if @data.minimized then style:'display:none' else {}), ->
                                 input name:'user', value:'', placeholder: @data.strings.user
                                                                         
                                 input name:'pass', value:'', type:'password', placeholder:@data.strings.pass
                         
-                        button type: 'submit', name:'button', ->
-                            if user then @data.strings.logout else @data.strings.login
+                        attr = 
+                            type: 'submit'
+                            name:'button'
+                            class: if user then 'logout' else 'login'
+                            
+                        if cls = @data.button?.class || @data.button
+                            attr.class = attr.class+' '+cls 
+                        
+                        title = if user then @data.strings.logout else @data.strings.login
+                            
+                        if @data.button?.title
+                            attr.title = title
+                            
+                        button attr, ->
+                            if !@data.button?.title
+                                text title
             
             
             , config
