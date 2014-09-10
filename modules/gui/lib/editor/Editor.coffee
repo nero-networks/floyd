@@ -113,6 +113,8 @@ module.exports =
                         
                         if conf.text        
                             button.text conf.text 
+                        else
+                            button.addClass conf.class || 'icon'
                         
                         if conf.title
                             button.attr 'title', conf.title
