@@ -15,8 +15,8 @@ module.exports =
                         fade: false
                 
                 template: ->
-                    div class:'editor Buttons floyd-loading', style:'opacity: .35'
-                
+                    div class:'editor Buttons floyd-loading'
+                    
             , config
             
             @__buttons = config.buttons
@@ -44,12 +44,6 @@ module.exports =
         ##
         ##
         _wireMouse: ()->
-            @parent.__root.mouseenter (event)=>
-                @__root.css 'opacity', 1
-
-            .mouseleave (event)=>
-                @__root.css 'opacity', .35
-                
         
         ##
         ##
