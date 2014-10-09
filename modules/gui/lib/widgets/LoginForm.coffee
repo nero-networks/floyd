@@ -32,6 +32,14 @@ module.exports =
                                                                         
                                 input name:'pass', value:'', type:'password', placeholder:@data.strings.pass
                         
+                        if user && _fn = @data.username
+                            if typeof _fn is 'function'
+                                username = _fn.apply @
+                            else
+                                username = user
+                            
+                            span class:'username', username
+                                
                         attr = 
                             type: 'submit'
                             name:'button'
@@ -44,7 +52,7 @@ module.exports =
                             
                         if @data.button?.title
                             attr.title = title
-                            
+                        
                         button attr, ->
                             if !@data.button?.title
                                 text title
