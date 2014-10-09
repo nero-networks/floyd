@@ -19,8 +19,14 @@ module.exports =
                         right: '&gt;'
                         last: '&gt;|'
                     
-                    pages: true
-                    maxima: true
+                    pages: 5
+                    
+                    first: true
+                    left: true
+                    right: true
+                    last: true
+                    
+                    followable: true
                 
                 template: ->
                     div class:'browse'
@@ -61,7 +67,7 @@ module.exports =
         ##
         ##
         ##
-        _createLink: (offset, type, text, _class, img)->
+        _createLink: (offset, type, text, _class, img, followable)->
             
             if search = @data.search
                 href = location.pathname
@@ -80,6 +86,9 @@ module.exports =
                 
 
             link = $('<a>').attr('href', href).attr 'class', 'link '+_class
+            
+            if !followable
+                link.attr 'rel', 'nofollow' 
             
             if !img
                 link.html text
@@ -106,17 +115,44 @@ module.exports =
                 if rest is 0
                     last -= 1
                 
-                if @data.maxima
+                if @data.first
                     @__root.append @_createLink 0, 'first', @data.text.first, 'first', @data.imageLinks
                 
-                offset = if curr > 0 then curr - 1 else last 
-                @__root.append @_createLink offset, 'left', @data.text.left, 'prev', @data.imageLinks
+                if @data.left
+                    offset = if curr > 0 then curr - 1 else last 
+                    @__root.append @_createLink offset, 'left', @data.text.left, 'prev', @data.imageLinks
                 
-                @_process (if @data.pages then [0..last] else []),
+                if _pages = @data.pages
+                    if _pages is true
+                        _pages = last
+                    
+                    ##                    
+                    
+                    if (from = curr - Math.floor(_pages/2)) < 0
+                        from = 0 
+    
+                    if (to = from + _pages-2) >= last
+                        to = last
+
+                    pages = [from..to]
+                    
+                    while pages.length < last && pages.length < _pages-1
+                        pages.unshift pages[0]-1
+                    
+                    if to is last && pages.length < last
+                        pages.unshift pages[0]-1
+                    
+                    ##
+                       
+                    #pages = [0.._pages]
+                
+                @_process (pages || []),
     
                     each: (i, next)=>
-                    
-                        link = @_createLink i, 'page', ''+(i + 1), 'page'
+                        
+                        followable = if @data.followable && !@data.right && i > 0 && i-1 is curr then true else false
+                        
+                        link = @_createLink i, 'page', ''+(i + 1), 'page', null, followable
 
                         if i is curr
                             link.addClass 'actual'
@@ -128,10 +164,19 @@ module.exports =
                     done: (err)=>
                         return done?(err) if err
                         
-                        offset = if curr < last then curr + 1 else 0 
-                        @__root.append @_createLink offset, 'right', @data.text.right, 'next', @data.imageLinks
+                        if pages && pages.length < last && pages.length < _pages
+                            if pages[pages.length-1]+1 < last
+                                @__root.append '<span class="dots">..</span>'
+                            
+                            @__root.append @_createLink last, 'page', ''+(last + 1), 'page'
+                            
                         
-                        if @data.maxima
+                        if @data.right
+                            offset = if curr < last then curr + 1 else 0 
+                            followable = !!(@data.followable && offset > 0)
+                            @__root.append @_createLink offset, 'right', @data.text.right, 'next', @data.imageLinks, followable
+                        
+                        if @data.last
                             @__root.append @_createLink last, 'last', @data.text.last, 'last', @data.imageLinks
                         
                         if floyd.system.platform is 'remote'
