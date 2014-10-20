@@ -5,6 +5,9 @@ fs = require 'fs'
 ##
 path = require 'path'
 
+##
+zlib = require 'zlib'
+
 
 ##
 ##
@@ -160,6 +163,36 @@ module.exports = files =
             
         fs.watch normpath(name), fn
     
+    ##
+    ##
+    gzip: (name, fn)->
+        name = normpath(name)
+        
+        gzip = zlib.createGzip()
+        inp = files.fs.createReadStream name
+        out = files.fs.createWriteStream name+'.gz'
+        
+        out.on 'close', ()->
+            files.rm name
+            fn?()
+        
+        inp.pipe(gzip).pipe(out);
+
+    ##
+    ##
+    gunzip: (name, fn)->
+        name = normpath(name)
+
+        gunzip = zlib.createGunzip()
+        inp = files.fs.createReadStream name
+        out = files.fs.createWriteStream name.substr 0, name.length-3
+        
+        out.on 'close', ()->
+            files.rm name
+            fn?()
+        
+        inp.pipe(gunzip).pipe(out);
+
 
 ##
 ## private
