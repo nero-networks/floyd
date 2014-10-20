@@ -21,7 +21,7 @@ module.exports = (id, _manager)->
     ##
     ## private emitter
     emitter = new events.EventEmitter()
-    emitter.setMaxListeners 26 ## <-- dunno how many is good.. 26 is unique to identify warinings
+    emitter.setMaxListeners 56 ## <-- dunno how many is good.. 56 is unique to identify warinings
     
     ##
     authorized = (token)->
