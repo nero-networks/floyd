@@ -4,6 +4,9 @@
 ## TODO implement as floyd app --> ./bin/floyd.sh + ./bin/floyd.bat
 ##
 
+## read .floyd/env 
+test -e .floyd/env && . .floyd/env
+
 USER=`whoami`
 
 ##
