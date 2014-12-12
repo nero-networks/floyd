@@ -1,13 +1,24 @@
 
 im = require 'imagemagick'
 
-module.exports = 
+module.exports = images = 
     
     ##
     ##
     ##
     convert: (args...)->
         im.convert.apply im, args
+    
+    ##
+    ##
+    ##
+    fix_orientation: (file, done)->
+        temp = floyd.tools.files.tmp()
+        im.convert [file, '-auto-orient', temp], (err)=>
+            return done(err) if err
+            
+            floyd.tools.files.mv temp, file
+            images.info file, done
     
     ##
     ##
@@ -63,6 +74,19 @@ module.exports =
     crop: (geometry, src, dest, done)->
         
         im.convert ['-crop', geometry, src, dest], done
+    
+    
+    ##
+    ##
+    ##
+    scale_geometry: (geometry, factor)->
+        [width, parts] = geometry.split 'x'
+        (list = parts.split '+').unshift width
+        
+        for i in [0..list.length-1]
+            list[i] = Math.round parseInt(list[i]) * factor
+        
+        return floyd.tools.strings.vsprintf '%sx%s+%s+%s', list
     
     
     ##
