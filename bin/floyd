@@ -26,7 +26,9 @@ test $WORKDIR == $FLOYD_ROOT && _lib=true
 APPNAME=$(basename $WORKDIR)
 
 ##
-CMD="node $WORKDIR/.floyd"
+test $NODE_BINARY || NODE_BINARY=`which node`
+
+CMD="$NODE_BINARY $WORKDIR/.floyd"
 
 NODE_PATH="$WORKDIR:$WORKDIR/node_modules:$FLOYD_ROOT:$FLOYD_ROOT/node_modules"
 
@@ -426,7 +428,7 @@ function show_help() {
         ARGS="['[B]uild', '[H]elp', '[U]pdate', '[C]lear', '', '[R]efresh', '', '', '', '[Q]uit']"
     fi
     
-    node << EOFJS
+    $NODE_BINARY << EOFJS
         var args = $ARGS;
         
         $HELP_BANNER_CODE
