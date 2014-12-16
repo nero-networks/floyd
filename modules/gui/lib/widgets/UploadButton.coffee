@@ -42,11 +42,18 @@ module.exports =
                             
                         input _attr
                     
+                    _attr = 
+                        class:@data.button.class
+                        
+                    if _title = @data.button.title
+                        _attr.title = _title
+                        
                     if @data.button.type is 'link'
-                        a class:@data.button.class, href:'#', (@data.button.html || @data.button.text)
+                        _attr.href = '#'
+                        a _attr, (@data.button.html || @data.button.text)
                     
                     else
-                        button class:@data.button.class, (@data.button.html || @data.button.text)
+                        button _attr, (@data.button.html || @data.button.text)
                     
                     iframe id:'upload-frame-'+@id, name:'upload-frame-'+@id, width:'0px', height:'0px', frameborder:0, style: 'width:0;height:0;visibility:hidden'
                     
