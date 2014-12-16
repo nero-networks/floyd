@@ -46,7 +46,15 @@ module.exports = (handler)->
         emitter.emit 'authorized', __token = token
 
         handler.authorize token, (err, user)=>
-    
+            
+            ## second handler call, session destroy
+            if err?.message is 'session destroyed'
+                
+                emitter.emit 'logout'
+                #console.log 'logout hook triggered'
+                return __user = null
+            
+            ## first handler call, normal flow
             if !err 
                 #console.log 'post authorizing', token
     
@@ -58,6 +66,7 @@ module.exports = (handler)->
                 
         
             else if err
+                
                 emitter.emit 'unauthorized'
                 
                 #console.log 'authorize error', err
