@@ -3,7 +3,7 @@ module.exports =
 
     class Registry 
     
-        constructor: (@_config)->
+        constructor: (@_config, parent)->
         
             @_pool = {}
             @_running = null

@@ -35,10 +35,6 @@ module.exports =
                         registry:
                             type: 'http.sessions.PersisedRegistry'
                     
-                    shutdown: ->
-                        if @_registry
-                            @_registry.persist()
-                                          
                 ,
                 
                     id: 'lib'
