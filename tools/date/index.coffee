@@ -12,10 +12,16 @@ module.exports =
     ##
     ## reset time to midnight
     ##
-    reset: (date, day)->
+    reset: (date, day, month, year)->
         
         if day
             date.setDate day
+        
+        if month
+            date.setMonth month-1
+        
+        if year
+            date.setYear year
         
         date.setMilliseconds 0
         date.setSeconds 0 
