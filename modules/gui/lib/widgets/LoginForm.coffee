@@ -91,11 +91,14 @@ module.exports =
                                     hint.addClass('error').text(err.message)
                              
                                 else
-                                    location.reload()
+                                    @_loginSuccess()
                         
                         else div.show()
                         
                     return false
                 
                 done()
-                
+        
+        ##
+        _loginSuccess: ()->
+            location.reload()
