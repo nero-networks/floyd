@@ -34,7 +34,7 @@ module.exports =
         ##
         boot: (done)->
             
-            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry
+            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry, @
             
             super done
         
@@ -176,10 +176,18 @@ module.exports =
             if (sess = @_registry.get sid)
                 
                 #console.log 'found session', sess, sess.public.user?.login
+
+                ## initialize destroy hook on the fly
+                if !sess.destroyHook
+                    sess.on 'destroy', ()=>
+                        sess.destroyHook new Error 'session destroyed'
                 
-                
+                ## register the current callback as the destroy hook
+                sess.destroyHook = fn
+                        
+                ## authorize loggedin session
                 if user = sess.public.user?.login
-                    
+                       
                     @parent.children.users.get user, (err, data)=>
                         return fn(err) if err
                         
@@ -189,7 +197,8 @@ module.exports =
                         delete data.pass
                             
                         fn null, sess.public.user = data
-                        
+                
+                ## authorize anonymous session        
                 else
                     fn()
                     
@@ -228,12 +237,12 @@ module.exports =
                 else
                     sid = token.substr 40				
                     
-                    @logger.debug 'session authenticate session %s', sid
+                    @logger.fine 'session authenticate session %s', sid
     
                     @_load sid, (err, sess)=>
                         return fn(err) if err
                         
-                        @logger.debug 'session authenticate hash %s', token.substr 0, 39
+                        @logger.finer 'session authenticate hash %s', token.substr 0, 39
                         
                         if token is sess.token
                             
