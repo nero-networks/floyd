@@ -2,7 +2,8 @@
 mailer = require('nodemailer').createTransport 'SMTP'
 
 module.exports = 
-
+    
+    ##
     sendMail: (data, fn)->
         
         for field in ['subject', 'from', 'to', 'text']
@@ -17,4 +18,20 @@ module.exports =
             return fn new Error 'verify to'
         
         mailer.sendMail data, fn
+    
+    ##
+    format: (txt, wrap=70)->
+        words = txt.split ' '
+        txt = ''
         
+        lines = 1
+        while words.length
+            word = words.shift()
+            if txt.length + word.length > wrap * lines
+                lines++
+                txt += word + '\n'
+            else
+                txt += word + ' '
+        
+        return txt.trimRight()
+            
