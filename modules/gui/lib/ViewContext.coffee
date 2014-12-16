@@ -55,6 +55,9 @@ module.exports =
             if @data.content
                 @logger.info '@data.content is deprecated. use @content instead -', @type, @ID, @data.content
             
+            if @data.attr
+                @__root.attr @data.attr
+            
             if (cls=@data.class) && !@__root.hasClass cls
                 @__root.addClass cls
           
