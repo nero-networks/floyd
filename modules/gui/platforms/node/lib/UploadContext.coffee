@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             super new floyd.Config
                 data:
-                    route:'upload'
+                    route:'/upload'
                     
                     accept: '.*'
                     
@@ -79,7 +79,7 @@ module.exports =
                 done: fn
                 
                 each: (file, next)=>
-                    process.nextTick ()=>
+                    setImmediate ()=>
                         floyd.tools.files.rm file.path
                 
                         next()
