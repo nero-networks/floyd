@@ -152,29 +152,36 @@ module.exports =
                 days = 6
                 
             date.setDate date.getDate() - days
-
-            for cell in @find 'td'
-                
+            
+            for cell in @find 'tbody td'
+        
                 cell = $(cell).data 'date', time = date.getTime()
                 
-                if redraw
-	                cell.removeAttr('class').html('')
-	            
-	                if time is now
-	                    cell.addClass 'today'
-	
-	                if current && time is current  
-	                    cell.addClass 'current'
-	
-	                if date.getMonth() is prev
-	                    cell.addClass 'prev'
-	
-	                if date.getMonth() is next
-	                    cell.addClass 'next'
+                day = date.getDate()
                 
-                    cell.text day = date.getDate()
-
+                if redraw
+                    cell.removeAttr('class').html('')
+                
+                    if time is now
+                        cell.addClass 'today'
+                
+                    if current && time is current  
+                       cell.addClass 'current'
+                
+                    if date.getMonth() is prev
+                        cell.addClass 'prev'
+                    
+                    if date.getMonth() is next
+                        cell.addClass 'next'
+                
+                    cell.text day
+                
                 date.setDate day + 1
-
+                
+            if (row = @find('tbody tr').last()).find('td').first().hasClass 'next'
+                row.hide()
+            else
+                row.show()
+            
             @_wireEvents()
         
