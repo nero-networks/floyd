@@ -62,10 +62,10 @@ module.exports =
                         order = data._order || floyd.tools.objects.keys data
 
                         for key in order
-                            continue if key.charAt(0) is '_' || !(field = data[key])
+                            continue if key.charAt(0) is '_' 
                             
-                            if field.format
-                                value = field.format @
+                            if data[key]?.format
+                                value = data[key].format @
 
                             else 
                                 value = @[key]
