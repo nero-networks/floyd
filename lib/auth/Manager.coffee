@@ -129,12 +129,14 @@ module.exports = (handler)->
     logout: (fn)->
         #console.log emitter, typeof emitter.emit
         
-        if emitter.emit
-        	emitter.emit 'logout'
+        handler.logout __token, (err)->
+            return fn(err) if err
+            __user = null
+
+            if emitter.emit
+            	emitter.emit 'logout'
         
-        __user = null
-        
-        handler.logout __token, fn
+            fn()
 
         
     ##
