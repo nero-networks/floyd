@@ -97,7 +97,7 @@ module.exports =
                                 _cfg = new floyd.Config 
                                     class: 'narrow'
                             
-                                    type: 'one2many.widgets.users.UserData'
+                                    type: 'gui.widgets.users.UserData'
                             
                                     data:
                                         newUser: true
@@ -130,7 +130,7 @@ module.exports =
                                 _cfg = new floyd.Config
                                     class: 'narrow'
 
-                                    type: 'one2many.widgets.users.UserData'
+                                    type: 'gui.widgets.users.UserData'
                             
                                     data:
                                         admin: true
