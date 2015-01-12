@@ -100,7 +100,7 @@ function start_app() {
                 
     else			
     
-        NODE_PATH=$NODE_PATH $CMD $@ >> .floyd/logs/stdout.log 2>&1 &
+        NODE_PATH=$NODE_PATH /usr/bin/setsid $CMD $@ >> .floyd/logs/stdout.log 2>&1 &
         disown $!
         
     fi
@@ -313,7 +313,6 @@ function log_viewer() {
                         ;;
                         s)
                             PID=$(check); if [ $PID ]; then echo "restarting $APPNAME @ pid:$PID"; else echo starting $APPNAME; fi
-                            test "$1" == "-q" || echo -e "\033[0;0;1mWARNING\033[m: \033[0;31m<Ctrl-c> will terminate the child-process!\033[m\n         use [Q]uit to quit this log-viewer session..."
                             $0 restart >> .floyd/logs/stdout.log 2>&1 &
                         ;;
                         k)
