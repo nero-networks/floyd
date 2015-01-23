@@ -37,7 +37,7 @@ Diese E-Mail wurde, zur Bestätigung, automatisch versendet.'''
 ##
 module.exports =
     
-    class ContactPage extends floyd.gui.pages.PageContext
+    class ContactContext extends floyd.Context
     
         ##
         ##
@@ -70,9 +70,7 @@ module.exports =
         start: (done)->            
             super done 
             
-            @logger.warning 'gui.pages.ContactPage is deprecated! Use gui.ContactContext as child of gui.pages.PageContext'
-            
-            @_addRoute '/sendMail', (req, res, next)=>
+            @delegate '_addRoute', '/sendMail', (req, res, next)=>
                     
                 @logger.warning 'post handler usage for ContactForm'
                 
