@@ -112,7 +112,7 @@ module.exports = objects =
     ##
     ##
     isArray: (obj)->
-        obj instanceof Array || (obj && obj.push && obj.pop && obj.length isnt undefined)
+        obj && (obj instanceof Array || (obj && obj.push && obj.pop && obj.length isnt undefined))
     
     ##
     ##
@@ -125,31 +125,31 @@ module.exports = objects =
     ##
     ##
     isRegExp: (obj)->
-        obj instanceof RegExp
+        obj && obj instanceof RegExp
         
     ##
     ##
     ##
     isDate: (obj)->
-        obj instanceof Date
+        obj && obj instanceof Date
         
     ##
     ##
     ##
     isString: (obj)->
-        typeof obj is 'string'
+        obj && typeof obj is 'string'
         
     ##
     ##
     ##
     isNumber: (obj)->
-        typeof obj is 'number'
+        obj && typeof obj is 'number'
         
     ##
     ##
     ##
     isFunction: (obj)->
-        typeof obj is 'function'
+        obj && typeof obj is 'function'
     
     ##
     ##
