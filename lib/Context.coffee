@@ -215,11 +215,14 @@ module.exports =
                 
                 if config.TOKEN
                     floyd.tools.objects.intercept @, 'boot', (done, boot)=>
-
+                        
+                        first = true
                         @_getAuthManager().authorize config.TOKEN, (err)=>
                             #return done(err) if err
-
-                            boot done
+                            
+                            if first 
+                                first = false
+                                boot done
                 
                 ##
                 @_createAuthHandler = ()=>
@@ -376,8 +379,10 @@ module.exports =
                     
                     if !__first && ( __first = true )
                         @_changeStatus? status
-                        
-                    done? err
+                        done?()
+                    
+                    else if err
+                        done? err
                     
                     
 

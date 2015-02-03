@@ -1,5 +1,8 @@
 
-module.exports = new floyd.Config 
+##
+##
+##
+module.exports = 
     
     type: 'http.Server'
     
