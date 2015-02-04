@@ -150,7 +150,7 @@ module.exports =
                         ## bypass the send method here :-(
                         res.setHeader 'Content-Length', stats.size
                         res.writeHead 200, 'Content-Type': res.ctype
-                        
+
                         files.fs.createReadStream(file).pipe res
         
                         
