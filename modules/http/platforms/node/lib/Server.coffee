@@ -145,21 +145,30 @@ module.exports =
                         res.send '', 304 
                     
                     else
-                        res.cache?.etag()
+                        ##
+                        ## EXPERIMENTAL enable streaming for native files
+                        ## bypass the send method here :-(
+                        res.setHeader 'Content-Length', stats.size
+                        res.writeHead 200, 'Content-Type': res.ctype
+                        
+                        files.fs.createReadStream(file).pipe res
+        
+                        
+
+                        # res.cache?.etag()
                         
                         ##
                         ## still here? let's read the files content
                         ##				
     
-                        files.fs.readFile file, (e, data)=>
-                            err = e
-                            
-                            if data.length > 512
-                                res.compress()
-                                                            
-                            ## send and finish response
-                            next null, data
-                            
-        
+                        #files.fs.readFile file, (e, data)=>
+                        #    err = e
+                        #    
+                        #    if data.length > 512
+                        #        res.compress()
+                        #                                    
+                        #    ## send and finish response
+                        #    next null, data
+                        
     
     
