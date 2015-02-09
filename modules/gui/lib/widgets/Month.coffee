@@ -179,9 +179,9 @@ module.exports =
                 date.setDate day + 1
                 
             if (row = @find('tbody tr').last()).find('td').first().hasClass 'next'
-                row.hide()
+                row.css display: 'none'
             else
-                row.show()
+                row.css display: 'table-row'
             
             @_wireEvents()
         
