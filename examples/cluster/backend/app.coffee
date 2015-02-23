@@ -27,13 +27,12 @@ module.exports =
     
         id: 'test'
         
-        data:
-            permissions:
-                echo: 
-                    roles: 'tester'
+        permissions:
+            echo: 
+                roles: 'tester'
         
         echo: (inp, fn)->
-            #console.log 'echo', inp, 'to', @echo.identity.id
+            console.log 'echo', inp, 'to', @echo.identity.id
             
             fn null, inp
 

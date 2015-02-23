@@ -51,7 +51,7 @@ module.exports = new floyd.Config 'config.gui.server', 'config.dnode.server',
         
             
         ##
-        started: ->
+        running: ->        
             
             if floyd.system.platform is 'remote'
                 
