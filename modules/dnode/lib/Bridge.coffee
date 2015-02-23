@@ -41,24 +41,20 @@ module.exports =
                         
                         else
                             #console.log 'retry lookup', origin+'.'+name, err.message
-                            if name.substr(0, origin.length) is origin
-                                lookup name, identity, fn
-                            else
-                                lookup origin+'.'+name, identity, fn
+                            lookup origin+'.'+name, identity, fn
                     
                 
 
-            ## hack to connect us before our children are booted 
-            
-            floyd.tools.objects.intercept @, 'boot', (done, boot)=>
-            
+            ## hack to connect us before our root-parent gets booted 
+            _parent = _parent.parent while (_parent ?= @parent || @).parent
+            floyd.tools.objects.intercept _parent, 'boot', (done, boot)=>
                 @_connect (err)=>
                     return done(err) if err
-                    
-                    @_listen (err)=>
-                        return done(err) if err
-
-                        boot done 
+                
+                    boot (err)=>
+                        return done(err) if err 
+                        
+                        @_listen done
 
             return config	
     
@@ -68,7 +64,7 @@ module.exports =
         ##
         _connect: (fn)->
             done = false
-            
+
             @_process @data.gateways, 
                 
                 #done: fn
@@ -90,32 +86,32 @@ module.exports =
                         console.log 'doppelt!'				
                 ## <-- TEMPORARY DEBUGGING 
                                 
-                each: (conf, next)=>
-                    @logger.info 'connecting to gateway:', conf	 
+                each: (conf, next)=>                    
                     
-                    first=false
-                    
-                    connected = (err)=>
-                        return next(err) if err
-                        
-                        if !first && ( first = true )
-                            next()
-                            
+                    reconn = require('reconnect-core') ()=>
+                        if conf.tls
+                            @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
                         else
-                            @logger.debug 'reconnected', conf
-                            
-                            @_emit 'reconnect', conf
-                    
-                    
-                    d = @_createLocal connected
-                    
-                    if conf is 'remote'
-                        c = shoe @data.route
-                    
-                    else
-                        c = require('net').connect conf
+                            @logger.info 'connecting to gateway:', conf
                         
-                    d.pipe(c).pipe d
+                        if conf is 'remote'
+                            c = shoe @data.route
+                        else if conf.tls
+                            c = require('tls').connect conf
+                        else
+                            c = require('net').connect conf
+
+                        c.on 'error', (err)=>
+                            @logger.error err
+                         
+                        d = @_createLocal next
+                        d.pipe(c).pipe d
+                                                
+                        return c
+                    
+                    reconn().connect()
+                        
+                        
                         
         
         ##
@@ -128,7 +124,10 @@ module.exports =
                 done: fn
                 
                 each: (conf, next)=>
-                    @logger.info 'listening on port:', conf
+                    if conf.tls
+                        @logger.info 'listening on tls-port:', conf.host||'localhost', conf.port
+                    else
+                        @logger.info 'listening on port:', conf
                         
                     handler = (err)=>
                         fn(err) if err
@@ -150,7 +149,16 @@ module.exports =
                         @lookup conf.ctx, @identity, (err, ctx)=>
 
                             @_createServerSocket ctx.server, handler
-                            
+                    
+                    else if conf.tls
+                        require('tls').createServer conf, (c)=>
+                            d = @_createLocal(handler)
+                            c.pipe(d).pipe(c)
+
+                            c.on 'error', handler
+
+                        .listen conf.port, conf.host
+                        
                     else
                         @_createLocal(handler).listen conf	
                     
@@ -177,75 +185,55 @@ module.exports =
         _createLocal: (fn)->
             
             ##
-            dnode (proxy, conn)=>
-
-                @_createRemote proxy, conn, fn
-        
-        
-        ##
-        ##
-        ##
-        _createRemote: (proxy, conn, fn)->
-            
-            ##
             root = @parent || @
             
             ##
-            child = new floyd.dnode.Remote root
-            
-            child.init (id:conn.id, type:'dnode.Remote'), (err)=>
-                return fn(err) if err
+            dnode (proxy, conn)=>
                 
-                ##			
-                child.boot (err)=>
-                    return fn(err) if err
-            
-                    ##
-                    _first = false	
-                    conn.on 'remote', (remote)=>
+                child = null
+                
+                conn.on 'remote', (remote)=>
                     
-                        #console.log child.ID, 'conn remote', conn.id
-
-                        child._useProxy remote
-                    
-                        @logger.debug 'adding remote %s', child.ID
-                    
-                        root.children.push child
-                    
-                        child.start (err)=>
+                    if !(child = root.children[remote.id])
+                        child = new floyd.dnode.Remote root
+                
+                        child.init (id: remote.id, type:'dnode.Remote'), (err)=>
                             return fn(err) if err
                         
-                            if !_first && ( _first = true )
-                                fn() 
-                                
+                        child._useProxy remote
+                        
+                        root.children.push child
+
+                        fn() 
                     
+                    else
+                        child._useProxy remote
+                
+                    ##
+                    @_emit 'connected',
+                        id: child.id
+
                     ##
                     conn.on 'end', ()=>
-                    
-                        #console.log child.ID, 'conn end', conn.id
-                    
-                        child.stop (err)=>
-                    
-                            root.children.delete child
+                        @_emit 'disconnected',
+                            id: child.id
 
-                            #console.log 'conn destroy'
-                            child.destroy fn
-
-                            
+                    
                     ##
                     conn.on 'error', (err)=>
-                    
+            
                         console.log 'conn error!', err
+            
+                        fn err          
                     
-                        fn err			
-                            
+                        
                                 
-            ## remote api
+                ## remote api
+                id: root.id
+                
+                lookup: (args...)=> 
+                    child.lookup.apply child, args
             
-            ID: root.ID+'.'+conn.id
 
-            lookup: (args...)=> 
-                #console.log 'remote api lookup:', args[0]
-                child.lookup.apply child, args
             
-            ping: (fn)-> fn()
+            

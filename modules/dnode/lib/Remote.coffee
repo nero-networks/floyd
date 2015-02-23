@@ -6,40 +6,26 @@ module.exports =
         ##
         ##
         ##
-        _useProxy: (@_proxy)->		
+        _useProxy: (proxy)->      
             
             ##
-            if !@origin
-            
-                @origin = 
-                    dnode: @id
-                    proxy: @_proxy.ID
+            if !@_proxy 
+                @_proxy = proxy
                 
                 ## prepare __wrappers
-                @__wrappers = {} 
-                
+                @__wrappers = {}                 
                 
                 ## reset the id
-                @ID = @parent.ID + '.' + (@id = floyd.tools.strings.part @_proxy.ID, '.', -2)
+                @ID = @parent.ID + '.' + (@id = @_proxy.id)
             
                 ## recreate the logger
                 @logger = @_createLogger @ID
                 
-                ## recreate the identity
-                #console.log 'recreate the identity'
-                #manager = @_getAuthManager()
-                #manager.destroyIdentity @identity
-                #
-                #@identity = manager.createIdentity @ID
-                    
             else
-            
-                ##
-                ##
-                @origin.proxy = @_proxy.ID
+                @_proxy = proxy
                 
                 ##
-                ##
+                ## rewrap active lookups
                 for name, wrappers of @__wrappers
                     do(name, wrappers)=>
                 
@@ -48,6 +34,10 @@ module.exports =
                                 
                                 @lookup name, wrapper.identity, (err, ctx)=>
                                     return wrapper.error(err) if err
+
+                                    for key, value of ctx 
+                                        wrapper.ctx[key] = value
+            
                                     
         
         ##
@@ -56,7 +46,7 @@ module.exports =
         lookup: (name, identity, fn, noremote)->
             
             if noremote
-                #console.log @id, 'direct lookup', name
+                #console.log '%s direct lookup %s for %s', @ID, name, identity.id
                 
                 super name, identity, fn
                 
@@ -66,20 +56,18 @@ module.exports =
                 @_proxy.lookup name, identity, (err, ctx)=>
                     return fn(err) if err
                     
-                    #console.log 'proxy hit', name
-                    
                     fn null, @_wrapRemote name, identity, ctx, fn
                 
-                , true
+                , true ## <-- this is the noremote flag
                          
         
          
         ##
         ##
         ##
-        _wrapRemote: (name, identity, ctx, error)->			
+        _wrapRemote: (name, identity, ctx, error)->         
 
-            wrappers = @__wrappers[name] ?= {}			
+            wrappers = @__wrappers[name] ?= {}                      
             wrapper = wrappers[identity.id] ?=
                 error: error
                 identity: identity
@@ -88,13 +76,5 @@ module.exports =
             for key, value of ctx 
                 wrapper.ctx[key] = value
             
-            wrapper.stop = ()=>
-                console.log 'TODO: pseudo stop ', name
-            
-            wrapper.destroy = ()=>
-                console.log 'TODO: pseudo destroy ', name
-            
             return wrapper.ctx
-                
-            
-                
+
