@@ -208,9 +208,6 @@ module.exports =
             ##
             if manager = config.data.authManager
                 
-                if config.ORIGIN
-                    manager = config.ORIGIN+'.'+manager
-                
                 #console.log 'prepare _createAuthHandler', manager
                 
                 if config.TOKEN
@@ -237,7 +234,12 @@ module.exports =
                             fn null, ctx
                         
                         else 
-                            @lookup manager, @identity, fn
+                            @lookup manager, @identity, (err, ctx)=>
+                                if !ctx && config.ORIGIN
+                                    @lookup config.ORIGIN+'.'+manager, @identity, fn
+                                
+                                else
+                                    fn err, ctx
                     
                     new floyd.auth.Handler
 
@@ -283,9 +285,14 @@ module.exports =
         ##
         ##
         _permitAccess: (identity, key, args, fn)->
-            super identity, key, args, (err)=>
+            super identity, key, args, (err, permitted)=>
+                return fn(err) if err
                 
                 checks = [
+                    (next)=>
+                        next permitted
+                        
+                ,
                     (next)=>
                         if @permissions?.__checks
                             for check in @permissions.__checks
@@ -302,6 +309,33 @@ module.exports =
                         
                         next (@permissions?[key] || @permissions) isnt false
                         
+                ,
+                
+                    (next)=> # custom check function - must callback true to permit!
+                        if typeof (check = @permissions) is 'function' || typeof (check = @permissions?[key]) is 'function' || check = (@permissions?[key]?.check || @permissions?.check)
+                            
+                            check identity, key, args, next                            
+                            
+                        else next true
+                    
+                ,
+
+                    (next)=> # check for identity.id restriction
+                        
+                        if id = (@permissions?[key]?.identity || @permissions?.identity)
+                            next identity.id is id
+                        
+                        else next true
+                ,
+
+                    (next)=> # check for token restriction
+                        
+                        if token = (@permissions?[key]?.token || @permissions?.token)
+                            
+                            identity.token (err, _token)=>
+                                next token is _token
+                        
+                        else next true
                 ,
 
                     (next)=> # check for login restriction
@@ -332,15 +366,6 @@ module.exports =
                                 
                         else next true
                 
-                ,
-                
-                    (next)=> # custom check function - must callback true to permit!
-                        if typeof (check = @permissions) is 'function' || typeof (check = @permissions?[key]) is 'function' || check = (@permissions?[key]?.check || @permissions?.check)
-                            
-                            check identity, key, args, next                            
-                            
-                        else next true
-                    
                 ]
                 
                 permit = (ok)=>
@@ -352,6 +377,7 @@ module.exports =
                     else fn()
                 
                 # start recursion
+                
                 permit true
 
         ##
@@ -523,9 +549,12 @@ module.exports =
                     else
                         done err
                 
-                else console.warn 'double found for lookup:', name, identity.id
+                else if !err 
+                    console.warn 'double found for lookup:', name, identity.id
             
-            
+                else
+                    console.error err
+                
             ##
             ## recursive function calls it's self until a notfound error is thrown
             next = ()=>
@@ -539,7 +568,7 @@ module.exports =
                         id = child.id
                         
                         if !__check()
-                            @logger.debug 'test child', id
+                            @logger.fine 'test child', id
                             
                             # 1. the requested context is a direct child. 
                             if name is id 
