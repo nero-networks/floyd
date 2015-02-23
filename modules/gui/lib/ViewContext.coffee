@@ -160,6 +160,8 @@ module.exports =
             ## stage 2 -> ready
             else                
                 @forIdentity @identity, (err, ctx)=>
+                    return done(err) if err
+                    
                     @__root.data 'floyd', ctx
                     
                     done()
