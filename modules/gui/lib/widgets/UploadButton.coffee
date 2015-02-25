@@ -147,11 +147,11 @@ module.exports =
                                         error: (err)=>
                                             if (msg = err.message) is 'limit exceeded'
                                                 alert 'Zu viele Daten! Reduziere die Anzahl oder die Größe der Dateien.'
-                                                location.reload()
+                                                #location.reload()
                                             
                                             else if (parts = msg.split(':'))[0] is 'invalid type'
                                                 alert 'Der Dateityp wurde nicht akzeptiert: '+parts[1]
-                                                location.reload()
+                                                #location.reload()
                                                 
                                             else
                                                 @error new Error err.message

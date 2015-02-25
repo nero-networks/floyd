@@ -157,10 +157,14 @@ module.exports = tools =
         ##
         form.on 'fileBegin', (field, file)=>
     
-            data.file = file.name
-    
-            progress()
-                        
+            if file.type.toLowerCase().match handler.accept
+                data.file = file.name
+                
+                progress()
+            
+            else                
+                handler.error new Error 'invalid type:'+file.name
+                
         
         ##
         form.on 'progress', (received, total)=>
@@ -177,8 +181,8 @@ module.exports = tools =
         
         ##
         form.on 'file', (field, file)=>
-                    
-            if file.type.match handler.accept
+                
+            if file.name is data.file
             
                 files.push file
                 
@@ -190,9 +194,6 @@ module.exports = tools =
                 
                 progress()
             
-            else                
-                handler.error new Error 'invalid type:'+file.name
-                
         
         ## fire!
         
