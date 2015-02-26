@@ -12,7 +12,7 @@ module.exports =
             super new floyd.Config 
                 
                 data:
-                    port: null
+                    ports: []
                 
             , config            
         
@@ -21,31 +21,43 @@ module.exports =
         ##
         ##
         boot: (done)->
-            if @data.port
-                dgram.createSocket 'udp4', (msg, info)=>
-                    @_handleMessage msg, info
+            @_sockets = []
+            
+            @_process @data.ports,
+                each: (conf, next)=>
+                    @_sockets.push sock = dgram.createSocket 'udp4', (msg, info)=>
+                        @_handleMessage sock, msg, info, conf
                     
-                .bind @data.port, @data.host
+                    sock.bind conf.port, conf.host, (err)=>
+                        return next(err) if err
+                        @logger.info 'listening for UDP on %s:%s', (conf.host||'0.0.0.0'), conf.port
+                        
+                        if conf.multicast
+                            @_process conf.multicast,
+                                each: (addr, fn)=>
+                                    if typeof addr is 'string'
+                                        addr =
+                                            addr: addr
+                                    
+                                    sock.setBroadcast true
+                                    sock.setMulticastTTL addr.ttl||128
+                                    
+                                    sock.addMembership addr.addr, addr.iface                                    
+                                    
+                                    @logger.info '    adding multicast membership: %s@%s', addr.addr, addr.iface||'all'
+                                    
+                                    fn()
+                                    
+                                done: next
+                        
+                        else next()
                 
-                done()
+                done: done
         
         ##
         ##
         ##
-        _handleMessage: (msg, info)->
-            console.log 'incomming message:', msg, info
+        _handleMessage: (sock, msg, info, conf)->
+            console.log 'incomming message:', msg, info, conf
         
-        
-        ##
-        ##
-        ##
-        _sendMessage: (msg, port, host, fn)->
-            if typeof host is 'function'
-                fn = host
-                host = '127.0.0.1'            
-        
-            buff = new Buffer msg
-            
-            dgram.createSocket('udp4').send buff, 0, buff.length, port, host, fn
-            
-            
+                    
