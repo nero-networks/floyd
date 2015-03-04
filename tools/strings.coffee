@@ -89,32 +89,34 @@ module.exports =
         require('sanitizer').sanitize str
         
 
-    ##
+    ###
     ## UUID generator
     ## 
     ## nice hack from here
     ## http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript#answer-2117523
     ##  
-    ##  i=0; start = +new Date()
-    ##  
-    ##  while (+new Date() - start) < 1000 && ++i
-    ##     floyd.tools.strings.uuid_old()
-    ##     
-    ##  console.log i, 'UUIDs per second'
+    
+      i=0; start = +new Date()
+      
+      while (+new Date() - start) < 1000 && ++i
+         floyd.tools.strings.uuid_old()
+         
+      console.log i, 'UUIDs per second'
+    
     ##
     ##  my firebug(acebug) console says: 
     ##  23368 UUIDs per second
     ##  23486 UUIDs per second
     ##  23502 UUIDs per second
     ##  23338 UUIDs per second
-    ##
+    ###
     uuid_old: ()->
         
         'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace /[xy]/g, (c)->
             r = Math.random()*16|0
             (if c is 'x' then r else r&0x3|0x8).toString(16)
 
-    ##
+    ###
     ## optimized UUID generator
     ## 
     ## improvement on the hack from here
@@ -126,20 +128,22 @@ module.exports =
     ## i took Jeff Ward's e6() from here(http://jsfiddle.net/jcward/7hyaC/1/) on 24/02/2014 
     ## because it still had a slight increase on my desktop
     ##
-    ##  i=0; start = +new Date()
-    ##  
-    ##  while (+new Date() - start) < 1000 && ++i
-    ##     floyd.tools.strings.uuid_old()
-    ##     
-    ##  console.log j=i, 'UUIDs per second with uuid_old'
-    ##
-    ##  i=0; start = +new Date()
-    ##  
-    ##  while (+new Date() - start) < 1000 && ++i
-    ##     floyd.tools.strings.uuid()
-    ##     
-    ##  console.log i, 'UUIDs per second with uuid'
-    ##  console.log 'the new uuid is', (i / j).toFixed(2), 'times faster'
+    
+      i=0; start = +new Date()
+      
+      while (+new Date() - start) < 1000 && ++i
+         floyd.tools.strings.uuid_old()
+         
+      console.log j=i, 'UUIDs per second with uuid_old'
+    
+      i=0; start = +new Date()
+      
+      while (+new Date() - start) < 1000 && ++i
+         floyd.tools.strings.uuid()
+         
+      console.log i, 'UUIDs per second with uuid'
+      console.log 'the new uuid is', (i / j).toFixed(2), 'times faster'
+    
     ##
     ##
     ##  my firebug(acebug) console says: 
@@ -163,7 +167,7 @@ module.exports =
     ##   26155 UUIDs per second with uuid_old
     ##   137794 UUIDs per second with uuid
     ##   the new uuid is 5.27 times faster
-    ##
+    ###
     uuid: ()->
         
         k = ['x','x','-','x','-','4','-','y','-','x','x','x']

@@ -389,23 +389,25 @@ module.exports = objects =
     ##
     ## replaces the method with a wrapper which calls the interceptor 
     ## the interceptor gets passed all arguments plus the replaced super-method
-    ##    
-    ##  # 1. given some random api object method. This one is saying hello to you.
-    ##  test =
-    ##      helloMyNameIs: (name, fn)->
-    ##    
-    ##          fn null, 'Hello ' + name + '!'
-    ##  
-    ##  # 2. this intercepts the method by adding 'how are you feeling today?'
-    ##  floyd.tools.objects.intercept test, 'helloMyNameIs', (name, fn, helloMyNameIs)->
-    ##    
-    ##      helloMyNameIs name + ' How are you today?', fn
-    ##    
-    ##  # 3. usage. this will display 'Hello Floyd! How are you feeling today?'
-    ##  test.helloMyNameIs 'Floyd', (err, res)->
-    ##    
-    ##      console.log res
-    ##        
+    ###    
+      # 1. given some random api object method. This one is saying hello to you.
+      test =
+          helloMyNameIs: (name, fn)->
+        
+              fn null, 'Hello ' + name + '!'
+      
+      # 2. this intercepts the method by adding 'How are you feeling today?'
+      floyd.tools.objects.intercept test, 'helloMyNameIs', (name, fn, helloMyNameIs)->
+        
+          helloMyNameIs name, (err, res)->
+              return fn(err) if err
+              fn null,  + ' How are you feeling today?'
+        
+      # 3. usage. this will display 'Hello Floyd! How are you feeling today?'
+      test.helloMyNameIs 'Floyd', (err, res)->
+        
+          console.log res
+    ###        
     ##
     intercept: (obj, method, interceptor)->
 
