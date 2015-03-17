@@ -149,6 +149,8 @@ module.exports =
                         ## EXPERIMENTAL enable streaming for bigger files
                         ## bypass the send method here :-(
                         
+                        res.setHeader 'Content-Length', stats.size
+                        
                         if stats.size > 512
                             res.compress()
                         
