@@ -82,9 +82,9 @@ module.exports =
             else
                 #console.log 'using _ident', _ident.identity.id
 
-	            floyd.tools.http.parseData req, (err)=>
-	                return fn(err) if err
-	                
+                floyd.tools.http.parseData req, (err)=>
+                    return fn(err) if err
+                    
                     res.cache?.etag()
                     
                     ##
