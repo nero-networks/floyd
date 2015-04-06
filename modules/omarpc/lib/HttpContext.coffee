@@ -63,7 +63,7 @@ module.exports =
         _createContent: (req, res, fn)->
                 
             ##                
-            if !(_ident = @_IDENTITIES[SID = req.session.SID])
+            if req.session && !(_ident = @_IDENTITIES[SID = req.session?.SID])
                 #console.log 'creating _ident'
                 
                 manager = new floyd.auth.Manager @_createAuthHandler()
@@ -91,6 +91,8 @@ module.exports =
                     m = req.body.m
                     a = JSON.parse(req.body.a || '[]')
                     
+                    console.log req.body.o, m, a
+                    
                     a.push _send = (err, response)->
                         
                         obj =
@@ -113,7 +115,7 @@ module.exports =
                         @_getObject req.body.o, (err, o)=>
                             return fn(err) if err
                             
-                            if o.forIdentity
+                            if _ident && o.forIdentity
                                 o.forIdentity _ident.identity, (err, wrapper)=>
                                     return fn(err) if err
                                 
@@ -128,7 +130,10 @@ module.exports =
 
             if typeof (obj = @_registry[o]) is 'string'
                 @lookup obj, @identity, fn
-                
+            
+            else if typeof obj is 'function'
+                obj fn
+            
             else fn null, obj
                 
                 
