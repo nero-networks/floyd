@@ -125,12 +125,7 @@ module.exports =
                         ## so we send a redirect back to the browser just to add this slash
                         ## ugly but hopeless... we must ensure the browser sees a directory
                         
-                        ## refuse the access permission if there is no index file		
-                        if !files.fs.existsSync (file = files.path.join file, @data.index)
-                            return next new floyd.error.Forbidden req.url
-                    
-                        else 
-                            return res.redirect path+'/'+params
+                        return res.redirect path+'/'+params
                     
                     
                     res.setHeader 'Last-Modified', stats.mtime.toUTCString()
