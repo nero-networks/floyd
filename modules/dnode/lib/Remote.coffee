@@ -1,4 +1,7 @@
 
+##
+##
+##
 module.exports = 
 
     class DNodeRemote extends floyd.Context
@@ -9,6 +12,7 @@ module.exports =
         _useProxy: (proxy)->      
             
             ##
+            ## initial call
             if !@_proxy 
                 @_proxy = proxy
                 
@@ -20,23 +24,24 @@ module.exports =
             
                 ## recreate the logger
                 @logger = @_createLogger @ID
-                
+            
+            ##
+            ## subsequent calls on reconnect
             else
                 @_proxy = proxy
                 
-                ##
                 ## rewrap active lookups
                 for name, wrappers of @__wrappers
-                    do(name, wrappers)=>
-                
+                    do (name, wrappers)=>
+                    
                         for id, wrapper of wrappers
-                            do(id, wrapper)=>
-                                
+                            do (id, wrapper)=>
+                            
+                                wrapper.rewrapping = true
+                            
                                 @lookup name, wrapper.identity, (err, ctx)=>
-                                    return wrapper.error(err) if err
-
-                                    for key, value of ctx 
-                                        wrapper.ctx[key] = value
+                                    wrapper.error(err) if err
+                                    
             
                                     
         
@@ -45,19 +50,21 @@ module.exports =
         ##
         lookup: (name, identity, fn, noremote)->
             
+            ## local lookup
             if noremote
-                #console.log '%s direct lookup %s for %s', @ID, name, identity.id
-                
                 super name, identity, fn
-                
+            
+            ## cache lookup
+            else if (wrapper = @__wrappers[name]?[identity.id]) && !wrapper.rewrapping
+                fn null, wrapper.ctx       
+            
+            ## remote lookup
             else
-                #console.log @id, 'proxy lookup', name
-                
                 @_proxy.lookup name, identity, (err, ctx)=>
                     return fn(err) if err
                     
                     fn null, @_wrapRemote name, identity, ctx, fn
-                
+            
                 , true ## <-- this is the noremote flag
                          
         
@@ -66,15 +73,25 @@ module.exports =
         ##
         ##
         _wrapRemote: (name, identity, ctx, error)->         
-
-            wrappers = @__wrappers[name] ?= {}                      
-            wrapper = wrappers[identity.id] ?=
+            
+            ## create reusable wrapper
+            wrapper = (@__wrappers[name] ?= {})[identity.id] ?=
                 error: error
                 identity: identity
                 ctx: {}
-                
+            
+            ## fill wrapper    
             for key, value of ctx 
                 wrapper.ctx[key] = value
             
+            ## 
+            if wrapper.rewrapping
+                wrapper.rewrapping = false
+                
+                ## delete unknown keys in case of changes in remote api
+                for key, value of wrapper.ctx
+                    delete wrapper.ctx[key] if !ctx[key]                        
+            
+            ##
             return wrapper.ctx
 
