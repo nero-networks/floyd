@@ -12,11 +12,12 @@ module.exports =
             fn = host
             host = '127.0.0.1'            
             
-        if typeof msg isnt 'string'
+        if typeof msg isnt 'string' && !(msg instanceof Buffer)
             msg = JSON.stringify msg
-    
-        buff = new Buffer msg
-        
+            
+        if !(msg instanceof Buffer)
+            msg = new Buffer msg
+
         SOCKET.send buff, 0, buff.length, port, host, fn
             
             
