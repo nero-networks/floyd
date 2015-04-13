@@ -3,12 +3,6 @@ events = require 'events'
 
 ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped']
 
-## EXPERIMENTAL identity based lookups cache -> nero
-## it is working! still deactivated by default. to use
-## put USELOOKUPSCACHE: true into the base config object
-USELOOKUPSCACHE = false
-LOOKUPSCACHE = {}
-
 module.exports = 
 
     ## 
@@ -67,14 +61,6 @@ module.exports =
             @identity = @_createIdentity()
 
             @_emitter = @_createEmitter config
-            
-            # --> EXPERIMENTAL identity based lookups cache -> nero
-            
-            if config.USELOOKUPSCACHE
-                USELOOKUPSCACHE = true
-                @logger.debug 'init lookups cache'
-            
-            # <-- EXPERIMENTAL 
             
             @children = new floyd.data.MappedCollection()
 
@@ -404,9 +390,14 @@ module.exports =
                 done: (err)=>
                     
                     if !__first && ( __first = true )
-                        @_changeStatus? status
-                        done?()
-                    
+                        if level is 'stop' || level is 'destroy'
+                            @_changeStatus? status
+                            done?()
+                        
+                        else
+                            done?()
+                            @_changeStatus? status
+                                            
                     else if err
                         done? err
                     
@@ -449,210 +440,45 @@ module.exports =
         ##
         stop: (done)->
             @_changeStatus 'shutdown'
-            
-            # --> EXPERIMENTAL identity based lookups cache -> nero
-
-            if USELOOKUPSCACHE
-                for ident in floyd.tools.objects.keys LOOKUPSCACHE
-                    LOOKUPSCACHE[ident]._off()
-                    delete LOOKUPSCACHE[ident]
-
-            # <-- EXPERIMENTAL
-            
+                        
             @_init 'stop', 'stopped', done
 
         
-        
         ##
-        ## TODO description
-        ## 
+        ##
         ##
         lookup: (name, identity, done)->
+            if !identity || !identity.id || !identity.token
+                return done new Error '2. parameter is not identity'
             
-            if !(__ident = identity.id) || !identity.token
-                console.log '2. parameter is not identity', @ID
-                throw new Error '2. parameter is not identity'
+            ## myself
+            if name is @id
+                @logger.debug 'found(%s) for %s', @ID, identity.id
+                return @forIdentity identity, done
             
-            _children = 0
-            _parent = !!(@parent && @parent.lookup)
-            _global = !!(!@parent && floyd.__parent?.lookup)
+            ## children
+            if (base = name.split('.').shift()) is @id
+                base = (name = name.substr base.length + 1).split('.').shift()
             
-            @logger.debug 'lookup:', name, __ident
+            for child in @children 
+                if child.id is base
+                    @logger.debug 'delegate lookup(%s) to child %s for %s', name, child.ID, identity.id
+                    return child.lookup name, identity, done
             
-            # --> EXPERIMENTAL identity based lookups cache -> nero
+            ## parent
+            if @parent?.lookup
+                @logger.debug 'delegate lookup(%s) to parent %s for %s', name, @parent.ID, identity.id
+                return @parent.lookup name, identity, done
             
-            if USELOOKUPSCACHE # inactive if false here
-
-                ## interrupt search here and return lookup from cache
-
-                if (lookupscache = LOOKUPSCACHE[__ident]) && lookupscache[name]
-                    @logger.debug 'found cached:', name, identity.id
-                    return done(null, lookupscache[name]) 
-                
-            # <-- EXPERIMENTAL
+            ## global
+            if floyd.__parent?.lookup
+                @logger.debug 'delegate lookup(%s) to global parent for %s', name, identity.id
+                return floyd.__parent.lookup name, identity, done
             
+            ## not found
+            @logger.debug 'lookup(%s) failed for %s', name, identity.id
+            done new Error 'Context not found: '+name
             
-            @logger.debug 'start search', name, identity.id
-            
-            n=0
-            
-            found = false
-            
-            __found = ()=>
-                found = true
-            
-            __check = ()=>
-                return found
-                
-            _try = (err, ctx)=>
-                #@logger.debug found, '_try', ctx?.ID, identity.id
-                
-                if !__check()
-                
-                    if ctx
-                    
-                        # --> EXPERIMENTAL identity based lookups cache -> nero
-                        
-                        if USELOOKUPSCACHE # inactive if false here
-                            if !(lookupscache = LOOKUPSCACHE[__ident])
-                                @logger.debug 'create lookups cache for', __ident
-                    
-                                lookupscache = LOOKUPSCACHE[__ident] = {}                                
-                                
-                                identity.on 'destroyed', _destroy = ()=>                                    
-                                    @logger.debug 'destroy lookups cache for', __ident
-                                    delete LOOKUPSCACHE[__ident]
-                    
-                                lookupscache._off = ()->
-                                    identity.off 'destroyed', _destroy
-
-                            if !lookupscache[name]
-                                @logger.debug 'add %s to cache for', name, __ident
-                            
-                                lookupscache[name] = ctx
-                                
-                                ctx.on 'destroyed', ()=>
-                                    @logger.debug 'delete %s from cache for', name, __ident
-                                    delete lookupscache[name]
-                        
-                        # <-- EXERIMENTAL
-                        
-                        __found()
-                        
-                        #@logger.debug __check(), n++, 'found', ctx.ID, identity.id
-                        done null, ctx
-                    
-                    else if !err
-                        #console.log 'next'
-                        next()
-                        
-                    else
-                        done err
-                
-                else if !err 
-                    console.warn 'double found for lookup:', name, identity.id
-            
-                else
-                    console.error err
-                
-            ##
-            ## recursive function calls it's self until a notfound error is thrown
-            next = ()=>
-                
-                if !__check()
-                    
-                    ##
-                    ## search children
-                    ##
-                    if child = @children[_children++]
-                        id = child.id
-                        
-                        if !__check()
-                            @logger.fine 'test child', id
-                            
-                            # 1. the requested context is a direct child. 
-                            if name is id 
-                                
-                                @logger.debug 'found as a direct child', child.id
-                                
-                                #console.log @ID, name
-                                child.forIdentity identity, _try
-                            
-                            # 2. the prefix of name matches child.id
-                            else if name.substr(0, name.indexOf '.') is id
-                                
-                                @logger.debug 'searching for %s in %s', name.substr(id.length+1), child.ID
-        
-                                child.lookup name.substr(id.length+1), identity, _try
-                            
-                            else
-                                next()
-                        
-                    ##
-                    ## self lookup
-                    ##
-                    else if name is @id
-                        
-                        # 4. last but not least it happens that 
-                        # someone asks us about our self... 
-                        
-                        @logger.debug 'its my self', name, @ID
-    
-                        @forIdentity identity, _try
-                    
-                    
-                    ##
-                    ##
-                    ##
-                    else if name.substr(0, name.indexOf '.') is @id
-                    
-                        @lookup name.substr(@id.length + 1), identity, _try
-                    
-    
-                    ##
-                    ## search parent
-                    ##
-                    else if _parent
-                        _parent = false
-                        
-                        # 3. if we still did not found anything we
-                        # delegate that to the parent
-                        
-                        @logger.debug 'delegate to parent', @parent.ID, name
-                        
-                        process.nextTick ()=>
-                            @parent.lookup name, identity, _try
-                    
-                    
-                    ##
-                    ## global parent
-                    ##
-                    else if _global 
-                        _global = false
-                    
-                        # 5. EXPERIMENTAL 
-                        
-                        @logger.debug 'maybe its global', @ID, name, floyd.__parent
-                    
-                        floyd.__parent.lookup name, identity, _try
-                    
-                    
-                    ##
-                    ## not found
-                    ##
-                    else
-                        
-                        err = new Error('Context not found: '+name)
-    
-                        if done
-                            done err
-                        else
-                            throw err
-                
-            
-            ## start recursion
-            next()
-        
         
         ##
         ## delegates a method call down the hirarchy
@@ -816,7 +642,7 @@ module.exports =
                 ## all non served events are boubled up if @data.events?.delegate is true
                 ## or if @data.events?.delegate is an array that contains action as a string
                 ## delegation is always suppressed for lifecycle-events        
-                if !stop && (@data.events?.delegate is true || @data.events?.delegate?.indexOf action) && ACTIONS.indexOf(action) is -1
+                if !stop && ACTIONS.indexOf(action) is -1 && (@data.events?.delegate is true || @data.events?.delegate?.indexOf(action) > -1)
                     
                     @parent._emit action, event, args
                 
