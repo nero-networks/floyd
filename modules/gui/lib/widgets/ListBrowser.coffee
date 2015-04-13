@@ -46,21 +46,21 @@ module.exports =
         ##
         ##
         _wireLinks: (data, done)->            
-            @find(@data.linkSelector).each (i, link)=>
-                link = $(link).click ()=>
-                    href = link.attr('href')
-                    
-                    if search = @data.search
-                        offset = qs.parse(href.split('?')[1])[search]
-                    else
-                        offset = href.match(/([0-9]+)\/$/)[1]   
-                        
-                    process.nextTick ()=>
-                        @_emit 'browse',
-                            offset: data.limit * parseInt offset
-                            limit: data.limit
+            @find(@data.linkSelector).click (e)=>
+                link = $ e.currentTarget
                 
-                    return false
+                href = link.attr('href')
+                
+                if search = @data.search
+                    offset = qs.parse(href.split('?')[1])[search]
+                else
+                    offset = href.match(/([0-9]+)\/$/)[1]   
+                    
+                @_emit 'browse',
+                    offset: data.limit * parseInt offset
+                    limit: data.limit                
+                
+                return false
 
             done?()
             
