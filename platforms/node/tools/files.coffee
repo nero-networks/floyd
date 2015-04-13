@@ -42,41 +42,54 @@ module.exports = files =
     
     ##
     ##
-    exists: (name)->
-    
-        return fs.existsSync normpath name            
-    
-    
-    ##
-    ##
-    stat: (name)->
-
-        return fs.lstatSync normpath name            
-    
-    ##
-    ##
-    is_dir: (name)->
+    exists: (name, fn)->
+        if fn
+            fs.exists normpath(name), fn
         
-        files.stat(normpath name).isDirectory()
+        else fs.existsSync normpath name            
+    
     
     ##
     ##
-    list: (dir)->
+    stat: (name, fn)->
+        if fn
+            fs.lstat normpath(name), fn
         
-        fs.readdirSync normpath(dir)            
-    
-    
-    ##
-    ##
-    write: (name, data, enc='utf8')->
-        
-        fs.writeFileSync normpath(name), data, enc
+        else fs.lstatSync normpath name            
     
     ##
     ##
-    read: (name, enc='utf8')->
+    is_dir: (name, fn)->
+        if fn
+            files.stat name, (err, stat)->
+                fn err, stat?.isDirectory()
+                
+        else files.stat(name).isDirectory()
+    
+    ##
+    ##
+    list: (dir, fn)->
+        if fn
+            fs.readdir normpath(dir), fn
             
-        fs.readFileSync normpath(name), enc
+        else fs.readdirSync normpath(dir)            
+    
+    
+    ##
+    ##
+    write: (name, data, enc='utf8', fn)->
+        if fn
+            fs.writeFile normpath(name), data, enc, fn
+            
+        else fs.writeFileSync normpath(name), data, enc
+    
+    ##
+    ##
+    read: (name, enc='utf8', fn)->
+        if fn
+            fs.readFileSync normpath(name), enc, fn
+            
+        else fs.readFileSync normpath(name), enc
     
     
     ##
