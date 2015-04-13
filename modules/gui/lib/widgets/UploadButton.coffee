@@ -66,7 +66,7 @@ module.exports =
                     
                     view:
                         content: ->
-                            section class:'upload Status', ->
+                            div class:'upload Status', ->
                                 
                                 div class:'progress'
                                 
@@ -84,6 +84,7 @@ module.exports =
                         
                         @find('.name').text name
                         @find('.value').text data.state+' '+value
+                        
                                 
                                     
             , config
