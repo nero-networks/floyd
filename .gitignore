@@ -7,6 +7,13 @@ examples/*/*/.floyd/logs/*
 examples/*/*/.floyd/tmp/*
 examples/*/*/.floyd/sessions-store.json
 
+examples/dnode-cluster/workers/backend
+
+examples/dnode-cluster/workers/*/.floyd/logs/*
+examples/dnode-cluster/workers/*/.floyd/tmp/*
+examples/dnode-cluster/workers/*/.floyd/sessions-store.json
+examples/dnode-cluster/workers/*/.app.js
+
 .project
 
 node_modules/
