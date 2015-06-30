@@ -1,45 +1,50 @@
  
-module.exports =
+module.exports = password =
 
     ##
     ##
     ##
-    create: (pass, options)->
+    create: (pass, options, done)->
 
-        options = floyd.tools.objects.extend {}, floyd.tools.crypto.password._options, options
+        if typeof options is 'function'
+            done = options 
+            options = null
+        
+        if done
+            setImmediate ()->
+                done null, password.create pass, options
+            
+        else    
+
+            options = floyd.tools.objects.extend {}, floyd.config.crypto.password, options
     
-        salt = floyd.tools.crypto.CryptoJS.lib.WordArray.random floyd.tools.objects.cut options, 'saltSize'
+            salt = floyd.tools.crypto.CryptoJS.lib.WordArray.random floyd.tools.objects.cut options, 'saltSize'
     
-        floyd.tools.crypto.password._hash pass, salt.toString(), options
+            password._hash pass, salt.toString(), options
     
      
     ##
     ##
     ##
-    verify: (pass, hash)->
-        data = hash.split '-'
-        
-        if data.length > 1
-            _hash = floyd.tools.crypto.password._hash pass, data[0],
-                hasher: data[1] 
-                keySize: (parseInt data[2])
-                iterations: (parseInt data[3])                
-        
-        else # old, deprecated password hash
-            _hash = floyd.tools.crypto.password_old pass, hash.substr 40 
-        
-        hash is _hash                
-        
-       
-    ##
-    ##
-    ##
-    _options:
-        saltSize: 16
-        keySize: 4
-        iterations: 1000
-        hasher: 'SHA256'
-        
+    verify: (pass, hash, done)->
+        if done
+            setImmediate ()=>
+                done null, password.verify pass, hash
+            
+        else    
+	        data = hash.split '-'
+	        
+	        if data.length > 1
+	            _hash = password._hash pass, data[0],
+	                hasher: data[1] 
+	                keySize: (parseInt data[2])
+	                iterations: (parseInt data[3])                
+	        
+	        else # old, deprecated password hash
+	            _hash = floyd.tools.crypto.password_old pass, hash.substr 40 
+	        
+	        hash is _hash                
+                
         
     ##
     ##

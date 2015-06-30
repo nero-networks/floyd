@@ -128,7 +128,7 @@ module.exports =
         ##
         _checkPasswordHash: (user, pass, data, fn)->
             
-            cfg = floyd.tools.crypto.password._options
+            cfg = floyd.config.crypto.password
 
             parts = data.pass.split '-'
             

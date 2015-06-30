@@ -37,9 +37,26 @@ module.exports =
                 nextTick: (fn)->
                     setTimeout fn, 1
             
-            window.setImmediate ?= (fn)->
-                setTimeout fn, 1
+            
+            ## setImmediate emulation
+            if !window.setImmediate
+                pending = []
                 
+                triggerID = null
+                if window.postMessage
+                    window.addEventListener 'message', (e)->
+                        if e.origin is location.origin && triggerID && e.data is triggerID
+                            if pending.length
+                                pending.shift()()
+            
+                window.setImmediate = (fn)->
+                    if !window.postMessage
+                        triggerID = 'floyd-exec-pending-immediate-trigger-'+floyd.tools.strings.uuid()
+                        pending.push fn      
+                        window.postMessage triggerID, location.origin          
+
+                    else ## fallback
+                        setTimeout fn, 1
 
         
         ##
