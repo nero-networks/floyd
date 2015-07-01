@@ -12,13 +12,21 @@ module.exports =
 
                 data:
                     class: 'Month'
+                    browse:
+                        class: 'browse'
+                        titleClass: 'title'
+                        prevText: '&laquo;'
+                        prevClass: 'prev'
+                        nextText: '&raquo;'
+                        nextClass: 'next'
                 
                 content: ->
 
-                    div class:'browse', ->
-                        a class:'prev', href:'#', '&laquo;'
-                        span class:'title'
-                        a class:'next', href:'#', '&raquo;'
+                    browseConf = @data.browse
+                    div class:browseConf.class, ->
+                        a class:browseConf.prevClass, href:'#', browseConf.prevText
+                        span class:browseConf.titleClass
+                        a class:browseConf.nextClass, href:'#', browseConf.nextText
 
                     table ->
                         thead ->
@@ -60,10 +68,10 @@ module.exports =
             super (err)=>
                 return done(err) if err
                 
-                @find('.browse >a').click (e)=>
+                @find('.'+@data.browse.class.join('.')+' >a').click (e)=>
                     date = new Date @_currentMonth
                     
-                    date.setMonth date.getMonth() - if $(e.currentTarget).hasClass 'next' then -1 else 1
+                    date.setMonth date.getMonth() - if $(e.currentTarget).attr('class') is @data.browse.nextClass then -1 else 1
 
                     @_fill date
                     
@@ -140,7 +148,7 @@ module.exports =
             today = floyd.tools.date.reset new Date()
             now = today.getTime()
             
-            @find('.browse .title').text (floyd.tools.date.format date, 'MMMM YYYY')
+            @find('.'+@data.browse.class.join('.')+' .'+@data.browse.titleClass.join('.')).text (floyd.tools.date.format date, 'MMMM YYYY')
 
             (prev = new Date date).setMonth prev.getMonth() - 1
             (next = new Date date).setMonth next.getMonth() + 1

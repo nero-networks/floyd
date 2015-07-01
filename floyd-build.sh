@@ -5,5 +5,5 @@
 ##
 
 echo copying node_modules patches
-cp -r node_modules_patches/* node_modules/
+cp -b -r node_modules_patches/* node_modules/
 
