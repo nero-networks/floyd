@@ -3,6 +3,18 @@ module.exports =
     
     class ContentContext extends floyd.gui.ViewContext
         
+        configure: (config)->
+        
+            super new floyd.Config
+                
+                data:
+                    adminnavi:
+                        parent: '#header'
+            
+            , config
+        
+        
+        
         ##
         ##
         wire: (done)->
@@ -21,7 +33,7 @@ module.exports =
                     @lookup origin, @identity, (err, ctx)=>
                         return done(err) if err
                         
-                        $('#header').append ul = $('<ul class="adminnavi"/>')
+                        $(@data.adminnavi.parent).append ul = $('<ul class="adminnavi"/>')
                         
                         if @identity.hasRole ['admin', 'editor']
                         

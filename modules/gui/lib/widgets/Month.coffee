@@ -61,6 +61,11 @@ module.exports =
                 
                 done()
         
+        
+        ##
+        _classString: (str)->
+            str.replace /[ ]+/, '.'
+        
         ##
         ##
         ##
@@ -68,7 +73,7 @@ module.exports =
             super (err)=>
                 return done(err) if err
                 
-                @find('.'+@data.browse.class.join('.')+' >a').click (e)=>
+                @find('.'+@_classString(@data.browse.class)+' >a').click (e)=>
                     date = new Date @_currentMonth
                     
                     date.setMonth date.getMonth() - if $(e.currentTarget).attr('class') is @data.browse.nextClass then -1 else 1
@@ -148,7 +153,7 @@ module.exports =
             today = floyd.tools.date.reset new Date()
             now = today.getTime()
             
-            @find('.'+@data.browse.class.join('.')+' .'+@data.browse.titleClass.join('.')).text (floyd.tools.date.format date, 'MMMM YYYY')
+            @find('.'+@_classString(@data.browse.class)+' .'+@_classString(@data.browse.titleClass)).text (floyd.tools.date.format date, 'MMMM YYYY')
 
             (prev = new Date date).setMonth prev.getMonth() - 1
             (next = new Date date).setMonth next.getMonth() + 1
