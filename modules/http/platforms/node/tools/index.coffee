@@ -127,8 +127,7 @@ module.exports = tools =
         form = formidable.IncomingForm()
                 
         if handler.maxSize && parseInt(req.headers['content-length']) > handler.maxSize
-            handler.error err = new Error 'limit exceeded'
-            return done err
+            return done new Error 'limit exceeded'
         
         form.uploadDir = floyd.system.appdir+'/.floyd/tmp/'
         

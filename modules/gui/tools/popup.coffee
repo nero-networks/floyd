@@ -34,9 +34,13 @@ module.exports = (parent, config, fn)->
             child.on 'close', (e)->
                 
                 child.confirmClose ()=>
-                
-                    child.__root.remove()
-                
+                    
+                    if child.data.fade
+                        child.__root.fadeOut 'fast', ()=>
+                            child.__root.remove()
+                    else
+                        child.__root.remove()
+                        
                     child.stop ()-> 
                         #console.log 'stopped', child.ID
                     

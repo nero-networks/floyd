@@ -39,17 +39,18 @@ module.exports =
                         ##
                         floyd.tools.http.upload req, res, handler, (err, files, fields)=>                        
                             if err
-                                handler.error err 
-                                return next err
+                                @_cleanup files, ()=>
+                                    handler.error err 
+                                    return next err
+                            else
+                                res.send 'ok'
                         
-                            res.send 'ok'
+                                handler.request = req
                         
-                            handler.request = req
-                        
-                            @_handleUpload handler, files, fields, (err)=>
-                                return handler.error(err) if err
+                                @_handleUpload handler, files, fields, (err)=>
+                                    return handler.error(err) if err
                             
-                                handler.disconnect()
+                                    handler.disconnect()
                 
                 ##
                 done()
@@ -93,8 +94,10 @@ module.exports =
                 
                 each: (file, next)=>
                     setImmediate ()=>
-                        floyd.tools.files.rm file.path
-                
+                        try
+                            floyd.tools.files.rm file.path
+                        catch e
+                        
                         next()
 
                     

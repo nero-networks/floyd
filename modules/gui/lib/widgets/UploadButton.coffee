@@ -146,16 +146,15 @@ module.exports =
                                                 @_disconnect()
                                         
                                         error: (err)=>
-                                            if (msg = err.message) is 'limit exceeded'
-                                                alert 'Zu viele Daten! Reduziere die Anzahl oder die Größe der Dateien.'
-                                                #location.reload()
+                                            progress.fadeOut null, ()=>
+                                                if (msg = err.message) is 'limit exceeded'
+                                                    alert 'Zu viele Daten! Reduziere die Anzahl oder die Größe der Dateien.'
                                             
-                                            else if (parts = msg.split(':'))[0] is 'invalid type'
-                                                alert 'Der Dateityp wurde nicht akzeptiert: '+parts[1]
-                                                #location.reload()
+                                                else if (parts = msg.split(':'))[0] is 'invalid type'
+                                                    alert 'Der Dateityp wurde nicht akzeptiert: '+parts[1]
                                                 
-                                            else
-                                                @error new Error err.message
+                                                else
+                                                    @error new Error err.message
                 ##  
                 done()  
         

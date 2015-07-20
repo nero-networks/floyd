@@ -110,10 +110,10 @@ module.exports =
                 setTimeout ()=>
                     
                     if @data.fade
-                        @__root.fadeIn 'slow'
+                        @find('.hidden').fadeIn 'fast'
                     
                     else
-                        @__root.show()
+                        @find('.hidden').show()
                 
                 , 100 ## das merkt man sogut wie nicht und die gui wirkt stabiler dadurch... weniger aufbau-gewusel
                 

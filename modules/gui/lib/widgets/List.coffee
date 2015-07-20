@@ -86,24 +86,34 @@ module.exports =
 
 
         _loadData: (offset, limit, fn)->
-            items = []
+            
+            if @data.loadData
+                
+                @_getBackend (err, ctx)=>
+                    return fn(err) if err
+                    
+                    ctx[@data.loadData] offset, limit, fn
+                
+            else
+        
+                items = []
 
-            if (_items = @data.items)
-                if limit > -1
-                    _items = _items.slice offset, offset+limit
-                else
-                    _items = _items.slice offset
-
-                for item in _items
-                    if typeof item is 'string'
-                        items.push item
+                if (_items = @data.items)
+                    if limit > -1
+                        _items = _items.slice offset, offset+limit
                     else
-                        items.push floyd.tools.objects.clone item
+                        _items = _items.slice offset
 
-            fn null, items,
-                offset: offset
-                limit: limit
-                size: @data.items?.length || 0
+                    for item in _items
+                        if typeof item is 'string'
+                            items.push item
+                        else
+                            items.push floyd.tools.objects.clone item
+
+                fn null, items,
+                    offset: offset
+                    limit: limit
+                    size: @data.items?.length || 0
 
 
         ##
