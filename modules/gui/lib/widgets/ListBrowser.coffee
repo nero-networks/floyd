@@ -11,6 +11,7 @@ module.exports =
                 data:
                     color: 'white'
                     
+                    wireLinks: true
                     linkSelector: '> a'
                     
                     text:
@@ -45,7 +46,9 @@ module.exports =
         ##
         ##
         ##
-        _wireLinks: (data, done)->            
+        _wireLinks: (data, done)->   
+            return done() if !@data.wireLinks
+            
             @find(@data.linkSelector).click (e)=>
                 link = $ e.currentTarget
                 

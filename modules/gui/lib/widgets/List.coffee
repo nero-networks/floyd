@@ -1,4 +1,6 @@
 
+qs = require('querystring')
+
 module.exports =
 
     class List extends floyd.gui.ViewContext
@@ -34,6 +36,7 @@ module.exports =
                     type: 'gui.widgets.ListBrowser'
 
                     data:
+                        search: config.data?.search
                         selector: '> div.browse'
                     
                     events:
@@ -79,6 +82,10 @@ module.exports =
         
         ##
         _reload: (done)->
+            if @data.search
+                query = if location.search then qs.parse location.search.substr 1 else {}
+                @data.offset = parseInt(query[@data.search] ?= '0') * @data.limit
+                
             @_loadData @data.offset, @data.limit, (err, items, data)=>
                 return done(err) if err
                 @_display items, data, done
