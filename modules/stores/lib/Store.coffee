@@ -155,7 +155,7 @@ module.exports =
                     _items.push _item = {}
                     
                     for field in fields							
-                        if field						## CHECK: wozu ist das? fields mit null-values?
+                        if field || field is 0
                             _item[field] = item[field] 
             
                 return _items
