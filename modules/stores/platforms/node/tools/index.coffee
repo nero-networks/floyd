@@ -14,6 +14,7 @@ module.exports =
             
             data: 
                 type: type
+                name: id
         
         , config
     

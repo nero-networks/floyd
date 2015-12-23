@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             config = super new floyd.Config
                 template: ->
-                    section class:'upload Button floyd-loading', style: 'display:inline-block'
+                    div class:'upload Button floyd-loading', style: 'display:inline-block'
                     
                 data:
                     multiple: false
@@ -21,11 +21,11 @@ module.exports =
                         class: 'button'
                     
                 content: ->                    
-                    form action:@data.action, target:'upload-frame', method:'post', enctype:'multipart/form-data', style: 'width:0;height:0;visibility:hidden', ->
+                    form action:@data.action, target:'upload-frame-'+@id, method:'post', enctype:'multipart/form-data', style: 'width:0;height:0;visibility:hidden', ->
                         
                         for name, field of @data.fields
                             
-                            if !field || typeof field is 'string'
+                            if !field || !(typeof field is 'object')
                                 field = 
                                     value:field||''
                                     
@@ -42,13 +42,20 @@ module.exports =
                             
                         input _attr
                     
+                    _attr = 
+                        class:@data.button.class
+                        
+                    if _title = @data.button.title
+                        _attr.title = _title
+                        
                     if @data.button.type is 'link'
-                        a class:@data.button.class, href:'#', (@data.button.text)
+                        _attr.href = '#'
+                        a _attr, (@data.button.html || @data.button.text)
                     
                     else
-                        button class:@data.button.class, (@data.button.text)
+                        button _attr, (@data.button.html || @data.button.text)
                     
-                    iframe id:'upload-frame', name:'upload-frame', width:'0px', height:'0px', frameborder:0, style: 'width:0;height:0;visibility:hidden'
+                    iframe id:'upload-frame-'+@id, name:'upload-frame-'+@id, width:'0px', height:'0px', frameborder:0, style: 'width:0;height:0;visibility:hidden'
                     
                     
                 popup: 
@@ -59,7 +66,7 @@ module.exports =
                     
                     view:
                         content: ->
-                            section class:'upload Status', ->
+                            div class:'upload Status', ->
                                 
                                 div class:'progress'
                                 
@@ -77,6 +84,7 @@ module.exports =
                         
                         @find('.name').text name
                         @find('.value').text data.state+' '+value
+                        
                                 
                                     
             , config
@@ -97,7 +105,7 @@ module.exports =
 
                 files = form.find '[name=files]'                    
                 
-                @find('.button').click ()=> 
+                @find('.'+@data.button.class).click ()=> 
                     files.click()
                     return false    
                 
@@ -112,7 +120,7 @@ module.exports =
                                 
                                 floyd.tools.gui.popup @, @_popup, (err, progress)=>                                
                                     
-                                    ctx.registerUpload
+                                    ctx.registerUpload @_prepareHandler
                                     
                                         connect: ()=>
                                             @_connect (err)=>
@@ -138,19 +146,31 @@ module.exports =
                                                 @_disconnect()
                                         
                                         error: (err)=>
-                                            if (msg = err.message) is 'limit exceeded'
-                                                alert 'Zu viele Daten! Reduziere die Anzahl oder die Größe der Dateien.'
-                                                location.reload()
+                                            progress.fadeOut null, ()=>
+                                                if (msg = err.message) is 'limit exceeded'
+                                                    alert 'Zu viele Daten! Reduziere die Anzahl oder die Größe der Dateien.'
                                             
-                                            else if (parts = msg.split(':'))[0] is 'invalid type'
-                                                alert 'Der Dateityp wurde nicht akzeptiert: '+parts[1]
-                                                location.reload()
+                                                else if (parts = msg.split(':'))[0] is 'invalid type'
+                                                    alert 'Der Dateityp wurde nicht akzeptiert: '+parts[1]
                                                 
-                                            else
-                                                @error new Error err.message
+                                                else
+                                                    @error new Error err.message
                 ##  
                 done()  
-
+        
+        
+        ##
+        ##
+        ##
+        _backend: (fn)->
+            @_getBackend fn
+            
+        ##
+        ##
+        ##
+        _prepareHandler: (handler)->
+            return handler
+        
         ##
         ##
         ##

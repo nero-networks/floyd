@@ -105,6 +105,12 @@ module.exports =
             else if cmd is 'clear'
                 @_display.html ''
             
+            else if cmd is 'help'
+                @_display.append $('<li>').html """
+                    /color - set css color for the nickname <br/>
+                    /clear - clear message history
+                """ 
+                            
             else
                 @_display.append $('<li>').text 'unknown command '+cmd
                 
@@ -125,7 +131,6 @@ module.exports =
                     @_input.attr 'placeholder', 'message or /command'
                     @_button.text 'send'
                             
-                    failed = false			
                     @_send connect: @_nick, respond: (err, user, origin)=>
                         if err
                             @_nick = null
@@ -138,8 +143,7 @@ module.exports =
                             @_input.attr 'placeholder', 'enter an alternate nick'
                             @_button.text 'join'
                             
-                        
-                        else if !failed
+                        else
                             @_addUser user, origin, true
                     
                     done()
@@ -156,7 +160,7 @@ module.exports =
                     
             if data = msg.data 
                 
-                # text message
+                # receiving text message
                 if text = data.text
                     nick = data.nick
                     
@@ -171,21 +175,24 @@ module.exports =
                     @_write '<b style="'+style+'">'+nick+'</b>: '+text
                 
                 
-                # user connection
-                if (user = data.connect) && msg.origin isnt @ID
+                # msg.origin is not myself
+                if msg.origin isnt @ID
+            
+                    # user connection
+                    if user = data.connect
                     
-                    if user is @_nick
-                        data.respond new Error 'already connected'
+                        if user is @_nick
+                            data.respond new Error 'already connected'
                     
-                    else
-                        @_addUser user, msg.origin
-                        data.respond null, @_nick, @ID
+                        else
+                            @_addUser user, msg.origin
+                            data.respond null, @_nick, @ID
                         
                                     
-                # user disconnection
-                if (user = data.disconnect) && msg.origin isnt @ID
+                    # user disconnection
+                    if user = data.disconnect
                     
-                    @_delUser user
+                        @_delUser user
     
         
         ##

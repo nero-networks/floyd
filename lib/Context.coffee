@@ -3,12 +3,6 @@ events = require 'events'
 
 ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped']
 
-## EXPERIMENTAL identity based lookups cache -> nero
-## it is working! still deactivated by default. to use
-## put USELOOKUPSCACHE: true into the base config object
-USELOOKUPSCACHE = false
-LOOKUPSCACHE = {}
-
 module.exports = 
 
     ## 
@@ -37,7 +31,7 @@ module.exports =
             
             @_status = []
         
-            @_hiddenKeys.push 'configure', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate', 'data', 'parent', 'children'
+            @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
             
         
         ##
@@ -47,26 +41,25 @@ module.exports =
             
             config = @configure config
             
-            # --> EXPERIMENTAL identity based lookups cache -> nero
-            
-            if config.USELOOKUPSCACHE
-                USELOOKUPSCACHE = true
-            
-            # <-- EXPERIMENTAL 
-            
             @id = config.id
                     
             @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
             
-            @data = new floyd.data.SearchableMap config.data, @parent?.data
-            
             if typeof (@type = config.type) is 'function'
                 @type = @ID+'.'+(@type.name || 'DynContext')
             
-            @identity = @_createIdentity()
-            
+            @data = new floyd.data.SearchableMap config.data, @parent?.data
+
             @logger = @_createLogger @ID
             
+            if @data.permissions
+                @logger.warning '@data.permissions is deprecated use config.permissions instead'
+                config.permissions = @data.permissions
+            
+            @permissions = config.permissions
+            
+            @identity = @_createIdentity()
+
             @_emitter = @_createEmitter config
             
             @children = new floyd.data.MappedCollection()
@@ -177,9 +170,9 @@ module.exports =
                                     
             
             ##
-            ##           
+            ##         
             floyd.tools.objects.intercept @, 'destroy', (done, destroy)=>
-            
+
                 if @stop && @_status.indexOf('stopped') is -1
                     @logger.warning 'context not stopped!'
                 
@@ -197,19 +190,27 @@ module.exports =
                             
                             done? err
             
+            ##
+            ##
             if manager = config.data.authManager
-                
-                if config.ORIGIN
-                    manager = config.ORIGIN+'.'+manager
                 
                 #console.log 'prepare _createAuthHandler', manager
                 
-                __user = config.USER
+                if config.TOKEN
+                    floyd.tools.objects.intercept @, 'boot', (done, boot)=>
+                        
+                        first = true
+                        @_getAuthManager().authorize config.TOKEN, (err)=>
+                            #return done(err) if err
+                            
+                            if first 
+                                first = false
+                                boot done
                 
                 ##
                 @_createAuthHandler = ()=>
                     
-                    #console.log '_createAuthHandler', manager, __user
+                    #console.log '_createAuthHandler', manager
                     
                     _auth = (fn)=>
                         # EXPERIMENTAL shortcut. use child if found
@@ -219,79 +220,40 @@ module.exports =
                             fn null, ctx
                         
                         else 
-                            @lookup manager, @identity, fn
+                            @lookup manager, @identity, (err, ctx)=>
+                                if !ctx && config.ORIGIN
+                                    @lookup config.ORIGIN+'.'+manager, @identity, fn
+                                
+                                else
+                                    fn err, ctx
                     
                     new floyd.auth.Handler
 
-                        #
+                        ##
                         authorize: (token, fn)=>
-                            
-                            #console.log 'autorizazion request', __user, @id
-                            
-                            if !@identity
-                                #console.log 'no identity', __user?.login
-                                
-                                fn null, __user
-
-                            else
-                                #console.log 'using manager for authorize'
-                                _auth (err, auth)=>
-                                    return fn(err) if err
-
-                                    #console.log 'delegate authorize', @identity.id
-                                    auth.authorize token, (err, user)=>
-                                            
-                                        fn err, __user = user
+                            _auth (err, auth)=>
+                                return fn(err) if err
+                                auth.authorize token, fn
                             
                         ##
                         authenticate: (identity, fn)=>
-                            #console.log 'using manager for authenticate', identity.id
-                            
                             _auth (err, auth)=>
-                                if err || !auth
-                                    @logger.warning 'authentication failed!\n\terror: %s\n\tfor: %s', \
-                                        (err?.message ? 'noauth'), identity.id
-                                    
-                                    fn (err ? new Error 'authentication failed!')
-                            
-                                else
-                                    @logger.debug 'delegate authenticate to: %s for: %s', auth.ID, identity.id
-                                    auth.authenticate identity, fn
+                                return fn(err) if err
+                                auth.authenticate identity, fn
             
                         ##
                         login: (token, user, pass, fn)=>
-                            #console.log 'using manager for login', user
-                            
                             _auth (err, auth)=>
                                 return fn(err) if err
-                                
-                                #console.log 'delegate login', token
-                            
-                                auth.login token, user, pass, (err)=>
-                                    
-                                    #console.log 'login granted', _user, @id
-                                    
-                                    fn err
+                                auth.login token, user, pass, fn
                             
                             
                         ##
                         logout: (token, fn)=>
-                                
-                            #console.log 'using manager for logout'
                             _auth (err, auth)=>
                                 return fn(err) if err
-                                
-                                #console.log 'delegate logout', token
-                                auth.logout  token, (err)=>
-
-                                    __user = null
-                                
-                                    fn? err
+                                auth.logout token, fn
                         
-                ##
-                if config.TOKEN
-                    @_getAuthManager().authorize config.TOKEN
-
                     
             if typeof config?.configure is 'function'
                 config = config.configure.apply @, [config]
@@ -309,12 +271,17 @@ module.exports =
         ##
         ##
         _permitAccess: (identity, key, args, fn)->
-            super identity, key, args, (err)=>
+            super identity, key, args, (err, permitted)=>
+                return fn(err) if err
                 
                 checks = [
                     (next)=>
-                        if @data.permissions?.__checks
-                            for check in @data.permissions.__checks
+                        next permitted
+                        
+                ,
+                    (next)=>
+                        if @permissions?.__checks
+                            for check in @permissions.__checks
                                 do(check)=>
                                     checks.push (next)=>
                                         check.apply @, [identity, key, args, next]
@@ -326,13 +293,40 @@ module.exports =
 
                     (next)=> # check for general remote restriction
                         
-                        next (@data.permissions?[key] || @data.permissions) isnt false
+                        next (@permissions?[key] || @permissions) isnt false
                         
+                ,
+                
+                    (next)=> # custom check function - must callback true to permit!
+                        if typeof (check = @permissions) is 'function' || typeof (check = @permissions?[key]) is 'function' || check = (@permissions?[key]?.check || @permissions?.check)
+                            
+                            check identity, key, args, next                            
+                            
+                        else next true
+                    
+                ,
+
+                    (next)=> # check for identity.id restriction
+                        
+                        if id = (@permissions?[key]?.identity || @permissions?.identity)
+                            next identity.id is id
+                        
+                        else next true
+                ,
+
+                    (next)=> # check for token restriction
+                        
+                        if token = (@permissions?[key]?.token || @permissions?.token)
+                            
+                            identity.token (err, _token)=>
+                                next token is _token
+                        
+                        else next true
                 ,
 
                     (next)=> # check for login restriction
                         
-                        if (@data.permissions?[key]?.login || @data.permissions?.login)
+                        if (@permissions?[key]?.login || @permissions?.login)
                             
                             identity.login (err, login)=>
                                 next !!login
@@ -342,7 +336,7 @@ module.exports =
 
                      (next)=> # check for user restriction and test identity.login
                         
-                        if user = (@data.permissions?[key]?.user || @data.permissions?.user)
+                        if user = (@permissions?[key]?.user || @permissions?.user)
                             
                             identity.login (err, login)=>
                                 next login is user
@@ -351,22 +345,13 @@ module.exports =
                 ,
 
                     (next)=> # check for roles restriction and test identity.hasRole
-                        if roles = (@data.permissions?[key]?.roles || @data.permissions?.roles)
+                        if roles = (@permissions?[key]?.roles || @permissions?.roles)
                             
                             identity.hasRole roles, (err, ok)=>
                                 next ok
                                 
                         else next true
                 
-                ,
-                
-                    (next)=> # custom check function - must callback true to permit!
-                        if typeof (check = @data.permissions) is 'function' || typeof (check = @data.permissions?[key]) is 'function' || check = (@data.permissions?[key]?.check || @data.permissions?.check)
-                            
-                            check identity, key, args, next                            
-                            
-                        else next true
-                    
                 ]
                 
                 permit = (ok)=>
@@ -378,6 +363,7 @@ module.exports =
                     else fn()
                 
                 # start recursion
+                
                 permit true
 
         ##
@@ -404,9 +390,16 @@ module.exports =
                 done: (err)=>
                     
                     if !__first && ( __first = true )
-                        @_changeStatus? status
+                        if level is 'stop' || level is 'destroy'
+                            @_changeStatus? status
+                            done?()
                         
-                    done? err
+                        else
+                            done?()
+                            @_changeStatus? status
+                                            
+                    else if err
+                        done? err
                     
                     
 
@@ -447,207 +440,45 @@ module.exports =
         ##
         stop: (done)->
             @_changeStatus 'shutdown'
-            
-            # --> EXPERIMENTAL identity based lookups cache -> nero
-
-            if USELOOKUPSCACHE
-                for ident in floyd.tools.objects.keys LOOKUPSCACHE
-                    LOOKUPSCACHE[ident]._off()
-                    delete LOOKUPSCACHE[ident]
-
-            # <-- EXPERIMENTAL
-            
+                        
             @_init 'stop', 'stopped', done
 
         
-        
         ##
-        ## TODO description
-        ## 
+        ##
         ##
         lookup: (name, identity, done)->
+            if !identity || !identity.id || !identity.token
+                return done new Error '2. parameter is not identity'
             
-            if !(__ident = identity.id) || !identity.token
-                console.log '2. parameter is not identity', @ID
-                throw new Error '2. parameter is not identity'
+            ## myself
+            if name is @id
+                @logger.debug 'found(%s) for %s', @ID, identity.id
+                return @forIdentity identity, done
             
-            _children = 0
-            _parent = !!(@parent && @parent.lookup)
-            _global = !!(!@parent && floyd.__parent?.lookup)
+            ## children
+            if (base = name.split('.').shift()) is @id
+                base = (name = name.substr base.length + 1).split('.').shift()
             
-            @logger.debug 'lookup:', name, __ident
+            for child in @children 
+                if child.id is base
+                    @logger.debug 'delegate lookup(%s) to child %s for %s', name, child.ID, identity.id
+                    return child.lookup name, identity, done
             
-            # --> EXPERIMENTAL identity based lookups cache -> nero
+            ## parent
+            if @parent?.lookup
+                @logger.debug 'delegate lookup(%s) to parent %s for %s', name, @parent.ID, identity.id
+                return @parent.lookup name, identity, done
             
-            if USELOOKUPSCACHE # inactive if false here
-
-                ## interrupt search here and return lookup from cache
-
-                if (lookupscache = LOOKUPSCACHE[__ident]) && lookupscache[name]
-                    @logger.debug 'found cached:', name, identity.id
-                    return done(null, lookupscache[name]) 
-                
-            # <-- EXPERIMENTAL
+            ## global
+            if floyd.__parent?.lookup
+                @logger.debug 'delegate lookup(%s) to global parent for %s', name, identity.id
+                return floyd.__parent.lookup name, identity, done
             
+            ## not found
+            @logger.debug 'lookup(%s) failed for %s', name, identity.id
+            done new Error 'Context not found: '+name
             
-            @logger.debug 'start search', name, identity.id
-            
-            n=0
-            
-            found = false
-            
-            __found = ()=>
-                found = true
-            
-            __check = ()=>
-                return found
-                
-            _try = (err, ctx)=>
-                #@logger.debug found, '_try', ctx?.ID, identity.id
-                
-                if !__check()
-                
-                    if ctx
-                    
-                        # --> EXPERIMENTAL identity based lookups cache -> nero
-                        
-                        if USELOOKUPSCACHE # inactive if false here
-                            if !(lookupscache = LOOKUPSCACHE[__ident])
-                                @logger.debug 'create lookups cache for', __ident
-                    
-                                lookupscache = LOOKUPSCACHE[__ident] = {}                                
-                                
-                                identity.on 'destroyed', _destroy = ()=>                                    
-                                    @logger.debug 'destroy lookups cache for', __ident
-                                    delete LOOKUPSCACHE[__ident]
-                    
-                                lookupscache._off = ()->
-                                    identity.off 'destroyed', _destroy
-
-                            if !lookupscache[name]
-                                @logger.debug 'add %s to cache for', name, __ident
-                            
-                                lookupscache[name] = ctx
-                                
-                                ctx.on 'destroyed', ()=>
-                                    @logger.debug 'delete %s from cache for', name, __ident
-                                    delete lookupscache[name]
-                        
-                        # <-- EXERIMENTAL
-                        
-                        __found()
-                        
-                        #@logger.debug __check(), n++, 'found', ctx.ID, identity.id
-                        done null, ctx
-                    
-                    else if !err
-                        #console.log 'next'
-                        next()
-                        
-                    else
-                        done err
-                
-                else console.warn 'double found for lookup:', name, identity.id
-            
-            
-            ##
-            ## recursive function calls it's self until a notfound error is thrown
-            next = ()=>
-                
-                if !__check()
-                    
-                    ##
-                    ## search children
-                    ##
-                    if child = @children[_children++]
-                        id = child.id
-                        
-                        if !__check()
-                            @logger.debug 'test child', id
-                            
-                            # 1. the requested context is a direct child. 
-                            if name is id 
-                                
-                                @logger.debug 'found as a direct child', child.id
-                                
-                                #console.log @ID, name
-                                child.forIdentity identity, _try
-                            
-                            # 2. the prefix of name matches child.id
-                            else if name.substr(0, name.indexOf '.') is id
-                                
-                                @logger.debug 'searching for %s in %s', name.substr(id.length+1), child.ID
-        
-                                child.lookup name.substr(id.length+1), identity, _try
-                            
-                            else
-                                next()
-                        
-                    ##
-                    ## self lookup
-                    ##
-                    else if name is @id
-                        
-                        # 4. last but not least it happens that 
-                        # someone asks us about our self... 
-                        
-                        @logger.debug 'its my self', name, @ID
-    
-                        @forIdentity identity, _try
-                    
-                    
-                    ##
-                    ##
-                    ##
-                    else if name.substr(0, name.indexOf '.') is @id
-                    
-                        @lookup name.substr(@id.length + 1), identity, _try
-                    
-    
-                    ##
-                    ## search parent
-                    ##
-                    else if _parent
-                        _parent = false
-                        
-                        # 3. if we still did not found anything we
-                        # delegate that to the parent
-                        
-                        @logger.debug 'delegate to parent', @parent.ID, name
-                        
-                        process.nextTick ()=>
-                            @parent.lookup name, identity, _try
-                    
-                    
-                    ##
-                    ## global parent
-                    ##
-                    else if _global 
-                        _global = false
-                    
-                        # 5. EXPERIMENTAL 
-                        
-                        @logger.debug 'maybe its global', @ID, name, floyd.__parent
-                    
-                        floyd.__parent.lookup name, identity, _try
-                    
-                    
-                    ##
-                    ## not found
-                    ##
-                    else
-                        
-                        err = new Error('Context not found: '+name)
-    
-                        if done
-                            done err
-                        else
-                            throw err
-                
-            
-            ## start recursion
-            next()
-        
         
         ##
         ## delegates a method call down the hirarchy
@@ -811,7 +642,7 @@ module.exports =
                 ## all non served events are boubled up if @data.events?.delegate is true
                 ## or if @data.events?.delegate is an array that contains action as a string
                 ## delegation is always suppressed for lifecycle-events        
-                if !stop && (@data.events?.delegate is true || @data.events?.delegate?.indexOf action) && ACTIONS.indexOf(action) is -1
+                if !stop && ACTIONS.indexOf(action) is -1 && (@data.events?.delegate is true || @data.events?.delegate?.indexOf(action) > -1)
                     
                     @parent._emit action, event, args
                 

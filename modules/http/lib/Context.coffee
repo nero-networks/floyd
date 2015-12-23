@@ -40,7 +40,7 @@ module.exports =
         ##
         ##
         start: (done)->
-            
+
             @_router = new floyd.http.Router @ID
         
             super (err)=>			
@@ -147,7 +147,6 @@ module.exports =
                             res.ctype ?= @data.ctype
                             
                             if res.compress && content.length > 512
-                                #console.log 'compressing', req.url
                                 res.compress()								
                             
                             res.send content
@@ -177,7 +176,7 @@ module.exports =
         ##
         _createRemote: (req, res, fn)->
             
-            @_createModel req, res, (err, model)=>
+            @_createModel req, res, 'remote', (err, model)=>
                 return fn(err) if err
                 
                 @_createBoot req, res, model, (err, boot, model)=>
@@ -190,10 +189,7 @@ module.exports =
         ##
         ##
         _createModel: (req, res, type, fn)->
-            if typeof type is 'function'
-                fn = type
-                type = 'remote'
-            
+
             next = (err, model)=>
                 return fn(err) if err
                 
@@ -203,9 +199,6 @@ module.exports =
                     model.id =  floyd.tools.strings.uuid()
                     
                     if @data.find 'authProxy'
-                        _parent = @
-                        while _parent.parent
-                            _parent = _parent.parent
                         
                         model.data ?= {} 
                         model.data.authManager ?= @data.find 'authManager'
@@ -213,12 +206,16 @@ module.exports =
                         if @data.find 'debug'
                             model.data.debug = true
                         
+                        _parent = @
+                        while _parent.parent && !_parent.data.authProxy
+                            _parent = _parent.parent
+
                         model.ORIGIN = _parent.id
                         
                         model.TOKEN = req.session.TOKEN
                         
-                        if req.session.user
-                            model.USER = req.session.user
+                        #if req.session.user
+                        #    model.USER = req.session.user
 
                 fn null, model
             
@@ -303,38 +300,60 @@ module.exports =
 ##
 ##
 ##
-__boot__ = (config)->
+__boot__ = (config)->    
     
-    window.floyd = require 'floyd'
-    
+    ##    
     _INITIALIZED_ = false
-    init = ()->
+    _TERMINATED_ = false
+    ctx = null
+    
+    ##
+    attachEvent = (event, listener)->
+        if window.addEventListener
+            window.addEventListener event, listener, false # real browsers
+        else
+            document.attachEvent 'on' + event, listener # IE quirks
+            window.attachEvent 'on' + event, listener # IE8
+            
+    
+    ##
+    init = (e)->
         return undefined if _INITIALIZED_ 
         _INITIALIZED_= true
+
+        window.floyd = require 'floyd'
         
         window.__initTime__ = +new Date()
         
         ctx = floyd.init config, (err)->
-            console.error(err) if err
+            return console.error(err) if err    
+
+    attachEvent 'DOMContentLoaded', init
+    attachEvent 'load', init
     
-    
+    ##        
+    terminate = (e)->
+        return undefined if _TERMINATED_
+        _TERMINATED_ = true
+        
         stopped = !ctx.stop
         destroyed = !ctx.destroy
-        
-        window.onbeforeunload = ()->
-            next = (err)->
-                console.error(err.stack||err) if err
+
+        next = (err)->
+            console.error(err.stack||err) if err
+
+            if !stopped && stopped = true
+                ctx.stop next
+    
+            else if !destroyed && destroyed = true
+                ctx.destroy next
+
+        next()
                 
-                if !stopped && stopped = true
-                    ctx.stop next
-                    
-                else if !destroyed && destroyed = true
-                    ctx.destroy next
-            
-            next()
-                                
-            return undefined
-            
-    window.addEventListener 'DOMContentLoaded', init
-    window.addEventListener 'load', init
+        return undefined
+    
+    attachEvent 'beforeunload', terminate
+    attachEvent 'unload', terminate
+    
+    return undefined
               

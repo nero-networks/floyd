@@ -41,14 +41,32 @@ module.exports =
         ##
         ##
         ##
+        boot: (done)->
+            super (err)=>
+                return done(err) if err
+                
+                @_hint = @find('.hint').attr style: 'display: none'
+    
+                ##
+                @_logout = @find('form.logout').attr style: 'display: none'
+            
+                ##                
+                @_login = @find('form.login').attr style: 'display: none'
+            
+                ##
+                @identity.login (err, user)=>
+                    (if user then @_logout else @_login).removeAttr 'style'
+                    done() 
+                
+        ##
+        ##
+        ##
         wire: (done)->
             super (err)=>
                 return done(err) if err
                 
-                @_hint = @find '.hint'
-        
                 ##
-                @_logout = @find('form.logout').hide().on 'submit', ()=>
+                @_logout.on 'submit', ()=>
                     
                     @_getAuthManager().logout (err)=>
                         return @_onError(err) if err
@@ -59,7 +77,7 @@ module.exports =
                     return false                    
                 
                 ##                
-                @_login = @find('form.login').hide().on 'submit', ()=>
+                @_login.on 'submit', ()=>
                     pwfield = @find('[name=pass]')
                     if (login = @find('[name=login]').val()) && (pass = pwfield.val())
                                                         
@@ -74,11 +92,6 @@ module.exports =
                 
                 ##
                 done() 
-                
-                ##
-                @identity.login (err, user)=>
-                
-                    if user then @_logout.show() else @_login.show()
                 
                 
         ##
@@ -108,5 +121,5 @@ module.exports =
         ##
         ##
         _onError: (err)->
-            @_hint.addClass('error').text(err.message)
+            @_hint.addClass('error').text(err.message).removeAttr 'style'
             

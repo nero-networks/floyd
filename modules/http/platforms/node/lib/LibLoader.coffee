@@ -31,13 +31,12 @@ module.exports =
                     prepend:		[]
                     append:			[]
                     
-                    modules:		['crypto']
+                    modules:		[]
                     
-                    node_modules:	['path', 'events', 'http', 'url', 'floyd/node_modules/sprintf', 'floyd/node_modules/sanitizer']
+                    node_modules:	['url', 'floyd/node_modules/sprintf']
                     
                     aliases: 		
                         sprintf: '/node_modules/floyd/node_modules/sprintf'
-                        sanitizer: '/node_modules/floyd/node_modules/sanitizer'
                                         
             , config
 
@@ -211,7 +210,6 @@ module.exports =
                 
                 ##
                 module: _module = (target, name, path, pkg)=>
-                    
                     try
                         _file = __read__(require.resolve path)
 
@@ -224,7 +222,7 @@ module.exports =
                             
                     catch e
                         if !e.message.match 'Cannot find module' # e.code isnt 'MODULE_NOT_FOUND' ## > node 0.7
-                            console.error 'lib build error', e
+                            console.error 'lib build error', e.toString()
                             
                 ##
                 package: _module				

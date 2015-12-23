@@ -53,6 +53,18 @@ module.exports = objects =
         next()
     
         
+    ##
+    ## shuffle the order of an array randomly
+    ##
+    shuffle: (arr) ->
+        i = arr.length
+        while --i > 0
+            j = ~~(Math.random() * (i + 1))
+            temp = arr[j]
+            arr[j] = arr[i]
+            arr[i] = temp
+        
+        return arr
     
     ##
     ## extract an index out of an object (or array)
@@ -100,7 +112,7 @@ module.exports = objects =
     ##
     ##
     isArray: (obj)->
-        obj instanceof Array || (obj && obj.push && obj.pop && obj.length isnt undefined)
+        obj && (obj instanceof Array || (obj && obj.push && obj.pop && obj.length isnt undefined))
     
     ##
     ##
@@ -113,31 +125,31 @@ module.exports = objects =
     ##
     ##
     isRegExp: (obj)->
-        obj instanceof RegExp
+        obj && obj instanceof RegExp
         
     ##
     ##
     ##
     isDate: (obj)->
-        obj instanceof Date
+        obj && obj instanceof Date
         
     ##
     ##
     ##
     isString: (obj)->
-        typeof obj is 'string'
+        obj && typeof obj is 'string'
         
     ##
     ##
     ##
     isNumber: (obj)->
-        typeof obj is 'number'
+        obj && typeof obj is 'number'
         
     ##
     ##
     ##
     isFunction: (obj)->
-        typeof obj is 'function'
+        obj && typeof obj is 'function'
     
     ##
     ##
@@ -377,23 +389,25 @@ module.exports = objects =
     ##
     ## replaces the method with a wrapper which calls the interceptor 
     ## the interceptor gets passed all arguments plus the replaced super-method
-    ##    
-    ##  # 1. given some random api object method. This one is saying hello to you.
-    ##  test =
-    ##      helloMyNameIs: (name, fn)->
-    ##    
-    ##          fn null, 'Hello ' + name + '!'
-    ##  
-    ##  # 2. this intercepts the method by adding 'how are you feeling today?'
-    ##  floyd.tools.objects.intercept test, 'helloMyNameIs', (name, fn, helloMyNameIs)->
-    ##    
-    ##      helloMyNameIs name + ' How are you today?', fn
-    ##    
-    ##  # 3. usage. this will display 'Hello Floyd! How are you feeling today?'
-    ##  test.helloMyNameIs 'Floyd', (err, res)->
-    ##    
-    ##      console.log res
-    ##        
+    ###    
+      # 1. given some random api object method. This one is saying hello to you.
+      test =
+          helloMyNameIs: (name, fn)->
+        
+              fn null, 'Hello ' + name + '!'
+      
+      # 2. this intercepts the method by adding 'How are you feeling today?'
+      floyd.tools.objects.intercept test, 'helloMyNameIs', (name, fn, helloMyNameIs)->
+        
+          helloMyNameIs name, (err, res)->
+              return fn(err) if err
+              fn null,  + ' How are you feeling today?'
+        
+      # 3. usage. this will display 'Hello Floyd! How are you feeling today?'
+      test.helloMyNameIs 'Floyd', (err, res)->
+        
+          console.log res
+    ###        
     ##
     intercept: (obj, method, interceptor)->
 
@@ -503,10 +517,7 @@ _extend = (target, source)->
                 _extend value, item
             
             else
-            
-                ## others are allways pushed if not already present
-                if target.indexOf(item) is -1
-                    target.push item
+                target.push item
     
     else
     

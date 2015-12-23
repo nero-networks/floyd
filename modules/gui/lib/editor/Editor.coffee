@@ -9,10 +9,14 @@ module.exports =
         configure: (config)->
         
             config = super new floyd.Config
-
-                template: ->
-                    div class:'editor Buttons floyd-loading', style:'opacity: .35'
                 
+                data:
+                    popup:
+                        fade: false
+                
+                template: ->
+                    div class:'editor Buttons floyd-loading'
+                    
             , config
             
             @__buttons = config.buttons
@@ -26,22 +30,20 @@ module.exports =
             super (err)=>
                 return done(err) if err
                 
-                @_buildButtons @__buttons
-                @_wireMouse()
-                
-                done()
+                try
+                    @_buildButtons @__buttons
+                    @_wireMouse()
+                    done()
+                    
+                catch err
+                    done(err)
+                    
                
                 
         ##
         ##
         ##
         _wireMouse: ()->
-            @parent.__root.mouseenter (event)=>
-                @__root.css 'opacity', 1
-
-            .mouseleave (event)=>
-                @__root.css 'opacity', .35
-                
         
         ##
         ##
@@ -49,25 +51,52 @@ module.exports =
         _buildButtons: (buttons)->
             
             _popup = (editor, fn)=>
+                editor.type ?= 'gui.ViewContext'
+                
+                confirmClose = editor.confirmClose
+                clazz = editor.class || 'dialog'
+                fade = editor.fade || @data.popup.fade
+                
                 floyd.tools.gui.popup @,
                     type: editor.popup || 'gui.widgets.Popup'
                     
                     data:
-                        class: editor.class || 'dialog'
+                        class: clazz
+                        fade: fade
                     
+                    ## TODO: check and if possible remove children and change to view: editor
                     view: 
                         children: [ editor ]
+                    
+                    confirmClose: (fn)->
+                        if confirmClose 
+                            if typeof confirmClose is 'function'
+                                @children[0].children[0].confirmClose fn
+                            
+                            else if typeof confirmClose is 'string'
+                                if confirm confirmClose
+                                    fn()
+                                
+                            else fn()                                
+                            
+                        else fn()
+                    
                 , fn
-                
-            for action, conf of buttons
-                do(action, conf)=>
+            
+            @_process buttons,
+                done: (err)=>
+                    if err
+                        throw err
+                        
+                each: (action, conf, next)=>    
                                     
                     if typeof conf is 'function'
                         conf =
                             handler: conf
                             
-                    @_createButton action, conf, (err, button)=>
-                                                
+                    @_createPermitedButton action, conf, (err, button)=>
+                        return next(err) if err || !button
+                                          
                         if typeof conf is 'string'
                             conf =
                                 text: conf
@@ -78,6 +107,8 @@ module.exports =
                         
                         if conf.text        
                             button.text conf.text 
+                        else
+                            button.addClass conf.class || 'icon'
                         
                         if conf.title
                             button.attr 'title', conf.title
@@ -96,12 +127,26 @@ module.exports =
                                     parent: @__root.parent()
                                 
                             return false
-        
+                        
+                        next()
+                        
         ##
         ##
         ##
         _createButton: (action, conf, fn)->
             fn null, $('<button/>').addClass action
-                  
+            
         
+        ##
+        ##
+        ##
+        _createPermitedButton: (action, conf, fn)->
+            if conf.roles
+                @identity.hasRole conf.roles, (err, hasRole)=>  
+                    return fn(err) if err || !hasRole
+                    
+                    @_createButton action, conf, fn
+            
+            else @_createButton action, conf, fn
+                    
             

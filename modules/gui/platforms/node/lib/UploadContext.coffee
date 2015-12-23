@@ -6,7 +6,7 @@ module.exports =
         configure: (config)->
             super new floyd.Config
                 data:
-                    route:'./upload'
+                    route:'/upload'
                     
                     accept: '.*'
                     
@@ -31,23 +31,26 @@ module.exports =
         
                     delete @_registry[req.session.TOKEN]
                     
-                    handler.accept = @data.accept
-                    handler.maxSize = @data.maxSize
-                    
-                    ##
-                    floyd.tools.http.upload req, res, handler, (err, files, fields)=>                        
+                    @_prepareUpload req, res, handler, (err)=>
                         if err
                             handler.error err 
                             return next err
+                                            
+                        ##
+                        floyd.tools.http.upload req, res, handler, (err, files, fields)=>                        
+                            if err
+                                @_cleanup files, ()=>
+                                    handler.error err 
+                                    return next err
+                            else
+                                res.send 'ok'
                         
-                        res.send 'ok'
+                                handler.request = req
                         
-                        handler.request = req
-                        
-                        @_handleUpload handler, files, fields, (err)=>
-                            return handler.error(err) if err
+                                @_handleUpload handler, files, fields, (err)=>
+                                    return handler.error(err) if err
                             
-                            handler.disconnect()
+                                    handler.disconnect()
                 
                 ##
                 done()
@@ -63,6 +66,17 @@ module.exports =
                 @_registry[token] = handler
                                       
                 handler.connect()
+        
+        ##
+        ##
+        ##
+        _prepareUpload: (req, res, handler, fn)->
+            handler.maxSize = @data.maxSize
+            handler.accept = @data.accept
+            
+            fn()
+            
+            
                 
         ##  
         ##  
@@ -79,9 +93,11 @@ module.exports =
                 done: fn
                 
                 each: (file, next)=>
-                    process.nextTick ()=>
-                        floyd.tools.files.rm file.path
-                
+                    setImmediate ()=>
+                        try
+                            floyd.tools.files.rm file.path
+                        catch e
+                        
                         next()
 
                     

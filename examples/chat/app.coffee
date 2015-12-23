@@ -10,6 +10,7 @@ module.exports =
         ##		
         data:
             port: 9038
+            debug: true
 
 
         ##	

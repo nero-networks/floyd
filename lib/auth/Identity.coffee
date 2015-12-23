@@ -21,12 +21,17 @@ module.exports = (id, _manager)->
     ##
     ## private emitter
     emitter = new events.EventEmitter()
-    emitter.setMaxListeners 26 ## <-- dunno how many is good.. 26 is unique to identify warinings
+    emitter.setMaxListeners 56 ## <-- dunno how many is good.. 56 is unique to identify warinings
     
     ##
     authorized = (token)->
         
         __token = token
+        
+     ##
+    unauthorized = ()->
+        
+        __token = null
         
     
     
@@ -50,6 +55,7 @@ module.exports = (id, _manager)->
         if manager?.removeListener
             #console.log authorized, login, logout, destroy
             manager.removeListener 'authorized', authorized
+            manager.removeListener 'unauthorized', unauthorized
             manager.removeListener 'login', login
             manager.removeListener 'logout', logout
             manager.removeListener 'destroy:'+id, destroy
@@ -62,6 +68,7 @@ module.exports = (id, _manager)->
     ##
     if manager?.addListener
         manager.addListener 'authorized', authorized
+        manager.addListener 'unauthorized', unauthorized
         manager.addListener 'login', login
         manager.addListener 'logout', logout
         manager.addListener 'destroy:'+id, destroy

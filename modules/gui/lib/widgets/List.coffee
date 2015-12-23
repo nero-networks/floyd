@@ -1,4 +1,6 @@
 
+qs = require('querystring')
+
 module.exports =
 
     class List extends floyd.gui.ViewContext
@@ -26,7 +28,7 @@ module.exports =
                     ul()
 
             , config
-
+            
             if config.browse
 
                 config.children.push new floyd.Config
@@ -34,7 +36,8 @@ module.exports =
                     type: 'gui.widgets.ListBrowser'
 
                     data:
-                        selector: 'div.browse'
+                        search: config.data?.search
+                        selector: '> div.browse'
                     
                     events:
                         browse: (e)->
@@ -53,8 +56,9 @@ module.exports =
 
             return config
 
-
-        start: (done)->
+        
+        ##
+        boot: (done)->
             super (err)=>
                 return done(err) if err
                 
@@ -62,36 +66,61 @@ module.exports =
                     @_ul = _sel.apply @, []
                 else
                     @_ul = @find _sel
-
+                
+                done()
+        
+        ##        
+        start: (done)->
+            super (err)=>
+                return done(err) if err
+                
                 if !@_ul.children().length
                     @_reload done
 
                 else done()
 
-
+        
+        ##
         _reload: (done)->
+            if @data.search
+                query = if location.search then qs.parse location.search.substr 1 else {}
+                @data.offset = parseInt(query[@data.search] ?= '0') * @data.limit
+                
             @_loadData @data.offset, @data.limit, (err, items, data)=>
                 return done(err) if err
-                @_display.call @, items, data, done
+                @_display items, data, done
 
 
 
         _loadData: (offset, limit, fn)->
-            items = []
+            
+            if @data.loadData
+                
+                @_getBackend (err, ctx)=>
+                    return fn(err) if err
+                    
+                    ctx[@data.loadData] offset, limit, fn
+                
+            else
+        
+                items = []
 
-            if (_items = @data.items)
-                if limit > -1
-                    _items = _items.slice offset, offset+limit
-                else
-                    _items = _items.slice offset
+                if (_items = @data.items)
+                    if limit > -1
+                        _items = _items.slice offset, offset+limit
+                    else
+                        _items = _items.slice offset
 
-                for image in _items
-                    items.push floyd.tools.objects.clone image
+                    for item in _items
+                        if typeof item is 'string'
+                            items.push item
+                        else
+                            items.push floyd.tools.objects.clone item
 
-            fn null, items,
-                offset: offset
-                limit: limit
-                size: @data.items.length
+                fn null, items,
+                    offset: offset
+                    limit: limit
+                    size: @data.items?.length || 0
 
 
         ##

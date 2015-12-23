@@ -8,7 +8,7 @@ module.exports =
         ##
         ##
         configure: (config)->
-            @_hiddenKeys.push 'wire', 'wiring'
+            @_hiddenKeys.push 'wire', 'wiring', 'build', 'building'
 
             @_template ?= config.template
             
@@ -18,18 +18,15 @@ module.exports =
                 @_build (err)=>
                     return done(err) if err
                     
-                    boot done                
-                
-                
-            
-            floyd.tools.objects.intercept @, 'start', (done, start)=>
-                start (err)=>
-                    return done(err) if err
-                    if floyd.system.platform is 'remote'
-                        @wire done
+                    boot (err)=>                    
+                        return done(err) if err
+                        if floyd.system.platform is 'remote'
+                            @wire done
                     
-                    else done()
-                    
+                        else 
+                            @build done
+                            
+                        
             config = super new floyd.Config
             
                 data: 
@@ -58,6 +55,9 @@ module.exports =
             if @data.content
                 @logger.info '@data.content is deprecated. use @content instead -', @type, @ID, @data.content
             
+            if @data.attr
+                @__root.attr @data.attr
+            
             if (cls=@data.class) && !@__root.hasClass cls
                 @__root.addClass cls
           
@@ -69,6 +69,16 @@ module.exports =
             @wiring?()
             
             done()
+        
+        ##
+        ##
+        ##
+        build: (done)->
+            if @building
+                @building done
+                
+            else
+                done()
         
         ##
         ##
@@ -90,7 +100,7 @@ module.exports =
                     $ selector, parent
                     
                 else
-                    selector.apply @, []
+                    selector.apply @, [parent]
             
             ##
             ## get the root element to represent the context
@@ -98,6 +108,7 @@ module.exports =
                 
                 ## element is already there, found by selector -> stage 1
                 if @data.selector && ( @__root = _sel @data.selector, @parent?.__root )?.length
+                    @__root.attr 'id', @id
                     
                     @_build done, 1
                 
@@ -149,6 +160,8 @@ module.exports =
             ## stage 2 -> ready
             else                
                 @forIdentity @identity, (err, ctx)=>
+                    return done(err) if err
+                    
                     @__root.data 'floyd', ctx
                     
                     done()
@@ -241,10 +254,12 @@ module.exports =
             item = if @data.key then data[@data.key] else data
             
             @_item item, (err, html)=>
-                return fn(err) if err && fn
+                return fn?(err) if err
                 
                 if html
                     @__root.append html
+                    
+                fn?()
                 
                 
         ##
@@ -268,8 +283,11 @@ module.exports =
         ##
         _prepare: (item, fn)->
             
-            fn null, floyd.tools.objects.clone item,
-                __data: @data
+            item = floyd.tools.objects.clone item
+            
+            item.__data = @data
+            
+            fn null, item
 
         
         ##
@@ -278,7 +296,7 @@ module.exports =
         _getBackend: (fn)->
             return fn(null, @__BACKEND) if @__BACKEND
             
-            @lookup @data.find('backend', @data.find('origin')), @identity, (err, ctx)=>
+            @lookup @data.find('backend', 'backend'), @identity, (err, ctx)=>
                 return fn(err) if err
                 
                 fn null, @__BACKEND = ctx

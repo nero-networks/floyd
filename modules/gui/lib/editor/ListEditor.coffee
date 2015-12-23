@@ -70,13 +70,6 @@ module.exports =
                         buttons:
                             add: config.add
                         
-                        _wireMouse: ()->
-    
-                            @parent.parent.__root.mouseenter (event)=>
-                                @__root.css 'opacity', 1
-                                
-                            .mouseleave (event)=>
-                                @__root.css 'opacity', .35
             , config
             
         

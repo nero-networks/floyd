@@ -6,8 +6,8 @@ module.exports =
         ##
         ##
         ##        
-        constructor: (@_config)->
-            super @_config
+        constructor: (@_config, parent)->
+            super @_config, parent
             
             @__store = @_config.store || '.floyd/sessions-store.json'
                         
@@ -22,8 +22,10 @@ module.exports =
                 each: (id, data, next)=>
 
                     sess = new (floyd.tools.objects.resolve @_config.sessions.type) id, @_config.sessions
-                    
+
                     floyd.tools.objects.extend sess, data
+                    
+                    sess.touch()
                     
                     @add sess
                     
@@ -34,14 +36,6 @@ module.exports =
                     
                     floyd.tools.stores.write 'registry', {}, @__store
                     
-                    
-                    
-                    
-        ##
-        ##
-        ##  
-        persist: ()->
+                    parent.on 'shutdown', ()=>
+                        floyd.tools.stores.write 'registry', @_pool, @__store
             
-            floyd.tools.stores.write 'registry', @_pool, @__store
-            
-        

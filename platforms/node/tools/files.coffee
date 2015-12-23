@@ -5,6 +5,9 @@ fs = require 'fs'
 ##
 path = require 'path'
 
+##
+zlib = require 'zlib'
+
 
 ##
 ##
@@ -17,6 +20,13 @@ module.exports = files =
     ##
     path: path
     
+    ##
+    ##
+    appdir: (args...)->
+        
+        normpath args
+
+
     ##
     ##
     mkdir: (dir)->
@@ -32,41 +42,54 @@ module.exports = files =
     
     ##
     ##
-    exists: (name)->
-    
-        return fs.existsSync normpath name            
-    
-    
-    ##
-    ##
-    stat: (name)->
-
-        return fs.lstatSync normpath name            
-    
-    ##
-    ##
-    is_dir: (name)->
+    exists: (name, fn)->
+        if fn
+            fs.exists normpath(name), fn
         
-        files.stat(normpath name).isDirectory()
+        else fs.existsSync normpath name            
+    
     
     ##
     ##
-    list: (dir)->
+    stat: (name, fn)->
+        if fn
+            fs.lstat normpath(name), fn
         
-        fs.readdirSync normpath(dir)            
-    
-    
-    ##
-    ##
-    write: (name, data, enc='utf8')->
-        
-        fs.writeFileSync normpath(name), data, enc
+        else fs.lstatSync normpath name            
     
     ##
     ##
-    read: (name, enc='utf8')->
+    is_dir: (name, fn)->
+        if fn
+            files.stat name, (err, stat)->
+                fn err, stat?.isDirectory()
+                
+        else files.stat(name).isDirectory()
+    
+    ##
+    ##
+    list: (dir, fn)->
+        if fn
+            fs.readdir normpath(dir), fn
             
-        fs.readFileSync normpath(name), enc
+        else fs.readdirSync normpath(dir)            
+    
+    
+    ##
+    ##
+    write: (name, data, enc='utf8', fn)->
+        if fn
+            fs.writeFile normpath(name), data, enc, fn
+            
+        else fs.writeFileSync normpath(name), data, enc
+    
+    ##
+    ##
+    read: (name, enc='utf8', fn)->
+        if fn
+            fs.readFileSync normpath(name), enc, fn
+            
+        else fs.readFileSync normpath(name), enc
     
     
     ##
@@ -101,23 +124,18 @@ module.exports = files =
     ##
     rm: (name, recursive)->
         
-        if floyd.tools.objects.isArray name
-            name = _join name
-        
         name = normpath name
         
         if files.exists name
             if files.is_dir name
-        
                 if recursive
                     for file in files.list name
-                        files.rm [name, file]
+                        files.rm [name, file], true
                 
-                fs.rmdirSync normpath name
+                fs.rmdirSync name
             
             else
-            
-                fs.unlinkSync normpath name
+                fs.unlinkSync name
                             
     ##
     ##
@@ -135,8 +153,11 @@ module.exports = files =
     
     ##
     ## tmp files
-    tmp: (name)->
+    tmp: (name, suffix)->
         name ?= floyd.tools.strings.uuid()
+        
+        if suffix
+            name = name+'.'+suffix
 
         ##
         normpath [floyd.system.tmpdir, name]
@@ -154,7 +175,37 @@ module.exports = files =
                 persistent: false  
             
         fs.watch normpath(name), fn
+    
+    ##
+    ##
+    gzip: (name, fn)->
+        name = normpath(name)
         
+        gzip = zlib.createGzip()
+        inp = files.fs.createReadStream name
+        out = files.fs.createWriteStream name+'.gz'
+        
+        out.on 'close', ()->
+            files.rm name
+            fn?()
+        
+        inp.pipe(gzip).pipe(out);
+
+    ##
+    ##
+    gunzip: (name, fn)->
+        name = normpath(name)
+
+        gunzip = zlib.createGunzip()
+        inp = files.fs.createReadStream name
+        out = files.fs.createWriteStream name.substr 0, name.length-3
+        
+        out.on 'close', ()->
+            files.rm name
+            fn?()
+        
+        inp.pipe(gunzip).pipe(out);
+
 
 ##
 ## private
@@ -166,17 +217,12 @@ module.exports = files =
 normpath = (dir)->
 
     if typeof dir is 'object'            
-        dir = _join dir
-                    
+        dir = path.join.apply path, dir
+    
     dir = dir.replace floyd.system.appdir, ''
     
     path.join floyd.system.appdir, path.normalize(dir)    
 
-##
-##
-##
-_join = (list)->
-    list.join '/' 
 
     
 ##

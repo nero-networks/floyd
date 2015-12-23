@@ -35,10 +35,6 @@ module.exports =
                         registry:
                             type: 'http.sessions.PersisedRegistry'
                     
-                    shutdown: ->
-                        if @_registry
-                            @_registry.persist()
-                                          
                 ,
                 
                     id: 'lib'
@@ -107,63 +103,56 @@ module.exports =
                 
                 ## load file only if no content until here
                 
-                floyd.tools.http.files.resolve decodeURIComponent(req.url), @data.public, (err, file)=>
+                url = req.url.split '?'
+                path = url.shift()
+                if params = url.join '?'
+                    params = '?'+params
+                
+                ## if path is a directory add the default index file
+                if floyd.tools.strings.tail(path) is '/'
+                    path += @data.index
+                
+                floyd.tools.http.files.resolve decodeURIComponent(path), @data.public, (err, file)=>
                     return next(err) if err
                     
                     files = floyd.tools.files
+
+                    stats = files.fs.lstatSync file
                     
-                    ## if file is a directory add the default index file
-                    if files.fs.lstatSync(file).isDirectory()
+                    if stats.isDirectory()
                     
                         ## the browser thinks of a file if the trailing slash is omittet
                         ## so we send a redirect back to the browser just to add this slash
                         ## ugly but hopeless... we must ensure the browser sees a directory
                         
-                        url = req.url.split '?'
-                        path = url.shift()
-                        if params = url.join '?'
-                            params = '?'+params
-                        
-                        #console.log path, url, params
-                        if floyd.tools.strings.tail(path) isnt '/'
-                            return res.redirect path+'/'+params
-                        
-                        
-                        ## refuse the access permission if there is no index file		
-                        else if !files.fs.existsSync (file = files.path.join file, @data.index)
+                        return res.redirect path+'/'+params
                     
-                            return next new floyd.error.Forbidden req.url
-                    
-                    
-                    ## INVESTIGATE dunno why, but i have to read it again to get the correct inode ?!?
-                    ## even if its not a directory...
-                    stats = files.fs.lstatSync file
                     
                     res.setHeader 'Last-Modified', stats.mtime.toUTCString()
                     
                     ## lookup the mimetype of the requested file
                     res.ctype = mime.lookup(file)||@data.ctype
                     
+                    
                     if (_last = req.headers['if-modified-since']) && _last is stats.mtime.toUTCString()
                     
                         res.send '', 304 
                     
-                    else
-                        res.cache?.etag()
+                    else 
                         
                         ##
-                        ## still here? let's read the files content
-                        ##				
-    
-                        files.fs.readFile file, (e, data)=>
-                            err = e
-                            
-                            if data.length > 512
-                                res.compress()
-                                                            
-                            ## send and finish response
-                            next null, data
-                            
+                        ## EXPERIMENTAL enable streaming for bigger files
+                        ## bypass the send method here :-(
+                        
+                        res.setHeader 'Content-Length', stats.size
+                        
+                        if stats.size > 512
+                            res.compress()
+                        
+                        res.writeHead 200, 'Content-Type': res.ctype
+
+                        files.fs.createReadStream(file).pipe res
         
+
     
     

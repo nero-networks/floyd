@@ -1,4 +1,7 @@
 
+##
+##
+##
 module.exports = 
 
     class DNodeRemote extends floyd.Context
@@ -6,48 +9,40 @@ module.exports =
         ##
         ##
         ##
-        _useProxy: (@_proxy)->		
+        _useProxy: (proxy)->      
             
             ##
-            if !@origin
-            
-                @origin = 
-                    dnode: @id
-                    proxy: @_proxy.ID
+            ## initial call
+            if !@_proxy 
+                @_proxy = proxy
                 
                 ## prepare __wrappers
-                @__wrappers = {} 
-                
+                @__wrappers = {}                 
                 
                 ## reset the id
-                @ID = @parent.ID + '.' + (@id = floyd.tools.strings.part @_proxy.ID, '.', -2)
+                @ID = @parent.ID + '.' + (@id = @_proxy.id)
             
                 ## recreate the logger
                 @logger = @_createLogger @ID
-                
-                ## recreate the identity
-                #console.log 'recreate the identity'
-                #manager = @_getAuthManager()
-                #manager.destroyIdentity @identity
-                #
-                #@identity = manager.createIdentity @ID
-                    
-            else
             
-                ##
-                ##
-                @origin.proxy = @_proxy.ID
+            ##
+            ## subsequent calls on reconnect
+            else
+                @_proxy = proxy
                 
-                ##
-                ##
+                ## rewrap active lookups
                 for name, wrappers of @__wrappers
-                    do(name, wrappers)=>
-                
+                    do (name, wrappers)=>
+                    
                         for id, wrapper of wrappers
-                            do(id, wrapper)=>
-                                
+                            do (id, wrapper)=>
+                            
+                                wrapper.rewrapping = true
+                            
                                 @lookup name, wrapper.identity, (err, ctx)=>
-                                    return wrapper.error(err) if err
+                                    wrapper.error(err) if err
+                                    
+            
                                     
         
         ##
@@ -55,46 +50,48 @@ module.exports =
         ##
         lookup: (name, identity, fn, noremote)->
             
+            ## local lookup
             if noremote
-                #console.log @id, 'direct lookup', name
-                
                 super name, identity, fn
-                
+            
+            ## cache lookup
+            else if (wrapper = @__wrappers[name]?[identity.id]) && !wrapper.rewrapping
+                fn null, wrapper.ctx       
+            
+            ## remote lookup
             else
-                #console.log @id, 'proxy lookup', name
-                
                 @_proxy.lookup name, identity, (err, ctx)=>
                     return fn(err) if err
                     
-                    #console.log 'proxy hit', name
-                    
                     fn null, @_wrapRemote name, identity, ctx, fn
-                
-                , true
+            
+                , true ## <-- this is the noremote flag
                          
         
          
         ##
         ##
         ##
-        _wrapRemote: (name, identity, ctx, error)->			
-
-            wrappers = @__wrappers[name] ?= {}			
-            wrapper = wrappers[identity.id] ?=
+        _wrapRemote: (name, identity, ctx, error)->         
+            
+            ## create reusable wrapper
+            wrapper = (@__wrappers[name] ?= {})[identity.id] ?=
                 error: error
                 identity: identity
                 ctx: {}
-                
+            
+            ## fill wrapper    
             for key, value of ctx 
                 wrapper.ctx[key] = value
             
-            wrapper.stop = ()=>
-                console.log 'TODO: pseudo stop ', name
+            ## 
+            if wrapper.rewrapping
+                wrapper.rewrapping = false
+                
+                ## delete unknown keys in case of changes in remote api
+                for key, value of wrapper.ctx
+                    delete wrapper.ctx[key] if !ctx[key]                        
             
-            wrapper.destroy = ()=>
-                console.log 'TODO: pseudo destroy ', name
-            
+            ##
             return wrapper.ctx
-                
-            
-                
+

@@ -16,53 +16,89 @@ module.exports =
                         pass: 'Password'
                         login: 'Login'
                         logout:'Logout'
+                    
+                    minimized: false
                         
                         
                 content: ->
                     
                     form method:'post', action:'#', class:'gui widgets LoginForm', ->
-
-                        p class:'hint'
-                        
-                        user = @identity.login()
-                        
-                        if !user
-                            input name:'user', value:'', placeholder: @data.strings.user
+                                            
+                        if !(user = @identity.login())
+                            p class:'hint'
+    
+                            div (if @data.minimized then style:'display:none' else {}), ->
+                                input name:'user', value:'', placeholder: @data.strings.user
                                                                         
-                            input name:'pass', value:'', type:'password', placeholder:@data.strings.pass
+                                input name:'pass', value:'', type:'password', placeholder:@data.strings.pass
                         
-                        button type: 'submit', name:'button', ->
-                            if user then @data.strings.logout else @data.strings.login
-            
-            
-                wiring: ->
-                
-                    hint = @find '.hint'
-        
-                    login = @find('form.gui.widgets.LoginForm')
-                    
-                    user = login.find('input[name=user]')    
-                    pass = login.find('input[name=pass]')
-                                                
-                    login.on 'submit', ()=>
+                        if user && _fn = @data.username
+                            if typeof _fn is 'function'
+                                username = _fn.apply @
+                            else
+                                username = user
+                            
+                            span class:'username', username
+                                
+                        attr = 
+                            type: 'submit'
+                            name:'button'
+                            class: if user then 'logout' else 'login'
+                            
+                        if cls = @data.button?.class || @data.button
+                            attr.class = attr.class+' '+cls 
                         
-                        if @identity.login()
+                        title = if user then @data.strings.logout else @data.strings.login
                             
-                            @_getAuthManager().logout (err)=> location.reload()                                        
-                            
-                        else            
-                                                
-                            @_getAuthManager().login user.val(), pass.val(), (err)=>                                    
-                                if err
-                                    pass.val ''
-                                    hint.addClass('error').text(err.message)
-                                 
-                                else
-                                     location.reload()
-                         
-                        return false
+                        if @data.button?.title
+                            attr.title = title
+                        
+                        button attr, ->
+                            if !@data.button?.title
+                                text title
+            
             
             , config
         
         
+        ##
+        ##
+        ##
+        wire: (done)->
+            super (err)=>
+                return done(err) if err
                 
+                hint = @find '.hint'
+    
+                login = @find('form.gui.widgets.LoginForm')
+                
+                user = login.find('input[name=user]')    
+                pass = login.find('input[name=pass]')
+                
+                div = login.find('> div')
+                
+                login.on 'submit', ()=>
+                    
+                    if @identity.login()
+                        
+                        @_getAuthManager().logout (err)=> location.reload()                                        
+                        
+                    else            
+                        if div.is ':visible'                            
+                            @_getAuthManager().login user.val(), pass.val(), (err)=>                                    
+                                if err
+                                    pass.val ''
+                                    hint.addClass('error').text(err.message)
+                             
+                                else
+                                    @_loginSuccess()
+                        
+                        else div.show()
+                        
+                    return false
+                
+                done()
+        
+        ##
+        _loginSuccess: ()->
+            location.reload()

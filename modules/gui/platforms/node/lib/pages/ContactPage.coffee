@@ -70,6 +70,8 @@ module.exports =
         start: (done)->            
             super done 
             
+            @logger.warning 'gui.pages.ContactPage is deprecated! Use gui.ContactContext as child of gui.pages.PageContext'
+            
             @_addRoute '/sendMail', (req, res, next)=>
                     
                 @logger.warning 'post handler usage for ContactForm'

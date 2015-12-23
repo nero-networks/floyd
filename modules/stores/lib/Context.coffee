@@ -51,7 +51,7 @@ module.exports =
                     @_engine.persist ()=>
                         @_engine.close?()
                         
-                        process.nextTick fn if fn
+                        setImmediate(fn) if fn
             
                 fn? err if err
             

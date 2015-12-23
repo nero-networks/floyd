@@ -47,11 +47,7 @@ module.exports =
                     
                     wiring: ->
                         @view = @parent.children[0]
-                        
-                        #floyd.tools.objects.intercept @ '_emit', (args..., _emit)=>
-                        #    _emit.apply @, args
-                        #    @parent._emit.apply @parent, args
-                        
+                                                
                         @find('button, a').click (e)=>
                             action = $(e.currentTarget).attr('class').split(' ').shift()
 
@@ -106,18 +102,29 @@ module.exports =
                 @find('button.close, a.close').click ()=> 
                     @close()
                 
-                setTimeout ()=>
-                    
-                    if @data.fade
-                        @__root.fadeIn 'slow'
-                    
-                    else
-                        @__root.show()
+                $(document).keyup keyup = (e)=>
+                    if e.keyCode is 27 # ESC
+                        $(document).unbind 'keyup', keyup
+                        @close()
                 
+                setTimeout ()=>
+                    @_show()
                 , 100 ## das merkt man sogut wie nicht und die gui wirkt stabiler dadurch... weniger aufbau-gewusel
                 
                 done()
+        
+        ##
+        ##
+        ##
+        _show: ()->
+            if @data.fade
+                @__root.fadeIn if typeof @data.fade is 'string' then @data.fade else 'slow'
+            
+            else
+                @__root.show()
                 
+        
+        
         ##
         ##
         ## 
@@ -131,6 +138,12 @@ module.exports =
         close: (fn)->
             @_emit 'close'
             fn?()
+        
+        ##
+        ##
+        ##
+        confirmClose: (fn)->
+            fn()
             
         ##
         ##
@@ -139,7 +152,7 @@ module.exports =
             @__root.fadeOut speed, ()=>
                 @close fn
                 
-                    
+        
         ##
         ##
         ##

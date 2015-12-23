@@ -6,13 +6,11 @@ module.exports =
     ##
     ## 
     ##
-    class HttpSessions extends floyd.Context
+    class HttpSessions extends floyd.auth.AuthContext
         
         configure: (config)->
         
             @_hiddenKeys.push 'Registry', 'Session'
-            @_TOKENS = config.tokens
-  
             super new floyd.Config
             
                 data:
@@ -34,7 +32,7 @@ module.exports =
         ##
         boot: (done)->
             
-            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry
+            @_registry = new (floyd.tools.objects.resolve @data.registry.type) @data.registry, @
             
             super done
         
@@ -130,7 +128,7 @@ module.exports =
         ##
         _checkPasswordHash: (user, pass, data, fn)->
             
-            cfg = floyd.tools.crypto.password._options
+            cfg = floyd.config.crypto.password
 
             parts = data.pass.split '-'
             
@@ -158,7 +156,7 @@ module.exports =
             
             if (sess = @_registry.get(sid))
                 
-                sess.public.user = floyd.tools.objects.unlink sess.public.user
+                delete sess.public.user
                 
                 
             fn()
@@ -167,18 +165,23 @@ module.exports =
         ##
         ## 
         ##
-        authorize: (token, fn)->
+        authorize: (token, fn)->            				
             
-            sid = token.substr 40				
-            
-            #console.log 'session authorize session %s', sid
-            
-            if (sess = @_registry.get sid)
+            if token && (sess = @_registry?.get (sid = token.substr 40))
                 
                 #console.log 'found session', sess, sess.public.user?.login
+
+                ## initialize destroy hook on the fly
+                if !sess.destroyHook
+                    sess.on 'destroy', ()=>
+                        sess.destroyHook new Error 'session destroyed'
                 
+                ## register the current callback as the destroy hook
+                sess.destroyHook = fn
+                        
+                ## authorize loggedin session
                 if user = sess.public.user?.login
-                                        
+                       
                     @parent.children.users.get user, (err, data)=>
                         return fn(err) if err
                         
@@ -188,21 +191,14 @@ module.exports =
                         delete data.pass
                             
                         fn null, sess.public.user = data
-                        
+                
+                ## authorize anonymous session        
                 else
                     fn()
                     
             
-            ## a static token has to be of the length of 40 plus the key in @_TOKENS
-            ## e.g. 8b804dd8-7a88-4142-8b33-913a586d67b4----backend so that the following comes true
-            ## @_TOKENS['backend'] is '8b804dd8-7a88-4142-8b33-913a586d67b4----backend'
-            else if @_TOKENS[sid] is token
-                fn()
-            
-            else
-                #console.log 'session failure', sid, sess, sess?.user
-                
-                fn new Error 'unauthorized sessionID'
+            else 
+                super token, fn
                 
         ##
         ##
@@ -211,38 +207,33 @@ module.exports =
             
             @logger.debug 'session authenticate identity %s', identity.id
             
-            identity.token (err, token)=>
-                if err || !token
-                    @logger.debug 'session authenticate NO TOKEN', identity.id
-                     
-                    return fn(err || new Error 'session authenticate NO TOKEN') 
+            super identity, (err)=>
+                return fn() if !err ## successfully authenticated
                 
-                ##
-                if @_TOKENS && @_TOKENS[identity.id.split('.').shift()] is token
+                identity.token (err, token)=>
+                    if err || !token
+                        @logger.warning 'session authenticate NO TOKEN', identity.id
+
+                        return fn(err || new Error 'session authenticate NO TOKEN') 
                 
-                    @logger.debug 'found known Token, authenticate SUCCESS', identity.id 
-                        
-                    fn()
-                
-                else
                     sid = token.substr 40				
                     
-                    @logger.debug 'session authenticate session %s', sid
-    
+                    @logger.fine 'session authenticate session %s', sid
+
                     @_load sid, (err, sess)=>
                         return fn(err) if err
-                        
-                        @logger.debug 'session authenticate hash %s', token.substr 0, 39
-                        
+                    
+                        @logger.finer 'session authenticate hash %s', token.substr 0, 39
+                    
                         if token is sess.token
-                            
+                        
                             @logger.debug 'session authenticate SUCCESS', identity.id 
-                            
+                        
                             fn()
-                            
+                        
                         else
                             @logger.debug 'session authenticate FAILURE', identity.id 
-                            
+                        
                             fn new Error 'session authenticate FAILURE'
                             
         

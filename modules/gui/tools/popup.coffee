@@ -32,19 +32,25 @@ module.exports = (parent, config, fn)->
             return fn(err) if err            
                 
             child.on 'close', (e)->
-        
-                child.__root.remove()
                 
-                child.stop ()-> 
-                    #console.log 'stopped', child.ID
+                child.confirmClose ()=>
                     
-                    parent.children.delete child
-                    
-                    parent.once 'destroyed', ()->
-                    
-                        child.destroy ()->
+                    if child.data.fade
+                        child.__root.fadeOut 'fast', ()=>
+                            child.__root.remove()
+                    else
+                        child.__root.remove()
                         
-                            #console.log 'destroyed', child.ID
+                    child.stop ()-> 
+                        #console.log 'stopped', child.ID
+                    
+                        parent.children.delete child
+                    
+                        parent.once 'destroyed', ()->
+                    
+                            child.destroy ()->
+                        
+                                #console.log 'destroyed', child.ID
                 
                 return false
     

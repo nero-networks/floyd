@@ -14,4 +14,4 @@ module.exports =
         title: 'Autorisierung erforderlich'
 
         constructor: (@realm)->
-            super floyd.tools.strings.sprintf(message, realm), 401
+            super floyd.tools.strings.sprintf(message, @realm), 401

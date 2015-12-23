@@ -49,9 +49,7 @@
     max-height:625px;
     overflow:auto;
     background:#fff;
-    box-shadow:0px 0px 40px #a0a727;
-    border:2px solid #40403d;
-    border-radius:10px;
+    box-shadow: 5px 5px 5px 1px;
 }
 
 .gui.Popup .tiny .popup-box-wrapper {
@@ -59,6 +57,9 @@
 }
 .gui.Popup .narrow .popup-box-wrapper {
   width: 550px;
+}
+.gui.Popup .wide .popup-box-wrapper {
+  width: 960px;
 }
 .gui.Popup .popup-box-wrapper {
   margin: auto;
@@ -70,8 +71,6 @@
   right: -8px;
   top: -8px;
   z-index: 100;
-  background-color: #40403d;
-  border-radius: 12px;
   padding: 2px;
   width: 21px;
   height: 21px;
@@ -81,25 +80,6 @@
 }
 .gui.Popup .popup-content .grid {
   width: 720px;
-}
-.gui.Popup .popup-content .link,
-.gui.Popup .popup-content a {
-  color: #a0a727 !important;
-}
-.gui.Popup .popup-content .link:hover,
-.gui.Popup .popup-content a:hover {
-  color: #434e25 !important;
-}
-.gui.Popup .popup-content h1 {
-    margin-bottom:10px;
-    color:#434e25;
-    font:143% impact;
-}
-.gui.Popup .popup-content p {
-    text-align:justify;
-}
-.gui.Popup .popup-content div.buttons {
-    margin-top: 10px;
 }
 .gui.Popup .popup-content div.buttons .img-next {
     float: right;

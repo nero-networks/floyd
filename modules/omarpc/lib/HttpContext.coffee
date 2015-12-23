@@ -62,34 +62,36 @@ module.exports =
         ##
         _createContent: (req, res, fn)->
                 
-            floyd.tools.http.parseData req, (err)=>
-                return fn(err) if err
+            ##                
+            if req.session && !(_ident = @_IDENTITIES[SID = req.session?.SID])
+                #console.log 'creating _ident'
                 
-                ##                
-                if !(_ident = @_IDENTITIES[SID = req.session.SID])
-                    #console.log 'creating _ident'
+                manager = new floyd.auth.Manager @_createAuthHandler()
+                
+                @_IDENTITIES[SID] = _ident = 
+                    manager: manager
+                    identity: manager.createIdentity @identity.id+'.'+SID
+                
+                req.session.on 'destroy', ()=>
+                    _ident.manager.destroyIdentity _ident.identity
+                    delete @_IDENTITIES[SID]
+                
+                manager.authorize req.session.TOKEN, (err)=>
+                    @_createContent req, res, fn
                     
-                    manager = new floyd.auth.Manager @_createAuthHandler()
-                    
-                    @_IDENTITIES[SID] = _ident = 
-                        manager: manager
-                        identity: manager.createIdentity @identity.id+'.'+SID
-                    
-                    req.session.on 'destroy', ()=>
-                        _ident.manager.destroyIdentity _ident.identity
-                        delete @_IDENTITIES[SID]
-                    
-                    manager.authorize req.session.TOKEN, (err)=>
-                        @_createContent req, res, fn
-                        
-                else
-                    #console.log 'using _ident', _ident.identity.id
+            else
+                #console.log 'using _ident', _ident.identity.id
+
+                floyd.tools.http.parseData req, (err)=>
+                    return fn(err) if err
                     
                     res.cache?.etag()
                     
                     ##
                     m = req.body.m
                     a = JSON.parse(req.body.a || '[]')
+                    
+                    console.log req.body.o, m, a
                     
                     a.push _send = (err, response)->
                         
@@ -113,7 +115,7 @@ module.exports =
                         @_getObject req.body.o, (err, o)=>
                             return fn(err) if err
                             
-                            if o.forIdentity
+                            if _ident && o.forIdentity
                                 o.forIdentity _ident.identity, (err, wrapper)=>
                                     return fn(err) if err
                                 
@@ -128,7 +130,10 @@ module.exports =
 
             if typeof (obj = @_registry[o]) is 'string'
                 @lookup obj, @identity, fn
-                
+            
+            else if typeof obj is 'function'
+                obj fn
+            
             else fn null, obj
                 
                 

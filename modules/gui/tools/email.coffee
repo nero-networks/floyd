@@ -20,7 +20,8 @@ module.exports =
             link.attr 'href', href.replace('mailto:', '_contact/').replace(/[.]/g, '+').replace('@', '/')
             link.attr 'rel', 'nofollow'
             
-            link.text _fake addr
+            if link.text() is addr
+                link.text _fake addr
         
         ##
         decode.each (i, ele)->
@@ -32,6 +33,7 @@ module.exports =
             link.attr 'href', href
             link.attr 'rel', null
             
-            link.text addr
+            if link.text() is _fake addr
+                link.text addr
         
         done?()

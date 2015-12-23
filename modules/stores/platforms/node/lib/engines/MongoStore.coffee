@@ -30,20 +30,20 @@ module.exports =
             fn()
                 
         close: (fn)->
-            @_db.close()
+            @_db?.close()
             fn?()
         
         get: (key, fn)->
-            @_client.findOne _id:key, fn
+            @_client.findOne _id:key.toString(), fn
 
 
         set: (key, item, fn)->
-            item._id = key
+            item._id = key.toString()
             @_client.save item, fn
 
 
         remove: (key, fn)->
-            @_client.remove _id:key, fn
+            @_client.remove _id:key.toString(), fn
 
 
         has: (key, fn)->
@@ -62,14 +62,6 @@ module.exports =
             query = {}
             query[@_options.cleanup.field] = $lte: +new Date()
             @_client.remove query, fn
-
-
-        each: (fn, done)->
-            @find {}, {}, null, (err, items)->
-                for doc in items
-                    fn doc, doc._id
-
-                done?()
 
         
         distinct: (field, query, fn)->

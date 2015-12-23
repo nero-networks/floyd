@@ -5,14 +5,23 @@ module.exports =
     QUATER:	15 * 60 * 1000
     HOUR:	60 * 60 * 1000
     DAY:	24 * 60 * 60 * 1000
+    WEEK:   7 * 24 * 60 * 60 * 1000
+    MONTH:  30 * 24 * 60 * 60 * 1000
+    YEAR:   365 * 24 * 60 * 60 * 1000
     
     ##
     ## reset time to midnight
     ##
-    reset: (date, day)->
+    reset: (date, day, month, year)->
         
         if day
             date.setDate day
+        
+        if month
+            date.setMonth month-1
+        
+        if year
+            date.setYear year
         
         date.setMilliseconds 0
         date.setSeconds 0 
@@ -43,4 +52,14 @@ module.exports =
             
         return d
         
-                
+    
+    ##
+    ##
+    ##
+    isToday: (date)->
+        now = new Date()
+        
+        return now.getDate() is date.getDate() \
+            && now.getMonth() is date.getMonth() \
+            && now.getYear() is date.getYear()
+        

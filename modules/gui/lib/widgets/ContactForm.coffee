@@ -84,7 +84,7 @@ module.exports =
                             for part, ele of parts
                                 data[part] = ele.val().trim()
                                 
-                            @lookup @data.find('origin'), @identity, (err, mailer)=>
+                            @lookup @data.find('mailer', @data.find 'origin'), @identity, (err, mailer)=>
                                 return hint.addClass('error').text err.message if err
                                 
                                 mailer.sendMail data, (err, verify)=>

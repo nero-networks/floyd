@@ -10,15 +10,15 @@ module.exports =
                 data:
                     file: '/index.html'
                     
-                    permissions:
-                        readFile:
-                            roles: ['editor', 'admin']
-                            
-                        writeFile:
-                            roles: ['editor', 'admin']
-                    
                     contentContextId: 'content'
                     
+                permissions:
+                    readFile:
+                        roles: ['editor', 'admin']
+                        
+                    writeFile:
+                        roles: ['editor', 'admin']
+                
                 remote:
                     
                     children: []
@@ -156,8 +156,8 @@ module.exports =
             ##
             
             if child = _findChild @data.contentContextId, @_model.local
-                #console.log child
                 child.content = @__file.data
+                #console.log child
                 
             else
                     

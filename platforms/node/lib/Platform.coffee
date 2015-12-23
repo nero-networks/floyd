@@ -68,7 +68,8 @@ module.exports =
                             try 
                                 require path 
                             catch e
-                                console.error 'error in file '+path
+                                throw new Error 'error in file\n'+e.toString()
+                                
                         set: ()->
                             #console.log 'reset', path
                         
