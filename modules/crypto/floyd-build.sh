@@ -34,6 +34,7 @@ then
     
     cat core.js lib-typedarrays.js hmac.js
     
+
     for file in $(find ./modules -type f)
     do
         echo -e "\n\n\n/* $file */\n\n"
@@ -51,7 +52,24 @@ then
         cat $file
         
     done
-    
+
+    for file in $(find ./modes -type f)
+    do
+        echo -e "\n\n\n/* $file */\n\n"
+
+        cat $file
+
+    done
+
+    for file in $(find ./paddings -type f)
+    do
+        echo -e "\n\n\n/* $file */\n\n"
+
+        cat $file
+
+    done
+
+   
     echo -e "\nmodule.exports = CryptoJS;"	
     
     echo "}());") > $TARGET

@@ -318,4 +318,13 @@ module.exports =
         _href: (href)->
             
             encodeURI @data.find('hrefBase', '/')+href
-                   
+        
+        ##
+        ##
+        ##
+        _populate: (data, opt)->
+            for name, value of data
+                do (name, value)=>
+                    ele = @find opt?[name]?.selector || '.'+name
+                    ele[opt?[name]?.method || 'text'] opt?[name]?.format?(ele) || opt?[name]?(ele) || value
+

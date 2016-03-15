@@ -34,4 +34,12 @@ module.exports = numbers =
     
         else
             parseInt val
-            
+        
+    ##
+    ##
+    ##
+    toHex: (num, size)->
+        s = num.toString(16).toUpperCase()
+        while s.length < size
+            s = "0" + s;
+        return s;    

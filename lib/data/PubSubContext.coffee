@@ -20,13 +20,11 @@ module.exports =
         ##
         ##
         publish: (data, done)->		
-
             @_process @_pool,				
                 done: done 
                 
                 each: (handler, next)=>
                     try					
-                        
                         handler null,
                             origin: (@publish.identity || @identity).id
                             data: data

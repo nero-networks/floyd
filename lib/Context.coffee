@@ -562,25 +562,40 @@ module.exports =
             @addListener.apply @, arguments
         
         off: ()->
+            @removeListener.identity = @off.identity
             @removeListener.apply @, arguments
         
         addListener: (action, handler)->
-            @_emitter.addListener.apply @_emitter, arguments
-            if @addListener.identity
-                if !handler
-                    console.log 'no handler', arguments
+            if !handler
+                return console.log 'no handler', action
+
+            @_emitter.addListener action, handler
+
+            if identity = @addListener.identity
                     
-                @addListener.identity.on 'destroyed', ()=>
-                    @removeListener action, handler
-            
-            #console.log @ID, @_emitter._events
-                
+                if !(@_eventHandlers ?= {})[identity.id]
+                    @_eventHandlers[identity.id] = {}
+
+                    identity.on 'destroyed', ()=>
+                        if @_eventHandlers[identity.id]
+                            for action, handler of @_eventHandlers[identity.id]
+                                @removeListener action, handler
+                            delete @_eventHandlers[identity.id]
+
+                @_eventHandlers[identity.id][action] = handler
         
-        removeListener: (action)->
-            @_emitter.removeListener.apply @_emitter, arguments
+        removeListener: (action, handler)->
+            if identity = @removeListener.identity
+
+                if @_eventHandlers[identity.id]?[action]
+                    handler = @_eventHandlers[identity.id][action]
+                    
+                    delete @_eventHandlers[identity.id][action]
+
+            @_emitter.removeListener action handler
         
-        once: ()->
-            @_emitter.once.apply @_emitter, arguments
+        once: (action, handler)->            
+            @_emitter.once action, handler
         
         
         ##
@@ -619,7 +634,7 @@ module.exports =
                 actions = [actions]
             
             if typeof (event ?= {}) is 'string'
-                event: 
+                event = 
                     topic: event
             
             event.origin ?=
