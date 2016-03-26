@@ -5,28 +5,28 @@ module.exports =
     ## @class floyd.stores.Store
     ##
     class Store
-        
+
         init: (@_options, fn)->
             @_memory ?= {}
-            
+
             ## cleanup interval
             if _interval = @_options.cleanup?.interval || -1 > 0
 
                 @_cleanup_interval = setInterval ()=>
 
                     @cleanup()
-                    
+
                 , _interval * 1000
-                    
-            
+
+
             fn()
 
         persist: (fn)->
             if @_cleanup_interval
                 clearInterval @_cleanup_interval
-                
+
             fn?()
-        
+
         close: (fn)->
             fn?()
 
@@ -35,7 +35,7 @@ module.exports =
 
 
         set: (key, item, fn)->
-            @_memory[key] = item
+            @_memory[key] = floyd.tools.objects.clone item
 
             fn?(null, @_memory[key])
 
@@ -71,96 +71,107 @@ module.exports =
 
 
         each: (fn, done)->
-            
+
             @find {}, {}, null, (err, items)=>
                 return done(err) if err
 
                 floyd.tools.objects.process items,
                     each: fn
                     done: done
-        
-        
+
+
         keys: (fn)->
             keys = []
             for key, val of @_memory
                 keys.push key
-            
+
             fn null, keys
-            
-        
+
+
         distinct: (field, query, fn)->
             throw new Error 'unimplemented'
-        
+
         find: (query, options, fields, fn)->
             _items = floyd.tools.objects.values(@_memory)
-            
-            
-            if !query || floyd.tools.objects.isEmpty query 
-                items = _items 
-            
-            else 
-                items = []                
-                
-                for item in _items
-                    for key, value of query
-                        if item[key] && (item[key] is value || item[key].match value)
-                            items.push item
-        
+
+
+            if !query || floyd.tools.objects.isEmpty query
+                items = _items
+
+            else
+                for key, value of query
+                    __items = []
+                    for item in _items
+
+                        if item[key] && __items.indexOf(item) is -1
+                            if (item[key] is value || item[key].match? value)
+                                __items.push item
+
+                            else if typeof item[key] is 'number'
+                                if (value['>'] && item[key] > value['>']) || (value['>='] && item[key] >= value['>=']) || (value['<'] && item[key] < value['<']) || (value['<='] && item[key] <= value['<='])
+                                    __items.push item
+                    _items = __items
+
+                items = __items
+
             options ?= {}
             if items
                 options.size = items.length
-                        
+
                 if options.sort
                     for sortby, dir of options.sort
                         dir ?= 1
-                        
+
                         items.sort (a, b)->
                             #console.log a[sortby], b[sortby]
                             if a[sortby] > b[sortby]
                                 return dir
-                                
+
                             if a[sortby] < b[sortby]
                                 return dir * -1
-                            
+
                             return 0
-                                
-    
+
+
                 if options.limit
                     items = items.slice 0, options.limit
-            
-                items = @_filterFields items, fields
-            
+
+                _items = @_filterFields items, fields
+
+                items = []
+                for item in _items
+                    items.push floyd.tools.objects.clone item
+
             if options.each
                 for item in items
                     fn null, item, options, fields, query
-                
+
                 if options.each.indexOf && options.each.indexOf 'terminate' != -1
                     fn null, null, options, fields, query
-                
+
             else
                 fn null, items, options, fields, query
-            
-        
-        
+
+
+
         ##
         ##
         ##
         _filterFields: (items, fields)->
-            
-            
+
+
             if items && fields
                 _items = []
-                
-                for item in items				
+
+                for item in items
                     _items.push _item = {}
-                    
-                    for field in fields							
+
+                    for field in fields
                         if field || field is 0
-                            _item[field] = item[field] 
-            
+                            _item[field] = item[field]
+
                 return _items
-            
+
             else
 
                 return items || []
-            

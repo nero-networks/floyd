@@ -14,8 +14,7 @@ module.exports =
     
     ##
     vsprintf: sprintf.vsprintf
-    
-    
+        
     part: (str, split, idx)->
         list = str.split(split)
         

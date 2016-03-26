@@ -121,8 +121,11 @@ module.exports =
                                 
                                     wrapper[m].apply wrapper, a
                         
-                            else o[m].apply o, a
+                            else if o?[m]
+                                o[m].apply o, a
                             
+                            else
+                                _send new Error 'unknown method: '+o+'.'+m
         ##
         ##
         ##           
