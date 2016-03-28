@@ -89,18 +89,8 @@ module.exports =
                 each: (conf, next)=>
 
                     reconn = require('reconnect-core') ()=>
-                        if conf.tls
-                            @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
-                        else
-                            @logger.info 'connecting to gateway:', conf
-
-                        c = @_createConnection conf
-
-                        c.on 'error', (err)=>
-                            @logger.error err
-
-                        d = @_createLocal next
-                        d.pipe(c).pipe d
+                        c = @_createConnection conf, ()=>
+                            @_pipeLocal conf, c, next
 
                         return c
 
@@ -110,13 +100,18 @@ module.exports =
         ##
         ##
         ##
-        _createConnection: (conf)->
+        _createConnection: (conf, fn)->
             if conf is 'remote'
-                shoe @data.route
+                @logger.info 'connecting to url:', @data.route
+                shoe @data.route, fn
+
             else if conf.tls
-                require('tls').connect conf
+                @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
+                require('tls').connect conf, fn
+
             else
-                require('net').connect conf
+                @logger.info 'connecting to gateway:', conf
+                require('net').connect conf, fn
 
         ##
         ##
@@ -142,42 +137,53 @@ module.exports =
                         while parent && !(server = parent.server) && parent.parent
                             parent = parent.parent
 
-                        @_createServerSocket parent.server, handler
+                        @_createServerSocket conf, parent.server, handler
 
                     else if conf.child
 
-                        @_createServerSocket @children[conf.child], handler
+                        @_createServerSocket conf, @children[conf.child], handler
 
                     else if conf.ctx
 
                         @lookup conf.ctx, @identity, (err, ctx)=>
 
-                            @_createServerSocket ctx.server, handler
+                            @_createServerSocket conf, ctx.server, handler
 
                     else if conf.tls
                         require('tls').createServer conf, (c)=>
-                            d = @_createLocal(handler)
-                            c.pipe(d).pipe(c)
+                            #@logger.info c.getPeerCertificate().subject.CN
 
-                            c.on 'error', handler
+                            @_pipeLocal conf, c, handler
 
                         .listen conf.port, conf.host
 
                     else
-                        @_createLocal(handler).listen conf
+                        require('net').createServer (c)=>
+
+                            @_pipeLocal conf, c, handler
+
+                        .listen conf.port, conf.host
 
                     ##
                     next()
+        ##
+        ##
+        ##
+        _pipeLocal: (conf, sock, handler)->
+            local = @_createLocal conf, sock, handler
+
+            sock.pipe(local).pipe(sock)
+
+            sock.on 'error', handler
+            local.on 'error', handler
 
         ##
         ##
         ##
-        _createServerSocket: (server, handler)->
+        _createServerSocket: (conf, server, handler)->
 
             sock = shoe (stream)=>
-                d = @_createLocal handler
-
-                d.pipe(stream).pipe d
+                @_pipeLocal conf, stream, handler
 
             sock.install server, @data.route
 
@@ -186,7 +192,7 @@ module.exports =
         ##
         ##
         ##
-        _createLocal: (fn)->
+        _createLocal: (conf, sock, fn)->
 
             ##
             root = @parent || @
@@ -198,37 +204,42 @@ module.exports =
 
                 conn.on 'remote', (remote)=>
 
-                    if !(child = root.children[remote.id])
-                        child = new floyd.dnode.Remote root
+                    @_authorizeRemote conf, sock, remote, (err)=>
+                        if err
+                            fn err
+                            return sock.end()
 
-                        child.init (id: remote.id, type:'dnode.Remote'), (err)=>
-                            return fn(err) if err
+                        if !(child = root.children[remote.id])
+                            child = new floyd.dnode.Remote root
 
-                        child._useProxy remote
+                            child.init (id: remote.id, type:'dnode.Remote'), (err)=>
+                                return fn(err) if err
 
-                        root.children.push child
+                            child._useProxy remote
 
-                        fn()
+                            root.children.push child
 
-                    else
-                        child._useProxy remote
+                            fn()
 
-                    ##
-                    @_emit 'connected',
-                        id: child.id
+                        else
+                            child._useProxy remote
 
-                    ##
-                    conn.on 'end', ()=>
-                        @_emit 'disconnected',
+                        ##
+                        @_emit 'connected',
                             id: child.id
 
+                        ##
+                        conn.on 'end', ()=>
+                            @_emit 'disconnected',
+                                id: child.id
 
-                    ##
-                    conn.on 'error', (err)=>
 
-                        console.log 'conn error!', err
+                        ##
+                        conn.on 'error', (err)=>
 
-                        fn err
+                            console.log 'conn error!', err
+
+                            fn err
 
 
 
@@ -237,3 +248,67 @@ module.exports =
 
                 lookup: (args...)=>
                     child.lookup.apply child, args
+
+                token: (fn)=>
+                    fn null, conf.token
+
+        ##
+        ##
+        ##
+        _authorizeRemote: (conf, sock, remote, fn)->
+
+                checks = [
+                    (next)=>
+                        if conf.permissions?.__checks
+                            for check in conf.permissions.__checks
+                                do(check)=>
+                                    checks.push (next)=>
+                                        check.apply @, [conf, sock, remote, next]
+
+
+                        next true
+
+                ,
+
+                    (next)=> # custom check function - must callback true to permit!
+                        if typeof (check = conf.permissions) is 'function' || check = conf.permissions?.check
+
+                            check conf, sock, remote, next
+
+                        else next true
+
+                ,
+                    (next)=>
+
+                        if conf.permissions?.token
+                            remote.token (err, token)=>
+                                next token && conf.permissions.token.indexOf(token) isnt -1
+
+                        else next true
+
+                ,
+                    (next)=>
+
+                        if conf.permissions?.tls
+                            data = sock.getPeerCertificate()
+                            for key, list of conf.permissions.tls
+                                val = floyd.tools.objects.resolve key, data
+                                if !val || list.indexOf(val) is -1
+                                    return next false
+
+                            next true
+                        else next true
+
+                ]
+
+                permit = (ok)=>
+                    return fn(new floyd.error.Forbidden @ID) if !ok
+
+                    if check = checks.shift()
+                        check permit
+
+                    else fn()
+
+                # start recursion
+
+                permit true
