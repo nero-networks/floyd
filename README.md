@@ -1,6 +1,6 @@
 # Floyd!
 
-hierarchical app containers - v0.4.3
+hierarchical app containers - v0.5.0
 
 ## Installation
 
@@ -9,7 +9,7 @@ hierarchical app containers - v0.4.3
 Install with [npm](http://github.com/isaacs/npm):
 
     not published yet!
-    
+
 ### git
 
     mkdir ~/projects/
@@ -26,14 +26,13 @@ Install with [npm](http://github.com/isaacs/npm):
 
 #### Prepare your System for the git/zip installation
 
-* You'll need the [node](http://nodejs.org/) engine **>= 0.10.0 ** to run floyd.
-  (tested until 0.10.26)
+* You'll need the [node](http://nodejs.org/) engine **>= 4.4.2 ** to run floyd.
 
 * Put a symbolic link to `~/projects/floyd/bin/floyd` into your execution PATH.  
-  I simply symlinked it into `/usr/local/bin` (which is in my $PATH variable)
+  I simply symlinked it into `~/bin` (which is in my $PATH variable)
 
-        cd /usr/local/bin/
-        sudo ln -s ~/projects/floyd/bin/floyd 
+        cd ~/bin
+        sudo ln -s ~/projects/floyd/bin/floyd
 
 * You need a `node_modules` folder somewhere above or within your projects folder  
   with the floyd folder symlinked into.
@@ -48,22 +47,22 @@ Install with [npm](http://github.com/isaacs/npm):
 
         cd ~/projects/floyd
         floyd build
-        
 
-### Floyd`s Hello World 
 
-* change to the `~/projects/floyd/examples/basics` directory 
-  and type **floyd**. this opens the app controll interface: 
-        
-          
+### Floyd`s Hello World
+
+* change to the `~/projects/floyd/examples/basics` directory
+  and type **floyd**. this opens the app controll interface:
+
+
                                           _/_/_/_/  _/                            _/
-        [S]tart         [H]elp           _/        _/    _/_/    _/    _/    _/_/_/ 
+        [S]tart         [H]elp           _/        _/    _/_/    _/    _/    _/_/_/
         [K]ill          [C]lear         _/_/_/    _/  _/    _/  _/    _/  _/    _/  
         [B]uild         [D]ump log     _/        _/  _/    _/  _/    _/  _/    _/   
         [U]pdate                      _/        _/    _/_/      _/_/_/    _/_/_/    
                         [Q]uit           (c) 2012 Nero Networks    _/               
                                                                 _/_/
-    
+
 * then press `s` and you'll get something like this:
 
         starting basics
@@ -79,26 +78,26 @@ Install with [npm](http://github.com/isaacs/npm):
         2014-04-04 12:09:38.781 - status changed to shutdown
         2014-04-04 12:09:38.782 - status changed to stopped
         2014-04-04 12:09:38.783 - status changed to destroyed
-    
-    
+
+
 ### My First TestApp
 
 * Create a new floyd project by executing
-    
+
         floyd create testapp  <-- choose any name you like
-    
+
 * Change to the new created directory
-    
+
         cd testapp            <-- use your choosen name!
 
 * Copy the file app.coffee from the basics example
-    
+
         cp ~/projects/floyd/examples/basics/app.coffee .
 
 * Open the app interface
-    
+
         floyd                 <-- opens the app interface
-    
+
 * Start the app by pressing the `s`-key
 
 

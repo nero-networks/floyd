@@ -1,5 +1,6 @@
 
-__OPTIONS = ['sort', 'skip']
+__OPTIONS = ['sort', 'skip', 'limit']
+__NUMOPTIONS = ['skip', 'limit']
 
 module.exports =
 
@@ -9,41 +10,45 @@ module.exports =
     class MongoStore extends floyd.stores.Store
 
         init: (options, fn)->
-            mongoq = require 'mongoq'
+            mongodb = require 'mongodb'
 
-            @_db = mongoq 'mongodb://'+(options.host || 'localhost')+'/'+options.name, (options.options || w:1)
-            @_client = @_db.collection options.collection
+            @_options = options.options || w:1
 
-            if (list = options.index)
-                if !floyd.tools.objects.isArray list
-                    list = [list]
+            mongodb.MongoClient.connect 'mongodb://'+(options.host || 'localhost')+'/'+options.name, (err, db)=>
+                return fn(err) if err
+                @_db = db
+                @_client = @_db.collection options.collection
 
-                for idx in list
+                if (list = options.index)
+                    if !floyd.tools.objects.isArray list
+                        list = [list]
 
-                    if typeof idx is 'string'
-                        name = idx
-                        idx = {}
-                        idx[name] = 1
+                    for idx in list
 
-                    @_client.ensureIndex idx, []
+                        if typeof idx is 'string'
+                            name = idx
+                            idx = {}
+                            idx[name] = 1
 
-            fn()
+                        @_client.ensureIndex idx, @_options
+
+                fn()
 
         close: (fn)->
             @_db?.close()
             fn?()
 
         get: (key, fn)->
-            @_client.findOne _id:key.toString(), fn
+            @_client.findOne {_id:key}, fn
 
 
         set: (key, item, fn)->
             item._id = key.toString()
-            @_client.save item, fn
+            @_client.save item, @_options, fn
 
 
         remove: (key, fn)->
-            @_client.remove _id:key.toString(), fn
+            @_client.remove _id:key.toString(), @_options, fn
 
 
         has: (key, fn)->
@@ -51,11 +56,11 @@ module.exports =
                 fn err, !!exists
 
         length: (fn)->
-            @_client.count fn
+            @_client.count {}, null, fn
 
 
         clear: (fn)->
-            @_client.remove fn
+            @_client.deleteMany {}, @_options, fn
 
 
         cleanup: (fn)->
@@ -65,18 +70,22 @@ module.exports =
 
 
         distinct: (field, query, fn)->
-            @_client.distinct field, query, fn
+            @_client.distinct field, query, null, fn
 
         find: (query, options, fields, fn)->
 
             #console.log 'query', query, options, fields
             q = @_client.find(query)
             q.count (err, size)=>
-                return fn(err) if err
+                return fn?(err) if err
                 #console.log 'size', size
                 options ?= {}
 
-                options.skip = options.offset
+                options.skip ?= options.offset || 0
+
+                for method in __NUMOPTIONS
+                    if q[method] && typeof q[method] isnt 'number'
+                        q[method] = floyd.tools.numbers.parse q[method]
 
                 for method in __OPTIONS
                     if options[method] && q[method]
@@ -86,10 +95,10 @@ module.exports =
                     if __OPTIONS.indexOf(method) is -1 && q[method]
                         q[method] value
 
-                options.size = size
-
-                setImmediate ()=>
-                    q.toArray (err, items)=>
-                        return fn(err) if err
+                if fn
+                    options.size = size
+                    setImmediate ()=>
+                        q.toArray (err, items)=>
+                            return fn(err) if err
                             setImmediate ()=>
                                 fn null, @_filterFields(items, fields), options, fields

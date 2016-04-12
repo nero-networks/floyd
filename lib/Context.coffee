@@ -40,7 +40,6 @@ module.exports =
         init: (config={}, done)->
 
             config = @configure config
-
             @id = config.id
 
             @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
@@ -66,7 +65,7 @@ module.exports =
 
             @_changeStatus 'configured'
 
-            process.nextTick ()=>
+            setImmediate ()=>
                 @_process config.children,
 
                     each: (child, next)=>

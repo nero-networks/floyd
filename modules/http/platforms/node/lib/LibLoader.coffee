@@ -2,13 +2,31 @@
 coffee = require 'coffee-script'
 browserify = require 'browserify'
 
-__PACKAGE =  'require.define("floyd", function (require, module, exports, __dirname, __filename)'
-__PACKAGE += ' {var __modules = {};%svar floyd = {system:{version:"%s"},AbstractPlatform: __modules["floyd.AbstractPlatform"]()};'
-__PACKAGE += ' module.exports = floyd = new (__modules["floyd.Platform"]())(floyd);floyd.boot(__modules);});\n'
+__PACKAGE =  '''
+/* floyd core */
+var __modules = {};
 
-__MODULE =   '__modules["%s"] = function %s() {var exports, module = {exports:exports={}};%s;return module.exports;};'
-__INCLUDE =  'module.exports = (function() {%s})();\n'
-__CLOSURE =  '(function() {%s})();\n'
+%s
+
+var floyd = {
+    system:{
+        version:"%s"
+    },
+    AbstractPlatform: __modules["floyd.AbstractPlatform"]()
+};
+
+module.exports = floyd = new (__modules["floyd.Platform"]())(floyd);
+
+floyd.boot(__modules);
+'''
+
+__MODULE =   '''    __modules["%s"] = function() {
+    var exports, module = { exports: exports={} };
+
+%s;
+
+    return module.exports;
+};'''
 
 module.exports =
 
@@ -46,10 +64,6 @@ module.exports =
         init: (config, done)->
             super config, (err)=>
                 return done(err) if err
-                debug = @data.find('debug')
-
-                ## set the uglify-js minifier as the default filter except for debug mode
-                @data.filter ?= (if !debug then 'uglify-js' else '')
 
                 @_started = new Date()
 
@@ -106,6 +120,8 @@ module.exports =
                 if !@__cache.init && ( @__cache.init = true ) # --> equals false once then never again
                     try
                         @_compile (err, lib)=>
+                            if err
+                                return fn(err)
 
                             ## populate @__cache.data to be delivered
                             ## to future requests from now on... (runtime-memcached)
@@ -116,6 +132,7 @@ module.exports =
                                 @__cache.waiting.pop() null, lib
 
                     catch err
+                        console.log 'compile error'
                         fn err
 
 
@@ -127,9 +144,6 @@ module.exports =
         _compile: (fn)->
 
             debug = @data.find 'debug'
-
-            if @data.filter
-                filter = require @data.filter
 
             ## reads file content and compiles coffee-script on-the-fly
             ##
@@ -145,39 +159,6 @@ module.exports =
 
 
 
-            ## build browserify
-
-            handler = browserify
-                filter: filter
-                path: process.env.NODE_PATH
-                cache: floyd.tools.files.tmp 'browserify.cache'
-
-            ##
-            ## include node_modules
-            for module in @data.node_modules
-
-                handler.require module
-
-            ##
-            ## include non-node modules
-
-            for name, file of @data.includes
-                #console.log 'include file %s as "%s"', file, name
-
-                try
-                    handler.include null, name, floyd.tools.strings.sprintf __INCLUDE, __read__(file)
-
-                catch e
-                    console.error 'lib include error', e
-
-            ##
-            ## aliases
-
-            for alias, module of @data.aliases
-
-                handler.include null, alias, 'module.exports = require("'+module+'")'
-
-            ##
             ##
             bundle = floyd.tools.strings.sprintf '/*!\n * floyd %s | (c) 2012 - https://github.com/nero-networks/floyd/LICENSE | compiled on %s\n */\n', floyd.system.version, new Date()
 
@@ -195,9 +176,51 @@ module.exports =
             if debug
                 bundle += '\n/* floyd lib - browserify bundle */\n\n'
 
-            bundle += handler.bundle() + '\n'
 
+            ## build browserify
 
+            handler = browserify
+                path: process.env.NODE_PATH
+                cache: floyd.tools.files.tmp 'browserify.cache'
+
+            ##
+            ## include node_modules
+            for module in @data.node_modules
+                handler.require module,
+                    expose: module
+
+            ##
+            ## include non-node modules
+            for name, file of @data.includes
+                handler.require file,
+                    expose: name
+
+            @_buildFloyd __read__, (err, tmpfile)=>
+
+                handler.require tmpfile,
+                    expose: 'floyd'
+
+                handler.bundle (err, lib)=>
+                    return fn(err) if err
+
+                    bundle += lib + '\n'
+
+                    ##
+                    ## append unprocessed files
+                    ##
+                    for file in @data.append
+                        if debug
+                            bundle += '\n/* ' + file + ' */\n'
+
+                        bundle += 'try {\n'+__read__(file) + '\n} catch(e) {'+(if @data.showErrors then 'console.error(e);' else '')+'};\n'
+
+                    ##
+                    fn null, bundle
+
+        ##
+        ##
+        ##
+        _buildFloyd: (__read__, fn)->
             ## build floyd-satellite-lib
 
             ##
@@ -219,14 +242,9 @@ module.exports =
                 ##
                 module: _module = (target, name, path, pkg)=>
                     try
-                        _file = __read__(require.resolve path)
+                        _file = '\n' + __read__(require.resolve path) + '\n'
 
-                        if filter
-                            _file = filter _file
-                        else
-                            _file = '\n' + _file + '\n'
-
-                        _code += floyd.tools.strings.sprintf __MODULE, pkg, name, _file, pkg
+                        _code += floyd.tools.strings.sprintf __MODULE, pkg, _file
 
                     catch e
                         if !e.message.match 'Cannot find module' # e.code isnt 'MODULE_NOT_FOUND' ## > node 0.7
@@ -240,20 +258,8 @@ module.exports =
 
             _code = floyd.tools.strings.sprintf __PACKAGE, _code, floyd.system.version
 
-            ##
-            if debug
-                bundle += '\n/* floyd core */\n'
+            tmpfile = files.tmp('browser.js')
+            files.write tmpfile, _code, (err)=>
+                return fn(err) if err
 
-            bundle += _code
-
-            ##
-            ## append unprocessed files
-            ##
-            for file in @data.append
-                if debug
-                    bundle += '\n/* ' + file + ' */\n'
-
-                bundle += 'try {\n'+__read__(file) + '\n} catch(e) {'+(if @data.showErrors then 'console.error(e);' else '')+'};\n'
-
-            ##
-            fn null, bundle
+                fn null, tmpfile

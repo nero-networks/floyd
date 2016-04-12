@@ -89,7 +89,7 @@ module.exports =
 
 
         distinct: (field, query, fn)->
-            throw new Error 'unimplemented'
+            fn new Error 'unimplemented'
 
         find: (query, options, fields, fn)->
             _items = floyd.tools.objects.values(@_memory)

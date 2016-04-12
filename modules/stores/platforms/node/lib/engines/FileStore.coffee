@@ -18,9 +18,9 @@ module.exports =
                 if !floyd.tools.files.exists _dir
                     floyd.tools.files.mkdir _dir, 0o700
 
-                dataFile = floyd.tools.files.path.join _dir, options.name+'.data'
-                if floyd.tools.files.exists dataFile
-                    @_memory = JSON.parse floyd.tools.files.read dataFile, 'utf-8',
+                @_dataFile = floyd.tools.files.path.join _dir, options.name+'.data'
+                if floyd.tools.files.exists @_dataFile
+                    @_memory = JSON.parse floyd.tools.files.read @_dataFile, 'utf-8',
 
                 done()
 
@@ -32,6 +32,6 @@ module.exports =
             if !@_options.readonly
                 indent = if @_options.find('debug') then 4 else 0
 
-                floyd.tools.files.write dataFile, JSON.stringify @_memory, null, indent
+                floyd.tools.files.write @_dataFile, JSON.stringify @_memory, null, indent
 
             super done
