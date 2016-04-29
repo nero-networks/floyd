@@ -30,6 +30,7 @@ module.exports =
             config = super new floyd.Config
 
                 data:
+                    class: config.class
                     selector: undefined
 
                     elements:

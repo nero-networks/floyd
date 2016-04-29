@@ -13,27 +13,35 @@ module.exports =
                     _active: null
 
                 template: ->
-                    section class:'Content Tabs', ->
+                    div class:'Tabs', ->
 
                         ul class:'bar'
-                        
+
+                        div class:'panels'
+
                 widget: ->
-                    attr = {}
+                    attr =
+                        class: @id
                     if @_class
-                        attr = class: @_class
+                        attr.class += @_class
+                    if  @title
+                        attr.title = @title
 
                     li attr, ->
                         a href:'#'+@id, @text
-                    
-                
+
+                events:
+                    display: ->
+                        @_wireTabs()
+
             , config
 
             @_tabs = config.tabs
             @_panels = config.panels
 
             return config
-        
-        
+
+
         ##
         ##
         ##
@@ -42,63 +50,73 @@ module.exports =
                 for key, val of @_tabs
                     if key.charAt(0) isnt '_'
                         _order.push key
-            
+
+            @_tabs._active ?= _order[0]
+
             @identity.data (err, user)=>
                 _hasRole = (roles)=>
                     for role in roles
                         if user?.roles?.indexOf?(role) != -1
-                            return true 
-                
+                            return true
+
                 tabs = []
                 for tab in _order
-                    data = @_tabs[tab]
+                    if !(data = @_tabs[tab])
+                        data = floyd.tools.strings.capitalize tab
+
                     if !data.roles || _hasRole data.roles
                         tabs.push _tab =
                             id: tab
                             text: data.text || data
+                            title: data.title
                             _class: data.class || ''
-                
+
                         if tab is @_tabs._active
                             _tab._class = ('active '+_tab._class).trim()
-                
+
                 fn null, tabs,
                     offset: offset
                     limit: limit
                     size: tabs.length
-        
+
         ##
         ##
         ##
-        wire: (done)->
-            super (err)=>
-                return done(err) if err
-                
-                tabs = @__root.parent().find('ul.bar a')
+        _wireTabs: ()->
+            tabs = @_ul.find('>li >a')
 
-                tabs.click (e)=>
-                    tabs.parent().removeAttr 'class'
-                    link = $(e.currentTarget)
-                    link.parent().addClass 'active'
+            tabs.click (e)=>
+                link = $(e.currentTarget)
 
-                    @_showPanel link.attr('href').replace '#', ''
+                @showPanel link.attr('href').substr 1
 
-                    return false;
+                return false;
 
-                @_showPanel @_tabs._active
+            @showPanel @_tabs._active
 
-                done()
 
         ##
         ##
         ##
         _showPanel: (id)->
-            @find('.panel.active').removeClass('active')
+            @logger.warning '_showPanel is deprecated! use showPanel instead...'
+            @showPanel id
+
+        ##
+        ##
+        ##
+        showPanel: (id)->
+            @find('.panel.active').removeClass 'active'
+            @_ul.find('> .active').removeClass 'active'
+            @_ul.find('> .'+id).addClass 'active'
+
+            @_tabs._active = id
 
             _emit = ()=>
                 @_emit 'change',
                     active: id
 
-            if (panel = @find '.'+id).length
+            if (panel = @find '.panel.'+id).length
 
                 panel.addClass('active')
                 _emit()
@@ -113,13 +131,14 @@ module.exports =
                 config = new floyd.Config
                     type: 'gui.ViewContext'
                     data:
+                        'parent-selector':'.panels'
                         class: 'panel'
                         active: id
 
                 , @_panels._config ,config
-                
+
                 config.id ?= id
-                
+
                 config.data.class += ' active '+id
 
                 @_createChild config, (err)=>

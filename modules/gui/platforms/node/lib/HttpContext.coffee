@@ -105,7 +105,7 @@ module.exports =
         ##
         _processContent: (req, res, content, fn)->
 
-            if @data.no_processing
+            if @data.find 'no_processing'
                 return fn null, content
 
             ##

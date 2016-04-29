@@ -25,10 +25,12 @@ module.exports =
                         $ @find('ul')[0]
 
                 content: ->
+                    if @data.headline
+                        h2 @data.headline
                     ul()
 
             , config
-            
+
             if config.browse
 
                 config.children.push new floyd.Config
@@ -38,54 +40,54 @@ module.exports =
                     data:
                         search: config.data?.search
                         selector: '> div.browse'
-                    
+
                     events:
                         browse: (e)->
                             @parent._loadData e.offset, e.limit, (err, items, data)=>
                                 return done(err) if err
                                 @parent._display items, data
-                    
+
                     booted: ->
                         @parent.on 'display', (e)=>
                             @_display e.items, e.data
-                        
-                        
+
+
                 , config.browse
 
             @_widget = floyd.tools.gui.ck config.widget
 
             return config
 
-        
+
         ##
         boot: (done)->
             super (err)=>
                 return done(err) if err
-                
+
                 if typeof (_sel = @data.listSelector) is 'function'
                     @_ul = _sel.apply @, []
                 else
                     @_ul = @find _sel
-                
+
                 done()
-        
-        ##        
+
+        ##
         start: (done)->
             super (err)=>
                 return done(err) if err
-                
+
                 if !@_ul.children().length
                     @_reload done
 
                 else done()
 
-        
+
         ##
         _reload: (done)->
             if @data.search
                 query = if location.search then qs.parse location.search.substr 1 else {}
                 @data.offset = parseInt(query[@data.search] ?= '0') * @data.limit
-                
+
             @_loadData @data.offset, @data.limit, (err, items, data)=>
                 return done(err) if err
                 @_display items, data, done
@@ -93,16 +95,16 @@ module.exports =
 
 
         _loadData: (offset, limit, fn)->
-            
+
             if @data.loadData
-                
+
                 @_getBackend (err, ctx)=>
                     return fn(err) if err
-                    
+
                     ctx[@data.loadData] offset, limit, fn
-                
+
             else
-        
+
                 items = []
 
                 if (_items = @data.items)
@@ -130,9 +132,9 @@ module.exports =
             if @data.key
                 items = floyd.tools.objects.resolve @data.key, items, false
 
-            
+
             @_emit 'before:display'
-            
+
             @_ul.html ''
             @_items = items
             @_elements = []
@@ -151,7 +153,7 @@ module.exports =
 
                 done: (err)=>
                     return fn(err) if err
-                    
+
                     @_emit 'display',
                         items: items
                         data: data
@@ -164,8 +166,8 @@ module.exports =
             if !floyd.tools.objects.isObject item
                 item =
                     text: item
-                
+
             if @format
                 item.text = @format item.text
-                
+
             super item, fn
