@@ -5,11 +5,18 @@ module.exports =
     ## @class floyd.stores.Context
     ##
     class StoreContext extends floyd.Context
-        
+
+        ##
+        configure: (config)->
+            super new floyd.Config
+                permissions: false
+            , config
+
+
         init: (config, done)->
             super config, (err)=>
                 return done(err) if err
-        
+
                 # instantiate store engine
                 if (type = @data.type || 'Store') is 'Store'
                     @_engine = new floyd.stores.Store()
@@ -18,29 +25,29 @@ module.exports =
 
                 else
                     type = floyd.tools.strings.capitalize(type)+'Store'
-                
+
                     if !floyd.stores.engines[type]
                         return @logger.error new floyd.error.Exception 'Invalid store type '+type
 
                     @_engine = new floyd.stores.engines[type]()
-            
-                @_settings = 
+
+                @_settings =
                     type: type
                     pk: @data.pk||'id'
-                    
+
                 done()
-            
-            
+
+
         ##
         ##
         ##
         boot: (fn)->
             super (err)=>
                 return fn(err) if err
-                            
+
                 @_engine.init @data, fn
 
-                
+
 
         ##
         ##
@@ -50,11 +57,11 @@ module.exports =
                 if @_engine
                     @_engine.persist ()=>
                         @_engine.close?()
-                        
+
                         setImmediate(fn) if fn
-            
+
                 fn? err if err
-            
+
         ##
         ## Get key, then callback fn(err, val).
         ##
@@ -109,15 +116,15 @@ module.exports =
         ##
         each: (fn, done)->
             @_engine.each fn, done
-        
-        
+
+
         ##
         ##
         ##
         keys: (fn)->
             @_engine.keys fn
-            
-            
+
+
         ##
         ##
         ##
@@ -125,9 +132,9 @@ module.exports =
             if typeof query is 'function'
                 fn = query
                 query = null
-                
+
             @_engine.distinct(field, query, fn)
-            
+
         ##
         ## Find all entities where its field values matching corresponding query,
         ## then callback fn(err, entities).
@@ -136,15 +143,15 @@ module.exports =
             if typeof options is 'function'
                 fn ?= options
                 options = {}
-                
+
             if typeof fields is 'function'
                 fn ?= fields
                 fields = null
-            
+
             options.limit = null if options.limit is -1
-            
+
             @_find query, options, fields, fn
-            
+
         ##
         ##
         _find: (query, options, fields, fn)->
