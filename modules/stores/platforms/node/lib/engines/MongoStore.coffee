@@ -9,12 +9,15 @@ module.exports =
     ##
     class MongoStore extends floyd.stores.Store
 
-        init: (options, fn)->
+        _connect: (options, fn)->
             mongodb = require 'mongodb'
+            mongodb.MongoClient.connect 'mongodb://'+(options.host || 'localhost')+'/'+options.name, fn
+
+        init: (options, fn)->
 
             @_options = options.options || w:1
 
-            mongodb.MongoClient.connect 'mongodb://'+(options.host || 'localhost')+'/'+options.name, (err, db)=>
+            @_connect options, (err, db)=>
                 return fn(err) if err
                 @_db = db
                 @_client = @_db.collection options.collection
@@ -78,10 +81,14 @@ module.exports =
             q = @_client.find(query)
             q.count (err, size)=>
                 return fn?(err) if err
+
                 #console.log 'size', size
                 options ?= {}
-
                 options.skip ?= options.offset || 0
+                options.size = size
+
+                if !size
+                    return fn null, [], options, fields
 
                 for method in __NUMOPTIONS
                     if q[method] && typeof q[method] isnt 'number'
@@ -96,7 +103,6 @@ module.exports =
                         q[method] value
 
                 if fn
-                    options.size = size
                     setImmediate ()=>
                         q.toArray (err, items)=>
                             return fn(err) if err
