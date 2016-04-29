@@ -51,7 +51,7 @@ module.exports =
 
             @logger = @_createLogger @ID
 
-            if @data.permissions
+            if @data.permissions || @data.permissions is false
                 @logger.warning '@data.permissions is deprecated use config.permissions instead'
                 config.permissions = @data.permissions
 
