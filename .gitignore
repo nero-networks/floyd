@@ -15,6 +15,7 @@ examples/dnode-cluster/workers/*/.floyd/sessions-store.json
 examples/dnode-cluster/workers/*/.app.js
 
 .project
+.floyd
 
 node_modules/
 
