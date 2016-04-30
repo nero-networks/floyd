@@ -4,7 +4,7 @@
 ## TODO implement as floyd app --> ./bin/floyd.sh + ./bin/floyd.bat
 ##
 
-## read .floyd/env 
+## read .floyd/env
 test -e .floyd/env && . .floyd/env
 
 USER=`whoami`
@@ -23,7 +23,7 @@ FLOYD_ROOT="$( cd -P "$( dirname "$SOURCE" )"; cd .. && pwd -P )"
 ##
 WORKDIR=$( pwd -P )
 
-test $WORKDIR == $FLOYD_ROOT && _lib=true 
+test $WORKDIR == $FLOYD_ROOT && _lib=true
 
 ##
 APPNAME=$(basename $WORKDIR)
@@ -40,10 +40,10 @@ NODE_PATH="$WORKDIR:$WORKDIR/node_modules:$FLOYD_ROOT:$FLOYD_ROOT/node_modules"
 ##
 if ! [ $_lib ]
 then
-    if ! [ -x .floyd ] && [ "$1" != "create" ] 
+    if ! [ -x .floyd ] && [ "$1" != "create" ]
     then
         echo -e "\033[0;0;1mFATAL\033[m: \033[0;31m.floyd not found in working directory!\033[m exiting..."
-        exit 1		
+        exit 1
     fi
 fi
 
@@ -63,27 +63,27 @@ PID=`check`
 ##
 ##
 function create_app() {
-    
+
     test $USER == "root" && echo -e "\033[0;0;1mWARNING\033[m: \033[0;31mCreating the app as root is not recomended\033[m"
-    
+
     if [ $1 ]
     then
         test -x $1 || mkdir $1
         cd $1
-        
+
     fi
-    
+
     echo creating .floyd
-    
+
     test -x .floyd || mkdir .floyd
-    
+
     if ! [ -x .floyd/logs ]
     then
         mkdir .floyd/tmp
         mkdir .floyd/logs
         touch .floyd/logs/stdout.log
     fi
-    
+
     test -e .floyd/index.js || echo -e "\nrequire('floyd').init();\n" > .floyd/index.js
 
 }
@@ -93,16 +93,21 @@ function create_app() {
 ##
 ##
 function start_app() {
-    
+
     if [ $(check) ]
     then
         echo already running @ pid:$PID
-                
-    else			
-    
-        NODE_PATH=$NODE_PATH /usr/bin/setsid $CMD $@ >> .floyd/logs/stdout.log 2>&1 &
+
+    else
+        if [ -x /usr/bin/setsid ]
+        then
+            SETSID=/usr/bin/setsid
+        else
+            SETSID=/usr/local/bin/setsid
+        fi
+        NODE_PATH=$NODE_PATH $SETSID $CMD $@ >> .floyd/logs/stdout.log 2>&1 &
         disown $!
-        
+
     fi
 
 }
@@ -112,31 +117,31 @@ function start_app() {
 ##
 ##
 function build_app() {
-    
-    
+
+
     test -e $WORKDIR/package.json && npm i
-    
+
     if ! [ $_lib ]
-    then	
+    then
         test -x .floyd/logs || mkdir -p .floyd/logs ./floyd/tmp
     fi
-    
+
     for file in $(find $WORKDIR -type f -path '*node_modules' -prune -o -name floyd-build.*)
     do
         dir=$(dirname $file)
-        
+
         test -x $file || chmod +x $file
-        
-        if [ $dir != $WORKDIR ]	
+
+        if [ $dir != $WORKDIR ]
         then
             $file ./${dir#$WORKDIR/}
         else
             $file ./
         fi
     done
-    
+
     test "$1" != "-q" && echo done building $APPNAME
-    
+
 }
 
 
@@ -149,9 +154,9 @@ function update_app() {
     then
 
         npm update
-        
+
     fi
-    
+
     test "$1" != "-q" && echo done updating $APPNAME
 }
 
@@ -170,15 +175,15 @@ function cls() {
 ##
 _format="%-7s%-9s%10s%10s   %s\n"
 function show_running() {
-    
+
     now=$(date -d "00:00" "+%s")
-    
+
     echo running floyd processes on `date`
-    
+
     printf "$_format" PID owner started "cpu time" "app path"
-     
+
     ps aux|grep "/\.floyd"|grep -v grep|awk '{print $2 " " $1 " " $9 " " $10 " " $12}' \
-    |sed 's/\/\.floyd//'|(while read line; do		
+    |sed 's/\/\.floyd//'|(while read line; do
         printf "$_format" $line
     done)
 
@@ -200,7 +205,7 @@ function cleanup() {
 ##
 ##
 ##
-loop_delay=5	
+loop_delay=5
 
 function stop_refresh_loop() {
     test $loop_pid && kill $loop_pid > /dev/null 2>&1 && wait $loop_pid 2> /dev/null
@@ -212,23 +217,23 @@ function start_refresh_loop() {
     (loops=0; loop=true; while $loop
     do
         loops=`expr $loops + 1`
-        
+
         if [ $loops -gt 100 ]
-        then 
+        then
             loop=false
             echo "stopped refreshing after `expr $loops - 1` loops"
-            
+
         else
             cls
             echo "refreshing every $loop_delay seconds"
             show_running
             sleep $loop_delay
-            
+
         fi
-        
-        
+
+
     done) &
-    
+
     loop_pid=$!
     trap 'cleanup' EXIT
 
@@ -236,57 +241,57 @@ function start_refresh_loop() {
 
 
 ##
-## TODO: suppress Ctrl-c is killing re[S]tarted processes. 
+## TODO: suppress Ctrl-c is killing re[S]tarted processes.
 ##
 function log_viewer() {
     clear
-    
+
 
     if ! [ $_lib ]
     then
-        show_help 
+        show_help
 
-        PID=$(check) 
+        PID=$(check)
         if [ $PID ]
         then
             echo "floyd - $APPNAME is running @ pid:$PID"
         else
             echo "floyd - $APPNAME is not running"
         fi
-    
+
         ##
         tail -F -n1 .floyd/logs/stdout.log 2>/dev/null &
-        
+
         log_pid=$!
         trap 'cleanup' EXIT
-    
+
     else
-    
+
         show_help
         show_running
-            
+
     fi
-            
+
     ##
     running=true
     while $running
     do
-    
+
         read -n 1 -s cmd
-        
+
         case "$cmd" in
-        
+
             ## unofficial - may be replaced with something usefull
-        
+
             x)
                 running=false
-            ;;	
+            ;;
             n)
                 test -e node_modules && npm list
             ;;
-        
+
             ## official
-            
+
             h)
                 show_help $@
             ;;
@@ -303,10 +308,10 @@ function log_viewer() {
                 running=false
             ;;
             *)
-            
+
                 if ! [ $_lib ]
                 then
-                
+
                     case "$cmd" in
                         d)
                             tail -n500 .floyd/logs/stdout.log
@@ -321,42 +326,42 @@ function log_viewer() {
                         ;;
                     esac
                 else
-                
+
                     case "$cmd" in
                         r)
                             show_running
                         ;;
                         L)
                             stop_refresh_loop
-                            
+
                             if [ $loop_delay == 5 ]
                             then
                                 loop_delay=1
                             else
                                 loop_delay=5
                             fi
-                            
+
                             start_refresh_loop
                         ;;
                         l)
-                            
+
                             if [ $loop_pid ]
-                            then		
+                            then
                                 stop_refresh_loop
                             else
-                                start_refresh_loop						
+                                start_refresh_loop
                             fi
                         ;;
                     esac
-                
-                
-                fi			
-            
-            ;;			
-        esac		
-    
-    done	
-    
+
+
+                fi
+
+            ;;
+        esac
+
+    done
+
 }
 
 
@@ -372,46 +377,46 @@ then
 
 TEMPLATE = """
      _/_/_/_/  _/                            _/
-    _/        _/    _/_/    _/    _/    _/_/_/ 
-   _/_/_/    _/  _/    _/  _/    _/  _/    _/  
-  _/        _/  _/    _/  _/    _/  _/    _/   
- _/        _/    _/_/      _/_/_/    _/_/_/    
-    (c) 2012 Nero Networks    _/               
-                           _/_/              
+    _/        _/    _/_/    _/    _/    _/_/_/
+   _/_/_/    _/  _/    _/  _/    _/  _/    _/
+  _/        _/  _/    _/  _/    _/  _/    _/
+ _/        _/    _/_/      _/_/_/    _/_/_/
+    (c) 2012 Nero Networks    _/
+                           _/_/
 """.split '\n'
 
 ((parts)->
 
     build = (max, pad, tail='')->
-        
-        line = if pad then '   ' else ''		 
-            
-        while (line.length + (parts[0]?.length||0)) < max 
+
+        line = if pad then '   ' else ''
+
+        while (line.length + (parts[0]?.length||0)) < max
             if parts.length
                 part = parts.shift().substr 0, max
             else
                 part = ''
-            
+
             while part.length < pad
                 part += ' '
-                
+
             line += part + ' '
-            
+
         line.substr(0, max) + tail + '\n'
 
-    banner = '                                 '+TEMPLATE[0] + '\n' 
+    banner = '                                 '+TEMPLATE[0] + '\n'
     for i in [1..6]
         banner += build 33, 15, TEMPLATE[i]
-    
+
     banner += '\n'
-      
+
     while parts.length
         banner +=  build 70
 
     console.log banner.trimRight()
-    
-)(args) 
-    
+
+)(args)
+
 EOFCS
     )
 fi
@@ -422,17 +427,17 @@ fi
 ##
 function show_help() {
     echo ""
-    
+
     if ! [ $_lib ]
     then
         ARGS="['[S]tart', '[H]elp', '[K]ill', '[C]lear', '[B]uild', '[D]ump log', '[U]pdate', '', '', '[Q]uit']"
     else
         ARGS="['[B]uild', '[H]elp', '[U]pdate', '[C]lear', '', '[R]efresh', '', '', '', '[Q]uit']"
     fi
-    
+
     $NODE_BINARY << EOFJS
         var args = $ARGS;
-        
+
         $HELP_BANNER_CODE
 EOFJS
 
@@ -443,56 +448,54 @@ EOFJS
 ##
 ##
 case "$1" in
-    
+
     create)
         shift
         create_app $@
-        
+
     ;;
-    
+
     build)
         shift
-        build_app $@		
+        build_app $@
     ;;
-    
+
     update)
         shift
-        update_app $@		
+        update_app $@
     ;;
-    
+
     start)
         shift
         start_app $@
-        
+
     ;;
 
     stop)
         kill $PID > /dev/null 2>&1
-        
+
     ;;
-    
+
     running)
         show_running
     ;;
-    
+
     restart)
         $0 stop
-        
+
         while kill -0 $PID > /dev/null 2>&1
-        do	
+        do
             sleep .3
         done
-        
+
         shift
-        
-        $0 start $@ 
-        
+
+        $0 start $@
+
     ;;
-    
+
     *)
-        log_viewer $@ 
+        log_viewer $@
     ;;
-    
+
 esac
-
-
