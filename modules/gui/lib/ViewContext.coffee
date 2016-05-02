@@ -120,7 +120,6 @@ module.exports =
 
                 ## render root element, append to parent and recurse @_build
                 else
-
                     @_create (err, ele)=>
                         return done(err) if err
 
@@ -131,9 +130,12 @@ module.exports =
 
                                 @_build done, 0
 
-                        else
-                            _sel(@data['parent-selector'] || 'body').append(ele) if ele
+                        else if (__parentNode = _sel(@data['parent-selector'], @parent.__root)).length
+                            __parentNode.append ele
+                            @_build done, 0
 
+                        else
+                            _sel(@data['parent-selector'] || 'body').append ele
                             @_build done, 0
 
             ##

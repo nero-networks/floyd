@@ -23,7 +23,7 @@ module.exports =
                     attr =
                         class: @id
                     if @_class
-                        attr.class += @_class
+                        attr.class += ' '+@_class
                     if  @title
                         attr.title = @title
 
