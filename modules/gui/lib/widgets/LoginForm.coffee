@@ -23,7 +23,7 @@ module.exports =
                 content: ->
                     if @data.logo
                         img src:@data.logo
-                        
+
                     form method:'post', action:'#', class:'gui widgets LoginForm', ->
 
                         if !(user = @identity.login())
@@ -76,18 +76,23 @@ module.exports =
 
                 user = login.find('input[name=user]')
                 pass = login.find('input[name=pass]')
-
+                button = login.find('[name=button]')
                 div = login.find('> div')
 
                 login.on 'submit', ()=>
 
+                    hint.text('')
                     if @identity.login()
 
                         @_getAuthManager().logout (err)=> location.reload()
 
                     else
                         if div.is ':visible'
+                            button.attr 'disabled', true
+                            @__root.addClass 'working'
                             @_getAuthManager().login user.val(), pass.val(), (err)=>
+                                button.attr 'disabled', false
+                                @__root.removeClass 'working'
                                 if err
                                     pass.val ''
                                     hint.addClass('error').text(err.message)
