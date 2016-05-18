@@ -115,6 +115,9 @@ module.exports =
             _emit = ()=>
                 @_emit 'change',
                     active: id
+                for child in @children
+                    child._emit? 'tabs:change',
+                        active: id
 
             if (panel = @find '.panel.'+id).length
 
