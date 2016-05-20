@@ -31,7 +31,7 @@ module.exports = tools =
     ##
     post: (options, data, fn)->
         if typeof data is 'object'
-            data = '?'+qs.stringify data
+            data = qs.stringify data
 
         tools.parseOptions options, (err, options)->
 
@@ -47,6 +47,7 @@ module.exports = tools =
                 tools.readResponse res, fn
 
             req.write data
+
 
     ##
     ##
