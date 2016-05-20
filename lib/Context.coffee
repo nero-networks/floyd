@@ -31,7 +31,7 @@ module.exports =
 
             @_status = []
 
-            @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
+            @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'suspend', 'suspended', 'resume', 'resumed', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
 
 
         ##
@@ -354,15 +354,18 @@ module.exports =
                 ]
 
                 permit = (ok)=>
-                    return fn(new floyd.error.Forbidden @ID+'.'+key) if !ok
+                    if !ok
+                        @logger.warning 'access to %s denied to %s', key, identity.id
+                        return fn new floyd.error.Forbidden @ID+'.'+key
 
                     if check = checks.shift()
                         check permit
 
-                    else fn()
+                    else
+                        @logger.fine 'access to %s granted to %s', key, identity.id
+                        fn()
 
                 # start recursion
-
                 permit true
 
         ##
@@ -430,6 +433,27 @@ module.exports =
             @_init 'start', 'running', done
 
 
+        ##
+        ##
+        ##
+        suspend: (done)->
+            if @_status.indexOf('suspended') is -1
+                @_init 'suspend', 'suspended', done
+
+            else done new Error 'context already suspended'
+
+
+
+        ##
+        ##
+        ##
+        resume: (done)->
+            if @_status.indexOf('suspended') isnt -1
+                @_status.pop()
+                @_init 'resume', 'resumed', done
+
+            else done new Error 'context not suspended'
+
 
         ##
         ## TODO stop procedure documentation
@@ -456,7 +480,7 @@ module.exports =
 
             ## myself
             if name is @id
-                @logger.debug 'found(%s) for %s', @ID, identity.id
+                @logger.fine 'found(%s) for %s', @ID, identity.id
                 return @forIdentity identity, done
 
             ## children
@@ -465,21 +489,21 @@ module.exports =
 
             for child in @children
                 if child.id is base
-                    @logger.debug 'delegate lookup(%s) to child %s for %s', name, child.ID, identity.id
+                    @logger.finest 'delegate lookup(%s) to child %s for %s', name, child.ID, identity.id
                     return child.lookup name, identity, done
 
             ## parent
             if @parent?.lookup
-                @logger.debug 'delegate lookup(%s) to parent %s for %s', name, @parent.ID, identity.id
+                @logger.finer 'delegate lookup(%s) to parent %s for %s', name, @parent.ID, identity.id
                 return @parent.lookup name, identity, done
 
             ## global
             if floyd.__parent?.lookup
-                @logger.debug 'delegate lookup(%s) to global parent for %s', name, identity.id
+                @logger.fine 'delegate lookup(%s) to global parent for %s', name, identity.id
                 return floyd.__parent.lookup name, identity, done
 
             ## not found
-            @logger.debug 'lookup(%s) failed for %s', name, identity.id
+            @logger.fine 'lookup(%s) failed for %s', name, identity.id
             done new Error 'Context not found: '+name
 
 
@@ -491,16 +515,16 @@ module.exports =
         ##
         delegate: (method, args...)->
 
-            #@logger.info 'delegation of method', method, args
+            @logger.fine 'delegation of method', method, args
 
             _parent = @parent
             while _parent && !_parent[method] && _parent.parent
-                #@logger.info 'checking parent', _parent.id
+                @logger.finest 'checking parent', _parent.id
 
                 _parent = _parent.parent
 
             if _parent && _parent[method]
-                #@logger.info 'using parent', _parent.id
+                @logger.finer 'using parent', _parent.id
 
                 try
                     return success: true, result: _parent[method].apply _parent, args
@@ -510,7 +534,7 @@ module.exports =
                     throw err
 
             else
-                #@logger.info 'missed', method
+                @logger.finer 'missed', method
                 return success: false
 
         ##
@@ -529,6 +553,12 @@ module.exports =
 
             logger = new floyd.logger.Logger "#{id} - (#{type})"
 
+            if @parent
+                logger.console = false
+
+            logger.publish = (args)=>
+                @_processLogEntry args
+
             if (level = @data.find 'logger.level')
 
                 logger.level(logger.Level[level.toUpperCase()])
@@ -537,11 +567,22 @@ module.exports =
 
 
         ##
+        ##
+        ##
+        _processLogEntry: (args)=>
+            if @parent
+                @parent._processLogEntry args
+
+            else
+                @logger._console.apply @logger, args
+
+
+        ##
         ## triggers a status change emits status event
         ##
         _changeStatus: (status)->
 
-            if status
+            if status && @_status.indexOf(status) is -1
                 @_status.push status
 
                 @_emit 'before:'+status

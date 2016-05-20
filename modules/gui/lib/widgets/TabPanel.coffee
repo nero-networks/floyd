@@ -106,13 +106,42 @@ module.exports =
         ##
         ##
         showPanel: (id)->
+
+            ## suspend and recurse if active tab present and it is not id
+            if (active = @_tabs._active) && active isnt id && @children[active]
+                @_tabs._active = null
+
+                @logger.debug 'suspending', active
+                return @children[active].suspend (err)=>
+                    return @logger.error(err) if err
+
+                    @showPanel(id)
+
+            #else
+            #    console.log 'not suspending', @_tabs._active, id, !!@children[@_tabs._active]
+
+
+            if !@_tabs._active
+                @_tabs._active = id
+
+                ## resume and recurse if active tab present
+                if @children[id]
+                    @logger.debug 'resuming', id
+                    return @children[id].resume (err)=>
+                        return @logger.error(err) if err
+
+                        @showPanel(id)
+
+            #else
+            #    console.log 'not resuming', @_tabs._active, id, !!@children[id]
+
             @find('.panel.active').removeClass 'active'
             @_ul.find('> .active').removeClass 'active'
             @_ul.find('> .'+id).addClass 'active'
 
-            @_tabs._active = id
-
+            ##
             _emit = ()=>
+
                 @_emit 'change',
                     active: id
                 for child in @children
@@ -120,8 +149,8 @@ module.exports =
                         active: id
 
             if (panel = @find '.panel.'+id).length
-
                 panel.addClass('active')
+
                 _emit()
 
             else
@@ -140,7 +169,7 @@ module.exports =
 
                 , @_panels._config ,config
 
-                config.id ?= id
+                config.id = id
 
                 config.data.class += ' active '+id
 
