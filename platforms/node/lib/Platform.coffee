@@ -185,24 +185,6 @@ module.exports =
                     process.setgid(@system.GID) # GID first ;-)
                     process.setuid(@system.UID)
 
-                    ## EXPERIMENTAL! --> delete the require cache to prevent
-                    ## unprivileged users from reading sensitive data
-                    ## out of previously required module exports.
-
-                    ## I decided to delete everything to be sure at all.
-                    ## I messured the startup time with and without the cache
-                    ## the overhead is about 55 to 60 milliseconds, tollerable in my oppinion
-
-                    #___start = +new Date()
-
-                    for id, mod of require.cache
-                        delete require.cache[id]
-
-                    #ctx.on 'after:running', ->
-                    #	console.log (+new Date()) - ___start, 'millis'
-
-                    ## <-- EXPERIMENTAL
-
                 else if (@system.UID && @system.UID isnt process.getuid()) || (@system.GID && @system.GID isnt process.getgid())
                     ctx.logger.warning 'WARNING: running unprivileged!'
                     ctx.logger.warning '         changing UID/GID to %s/%s is impossible', (@system.UID || @system.GID), (@system.GID || @system.UID)
