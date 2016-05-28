@@ -33,7 +33,7 @@ module.exports =
 
                             items = @parent.parent.find(@data.find 'itemSelector')
 
-                            if @parent.data.type is 'clone'
+                            if @parent.data.displayType is 'clone'
 
                                 clone = @__root.clone()
                                 clone.removeAttr 'id'
