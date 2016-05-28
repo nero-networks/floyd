@@ -1,3 +1,4 @@
+util = require 'util'
 
 module.exports = objects =
 
@@ -33,13 +34,14 @@ module.exports = objects =
 
             return done() if !_iter.length
 
-            if _array
-                each _iter.shift(), next
+            try
+                if _array
+                    each _iter.shift(), next
 
-            else
-                each (key=_iter.shift()), obj[key], next
-
-
+                else
+                    each (key=_iter.shift()), obj[key], next
+            catch e
+                next e
         ##
         if floyd.tools.objects.isArray obj
             _array = true
@@ -214,6 +216,30 @@ module.exports = objects =
         JSON.stringify obj, _handle, indent
 
 
+    ##
+    ## experimental!
+    ##
+    delta: (data, defaults)->
+        return data if !defaults
+        return defaults if !data
+
+        if objects.isArray data
+            delta = []
+            for i in [0..data.length-1]
+                if val = objects.delta data[i], defaults[i]
+                    delta.push val
+
+        else if objects.isObject data
+            delta = {}
+            for key, v of data
+                if val = objects.delta data[key], defaults[key]
+                    delta[key] = val
+
+        else if data isnt defaults
+            delta = data
+
+        return delta
+
 
     ##
     ##
@@ -231,6 +257,7 @@ module.exports = objects =
                     code = code.replace(/[ ]{2,}/g, '').replace(/[\n]/g, '')
                 list.push [ (_id='__FN'+list.length+'NF__'), code ]
                 return _id
+
         , indent
 
         ##
@@ -294,6 +321,11 @@ module.exports = objects =
 
         , indent
 
+    ##
+    ##
+    ##
+    inspect: (obj, opts)->
+        util.inspect obj, opts
 
     ##
     ##
