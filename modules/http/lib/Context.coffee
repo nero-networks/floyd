@@ -39,7 +39,7 @@ module.exports =
         ##
         ##
         ##
-        start: (done)->
+        boot: (done)->
 
             @_router = new floyd.http.Router @ID
 
