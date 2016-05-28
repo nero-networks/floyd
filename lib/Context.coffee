@@ -1,7 +1,7 @@
 
 events = require 'events'
 
-ACTIONS = ['configured', 'booted', 'started', 'running', 'shutdown', 'stopped']
+ACTIONS = ['configured', 'booted', 'started', 'running', 'suspend',  'resume', 'shutdown', 'stopped']
 
 module.exports =
 
@@ -115,8 +115,8 @@ module.exports =
                             else
                                 done null, ctx
 
-                    else
-                        done null, ctx
+                        else
+                            done null, ctx
 
             else
                 done new Error 'Unknown Context-Type: '+config.type
