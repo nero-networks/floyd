@@ -67,6 +67,7 @@ module.exports =
         ##
         ##
         wire: (done)->
+            @_emit 'wiring'
             @wiring?()
 
             done()
