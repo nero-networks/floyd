@@ -115,8 +115,8 @@ module.exports =
                             else
                                 done null, ctx
 
-                        else
-                            done null, ctx
+                    else
+                        done null, ctx
 
             else
                 done new Error 'Unknown Context-Type: '+config.type
