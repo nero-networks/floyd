@@ -17,8 +17,10 @@ module.exports = strings =
 
     ##
     format: (format, parts...)->
+
+        ## some hacks to make sure the format string is really a string ;-)
         if typeof format is 'object'
-            format = floyd.tools.objects.serialize format
+            format = floyd.tools.objects.inspect format
 
         if parts.length == 1 && floyd.tools.objects.isArray parts[0]
             parts = parts[0]
@@ -26,12 +28,13 @@ module.exports = strings =
         if parts.length
             for i in [0..parts.length-1]
                 if typeof parts[i] is 'object'
-                    parts[i] = floyd.tools.objects.serialize parts[i]
+                    parts[i] = floyd.tools.objects.inspect parts[i]
 
-            if format.match
-                match = format.match /%[^%\s]/g
-            else
+            if typeof format isnt 'string'
                 format = format.toString()
+
+            match = format.match /%[^%\s]/g
+
             size = if match then match.length else 0
             length = parts.length - size
 
