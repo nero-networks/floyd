@@ -19,6 +19,12 @@ module.exports = strings =
     format: (format, parts...)->
 
         ## some hacks to make sure the format string is really a string ;-)
+        if !format
+            format = ''
+
+        if format.message && format.stack
+            format = format.stack
+
         if typeof format is 'object'
             format = floyd.tools.objects.inspect format
 
@@ -27,6 +33,10 @@ module.exports = strings =
 
         if parts.length
             for i in [0..parts.length-1]
+
+                if parts[i].message && parts[i].stack
+                    parts[i] = parts[i].stack
+
                 if typeof parts[i] is 'object'
                     parts[i] = floyd.tools.objects.inspect parts[i]
 
