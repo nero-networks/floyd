@@ -46,8 +46,9 @@ module.exports = tools =
 
                 tools.readResponse res, fn
 
-            req.write data
+            req.on 'error', fn
 
+            req.write data
 
     ##
     ##
