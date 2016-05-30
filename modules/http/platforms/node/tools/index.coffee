@@ -20,12 +20,13 @@ module.exports = tools =
     ##
     ##
     get: (options, fn)->
-
         tools.parseOptions options, (err, options)->
 
-            http.get options, (res)->
+            req = http.get options, (res)->
 
                 tools.readResponse res, fn
+
+            req.on 'error', fn
 
     ##
     ##
