@@ -214,23 +214,21 @@ module.exports = files =
 
         inp.pipe(gunzip).pipe(out);
 
+    ##
+    ##
+    normpath: normpath = (dir)->
+
+        if typeof dir is 'object'
+            dir = path.join.apply path, dir
+
+        dir = dir.replace floyd.system.appdir, ''
+
+        path.join floyd.system.appdir, path.normalize(dir)
+
 
 ##
-## private
-##
-
 ##
 ##
-##
-normpath = (dir)->
-
-    if typeof dir is 'object'
-        dir = path.join.apply path, dir
-
-    dir = dir.replace floyd.system.appdir, ''
-
-    path.join floyd.system.appdir, path.normalize(dir)
-
 
 
 ##
