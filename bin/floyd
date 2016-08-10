@@ -368,7 +368,7 @@ function log_viewer() {
 COFFEECMD=`which coffee`
 test -e "$COFFEECMD" || COFFEECMD=$FLOYD_ROOT/node_modules/coffee-script/bin/coffee
 
-if [ "$COFFEECMD" != "" ]
+if [ -x "$COFFEECMD" ] 
 then
     ##
     ## http://patorjk.com/software/taag/#p=display&f=Lean&t=Floyd
