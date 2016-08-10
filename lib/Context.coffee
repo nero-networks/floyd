@@ -31,7 +31,7 @@ module.exports =
 
             @_status = []
 
-            @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'suspend', 'suspended', 'resume', 'resumed', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
+            @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'lookupLocal', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'suspend', 'suspended', 'resume', 'resumed', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
 
 
         ##
@@ -506,6 +506,28 @@ module.exports =
             @logger.fine 'lookup(%s) failed for %s', name, identity.id
             done new Error 'Context not found: '+name
 
+        ##
+        ##
+        ##
+        lookupLocal: (name, fn)->
+            ## myself
+            if name is @id
+                return fn null, @
+
+            ## children
+            if (base = name.split('.').shift()) is @id
+                base = (name = name.substr base.length + 1).split('.').shift()
+
+            for child in @children
+                if child.id is base
+                    return child.lookupLocal name, fn
+
+            ## parent
+            if @parent?.lookup
+                return @parent.lookupLocal name, fn
+
+            ##
+            fn new Error 'Context not found: '+name
 
         ##
         ## delegates a method call down the hirarchy
