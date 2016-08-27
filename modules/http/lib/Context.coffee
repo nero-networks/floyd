@@ -71,7 +71,6 @@ module.exports =
                         @delegate '_addRoute', @data.route, (req, res, next)=>
 
                             req.uri = req.uri.replace @data.route, '/'
-
                             @_handleRequest req, res, next
 
 

@@ -76,9 +76,11 @@ module.exports =
             super done
 
             if !@data.find('debug')
-                process.nextTick ()=>
+                setImmediate ()=>
                     @getCompiledCode (err)=>
-                        @logger.error(err) if err
+                        if err
+                            @logger.info 'Error while precompiling floyd browser lib'
+                            @logger.error(err)
 
         ##
         ##
@@ -86,11 +88,13 @@ module.exports =
         _handleRequest: (req, res, next)->
 
             res.ctype = @data.ctype
-
             req.cache.lastModified @_started, ()=>
 
                 @getCompiledCode (err, data)=>
-                    return next(err) if err
+                    if err
+                        @logger.info 'Error while compiling floyd browser lib'
+                        @logger.error err
+                        return next(err)
 
                     ## activate gzip compression
                     res.compress()
@@ -111,6 +115,9 @@ module.exports =
                 ## return the cached data immediately...
                 fn null, @__cache.data
 
+            else if @__cache.error
+                fn @__cache.error
+
             else
 
                 ## register incomming requests for async delivery
@@ -121,6 +128,7 @@ module.exports =
                     try
                         @_compile (err, lib)=>
                             if err
+                                @__cache.error = err
                                 return fn(err)
 
                             ## populate @__cache.data to be delivered
@@ -186,19 +194,27 @@ module.exports =
             ##
             ## include node_modules
             for module in @data.node_modules
-                handler.require module,
-                    expose: module
+                try
+                    handler.require module,
+                        expose: module
+                catch err
+                    return fn err
 
             ##
             ## include non-node modules
             for name, file of @data.includes
-                handler.require file,
-                    expose: name
+                try
+                    handler.require file,
+                        expose: name
+                catch err
+                    return fn err
 
             @_buildFloyd __read__, (err, tmpfile)=>
-
-                handler.require tmpfile,
-                    expose: 'floyd'
+                try
+                    handler.require tmpfile,
+                        expose: 'floyd'
+                catch err
+                    return fn err
 
                 handler.bundle (err, lib)=>
                     return fn(err) if err
