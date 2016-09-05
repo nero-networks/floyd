@@ -69,6 +69,8 @@ module.exports =
                     ##
                     if @data.route
                         @delegate '_addRoute', @data.route, (req, res, next)=>
+                            if @_status.isSuspended || @_status.isStopped
+                                return next()
 
                             req.uri = req.uri.replace @data.route, '/'
                             @_handleRequest req, res, next
