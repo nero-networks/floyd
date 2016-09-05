@@ -3,6 +3,10 @@ events = require 'events'
 
 ACTIONS = ['configured', 'booted', 'started', 'running', 'suspend',  'resume', 'shutdown', 'stopped']
 
+ACTION_MAPPING =
+    suspend: 'suspended'
+    resume: 'resumed'
+
 module.exports =
 
     ##
@@ -30,6 +34,8 @@ module.exports =
             super null, @parent
 
             @_status = []
+            for action in ACTIONS
+                @_status['is'+floyd.tools.strings.capitalize (ACTION_MAPPING[action] || action)] = false
 
             @_hiddenKeys.push 'data', 'parent', 'children', 'permissions', 'lookup', 'lookupLocal', 'configure', 'init', 'boot', 'booting', 'booted', 'start', 'started', 'running', 'suspend', 'suspended', 'resume', 'resumed', 'shutdown', 'stop', 'stopped', 'error', 'delegate'
 
@@ -450,6 +456,7 @@ module.exports =
         resume: (done)->
             if @_status.indexOf('suspended') isnt -1
                 @_status.pop()
+                @_status.isSuspended = false
                 @_init 'resume', 'resumed', done
 
             else done new Error 'context not suspended'
@@ -606,6 +613,7 @@ module.exports =
 
             if status && @_status.indexOf(status) is -1
                 @_status.push status
+                @_status['is'+floyd.tools.strings.capitalize status] = true
 
                 @_emit 'before:'+status
 
