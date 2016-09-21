@@ -400,10 +400,10 @@ module.exports =
                     if !__first && ( __first = true )
                         if level is 'stop' || level is 'destroy'
                             @_changeStatus? status
-                            done?()
+                            done? err
 
                         else
-                            done?()
+                            done? err
                             @_changeStatus? status
 
                     else if err
