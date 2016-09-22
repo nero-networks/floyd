@@ -101,7 +101,7 @@ module.exports =
                 if typeof selector is 'string'
                     $ selector, parent
 
-                else
+                else if selector
                     selector.apply @, [parent]
 
             ##
@@ -131,7 +131,7 @@ module.exports =
 
                                 @_build done, 0
 
-                        else if (__parentNode = _sel(@data['parent-selector'], @parent.__root)).length
+                        else if (__parentNode = _sel(@data['parent-selector'], @parent.__root))?.length
                             __parentNode.append ele
                             @_build done, 0
 
