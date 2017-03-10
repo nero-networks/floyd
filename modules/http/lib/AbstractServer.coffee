@@ -121,6 +121,13 @@ module.exports =
 
                 done()
 
+        ##
+        ##
+        ##
+        stop: (done)->
+            @server?.close()
+            super done
+
 
         ##
         _loginfo:()->

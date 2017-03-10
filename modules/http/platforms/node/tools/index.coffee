@@ -111,6 +111,11 @@ module.exports = tools =
 
         res.on 'error', fn
 
+    ##
+    ##
+    ##
+    readData: (req, fn)->
+        tools.readResponse req, fn
 
     ##
     ##
