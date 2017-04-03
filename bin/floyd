@@ -13,9 +13,11 @@ USER=`whoami`
 ##
 SOURCE="${BASH_SOURCE[0]}"
 
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
-
-test "${SOURCE:0:2}" == ".."  && SOURCE=$(dirname ${BASH_SOURCE[0]})/$SOURCE
+while [ -h "$SOURCE" ] ; do
+    ref="$(readlink "$SOURCE")";
+    test "${ref:0:2}" == ".." && ref=$(dirname $SOURCE)/$ref
+    SOURCE=$ref
+done
 
 ##
 FLOYD_ROOT="$( cd -P "$( dirname "$SOURCE" )"; cd .. && pwd -P )"
@@ -368,7 +370,7 @@ function log_viewer() {
 COFFEECMD=`which coffee`
 test -e "$COFFEECMD" || COFFEECMD=$FLOYD_ROOT/node_modules/coffee-script/bin/coffee
 
-if [ -x "$COFFEECMD" ] 
+if [ -x "$COFFEECMD" ]
 then
     ##
     ## http://patorjk.com/software/taag/#p=display&f=Lean&t=Floyd
