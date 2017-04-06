@@ -23,7 +23,7 @@ module.exports = tools =
                 if typeof values is 'string'
                     values = [values]
 
-                ele._val values.join ', '
+                ele._val values.join ','
 
     ##
     ##
