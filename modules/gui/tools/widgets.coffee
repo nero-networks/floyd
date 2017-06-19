@@ -12,18 +12,18 @@ module.exports = tools =
                 tools.csv.values ele, val
 
             return ele
-            
+
         values: (ele, values)->
             ele._val ?= ele.val ## only if not already defined
 
             if values is undefined  ## read
-                ele._val().replace('/ /g','').split(',')
+                ele._val().trim().split /[\s]?,[\s]?/
 
             else ## write
                 if typeof values is 'string'
                     values = [values]
 
-                ele._val values.join ','
+                ele._val values.join ', '
 
     ##
     ##
