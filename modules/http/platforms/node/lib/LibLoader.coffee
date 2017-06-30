@@ -1,5 +1,5 @@
 
-coffee = require 'coffee-script'
+coffee = require 'coffeescript'
 browserify = require 'browserify'
 
 __PACKAGE =  '''
@@ -153,7 +153,7 @@ module.exports =
 
             debug = @data.find 'debug'
 
-            ## reads file content and compiles coffee-script on-the-fly
+            ## reads file content and compiles coffeescript on-the-fly
             ##
             __read__ = (path)->
 

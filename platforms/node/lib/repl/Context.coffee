@@ -1,6 +1,6 @@
 
 net = require 'net'
-REPL = require 'coffee-script/repl'
+REPL = require 'coffeescript/repl'
 through = require 'through'
 
 dnode = require 'dnode'

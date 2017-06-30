@@ -35,7 +35,7 @@ module.exports =
         ##
         ##
         ##	
-        _adapt: (ctx, user, done)=>        
+        _adapt: (ctx, user, done)->        
             
             @_process ctx.children, 
                 done: done

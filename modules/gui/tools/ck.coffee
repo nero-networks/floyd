@@ -1,5 +1,5 @@
 
-## coffee-script and fs -less ck clone for callback usage
+## coffeescript and fs -less ck clone for callback usage
 ## no files, no raw coffee.. but it runs in the browser
 ## and it compiles js functions into kup templates
 ##

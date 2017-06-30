@@ -10,16 +10,11 @@ module.exports =
     ##
     class AbstractHttpServer extends floyd.http.Context
 
-        constructor: (parent)->
-            super parent
-
-            @_hiddenKeys.push 'server'
-
-
         ##
         ##
         ## @override
         configure: (config)->
+            @_hiddenKeys.push 'server'
 
             super new floyd.Config
                 data:
@@ -117,7 +112,7 @@ module.exports =
                 ## log a small "i'm alive" message
                 @logger.info '%s is now listening on %s:%s', @_loginfo(), (@data.host||''), @data.port
 
-                @_emit 'listening', @data.port, @data.host
+                @_emit 'listening', port: @data.port, host: @data.host
 
                 done()
 

@@ -5,6 +5,35 @@ module.exports = objects =
     ##
     ##
     ##
+    promisify: (obj, target)->
+        if floyd.tools.objects.isFunction obj
+            return (args...)->
+                new Promise (resolve, reject)->
+                    args.push (err, res...)->
+                        return reject(err) if err
+                        resolve.apply null, res
+                    obj.apply target, args
+
+        else if floyd.tools.objects.isObject obj
+            proxy = {}
+            objects.process obj,
+                next: (key, value)->
+                    if typeof value is 'function'
+                        proxy[key] = objects.promisify value, obj
+                    else
+                        proxy[key] = value
+                        
+                    next()
+
+            return proxy
+
+        else
+            return Promise.resolve obj
+
+
+    ##
+    ##
+    ##
     keys: (obj)->
         return (key for key of obj)
 
@@ -50,10 +79,25 @@ module.exports = objects =
 
         else
             _iter.push key for key, val of obj
+            ## ES6 class prototype methods
+            _iter.push key for key in objects.methods obj
 
         ##
         next()
 
+    ##
+    ##
+    ##
+    methods: (obj, list)->
+        list ?= []
+        if obj
+            proto = Object.getPrototypeOf obj
+            if proto && Object.getPrototypeOf proto
+                for key in Object.getOwnPropertyNames Object.getPrototypeOf obj
+                    if key isnt 'constructor' && list.indexOf(key) is -1
+                        list.push key
+                objects.methods proto, list
+        return list
 
     ##
     ## shuffle the order of an array randomly

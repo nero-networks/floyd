@@ -6,9 +6,9 @@ module.exports =
         ##
         ##
         ##        
-        constructor: (@_config, parent)->
-            super @_config, parent
-            
+        constructor: (_config, parent)->
+            super _config, parent
+            @_config = _config
             @__store = @_config.store || '.floyd/sessions-store.json'
                         
             if !floyd.tools.files.exists @__store

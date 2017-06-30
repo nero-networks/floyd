@@ -140,7 +140,7 @@ module.exports =
             ##
             ## extend floyd.system with settings from config
             if config.system
-            	floyd.tools.objects.extend floyd.system, config.system
+                floyd.tools.objects.extend floyd.system, config.system
 
             files = floyd.tools.files
             ## create tmp folder and remove on exit
