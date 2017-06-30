@@ -17,12 +17,12 @@ module.exports = objects =
         else if floyd.tools.objects.isObject obj
             proxy = {}
             objects.process obj,
-                next: (key, value)->
+                each: (key, value, next)->
                     if typeof value is 'function'
                         proxy[key] = objects.promisify value, obj
                     else
                         proxy[key] = value
-                        
+
                     next()
 
             return proxy
