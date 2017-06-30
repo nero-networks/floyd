@@ -61,10 +61,10 @@ module.exports = (id, _manager)->
             manager.removeListener 'destroy:'+id, destroy
 
         floyd.tools.objects.process @,
-            next: (key, value)=>
+            each: (key, value, next)=>
                 @[key] = null
                 next()
-        
+
         emitter.emit 'destroyed'
 
 
