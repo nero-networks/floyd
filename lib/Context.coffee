@@ -160,7 +160,7 @@ module.exports =
 
             # extend context with methods from config. add @method._super for each
             @_process config,
-                next(key, value)=>
+                each: (key, value, next)=>
                     if typeof value is 'function'
 
                         _orig_super = @[key]
