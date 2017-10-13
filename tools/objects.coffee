@@ -573,50 +573,48 @@ _extend = (target, source)->
 
     else if objects.isArray source
 
-        for item in source
+        objects.process source,
+            each: (item, next)->
 
-            if objects.isObject(item)
+                if objects.isObject(item)
 
-                value = null
-                if item.id
-                    for _item in target
-                        if item.id is _item.id
-                            value = _item
-                            break;
-                ## removed this to prevent element merging if id attribute is not present
-                ##else
-                ##    t_index ?= 0
-                ##    if value = target[t_index++]
-                ##
-                ##        while value.id
-                ##            value = target[t_index++]
+                    value = null
+                    if item.id
+                        for _item in target
+                            if item.id is _item.id
+                                value = _item
+                                break;
 
-                if !value
-                    value = if objects.isArray(item) then [] else {}
-                    target.push value
+                    if !value
+                        value = if objects.isArray(item) then [] else {}
+                        target.push value
 
-                _extend value, item
+                    _extend value, item
 
-            else
-                target.push item
-
-    else
-
-        for key, item of source
-            if objects.isObject(item) || objects.isArray(item)
-                if typeof target?[key] isnt typeof item
-                    delete target[key]
-
-                if objects.isBuffer item
-                    target[key] = item
                 else
-                    target[key] ?= if objects.isArray(item) then [] else {}
+                    target.push item
 
-                    _extend target[key], item
+                next()
+                
+    else
+        objects.process source,
+            each: (key, item, next)=>
+                if objects.isObject(item) || objects.isArray(item)
+                    if typeof target?[key] isnt typeof item
+                        delete target[key]
 
-            else
+                    if objects.isBuffer item
+                        target[key] = item
+                    else
+                        target[key] ?= if objects.isArray(item) then [] else {}
 
-                target[key] = item
+                        _extend target[key], item
+
+                else
+
+                    target[key] = item
+
+                next()
 
 ##
 ##
