@@ -482,10 +482,18 @@ module.exports =
         lookup: (name, identity, done)->
             if !done && typeof identity is 'function'
                 done = identity
-                identity = @identity
+                identity = null
+            identity ?= @identity
 
-            if !identity || !identity.id || !identity.token
+            if !identity.id || !identity.token
                 return done new Error '2. parameter is not identity'
+
+            if !done ## recurse promisifyed
+                return new Promise (resolve, reject)=>
+                    @lookup name, identity, (err, ctx)=>
+                        reject(err) if err
+                        resolve floyd.tools.objects.promisify ctx
+            ##
 
             ## myself
             if name is @id
