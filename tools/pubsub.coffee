@@ -29,7 +29,7 @@ class Client
     ##
     ##
     publish: (topic, data, done)->
-        done ?= ()=>
+        done ?= (err)=>
             @_ctx.logger.error(err) if err
 
         @_getBroker (err, broker)=>
