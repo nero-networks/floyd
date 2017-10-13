@@ -155,14 +155,14 @@ module.exports =
 
                             @_pipeLocal conf, c, handler
 
-                        .listen conf.port, conf.host
+                        .listen conf
 
                     else
                         require('net').createServer (c)=>
 
                             @_pipeLocal conf, c, handler
 
-                        .listen conf.port, conf.host
+                        .listen conf
 
                     ##
                     next()

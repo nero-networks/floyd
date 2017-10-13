@@ -51,61 +51,61 @@ module.exports =
                 return done(err) if err
 
                 if date = @data.date then date = new Date date else date = new Date()
-                
+
                 date = floyd.tools.date.reset date, 1
-                
+
                 if $(@find('td')[0]).text()
                     @_currentMonth = date
-                
+
                 @_fill date
-                
+
                 done()
-        
-        
+
+
         ##
         _classString: (str)->
             str.replace /[ ]+/, '.'
-        
+
         ##
         ##
         ##
         wire: (done)->
             super (err)=>
                 return done(err) if err
-                
+
                 @find('.'+@_classString(@data.browse.class)+' >a').click (e)=>
                     date = new Date @_currentMonth
-                    
+
                     date.setMonth date.getMonth() - if $(e.currentTarget).attr('class') is @data.browse.nextClass then -1 else 1
 
                     @_fill date
-                    
+
                     @_emit 'browse',
                         date: new Date @_currentMonth
                         events: @_currentEvents
 
                     return false
-                
+
                 @find('td').click (e)=>
                     td = $(e.currentTarget)
-                    
+
                     @_emit 'select',
                         date: new Date td.data 'date'
                         td: td
-                
-                ##    
+
+                ##
                 done()
-                
-                
+
+
         ##
         ##
         ##
-        _wireEvents: ()->             
+        _wireEvents: ()->
             @_getEvents @_currentMonth, (err, events)=>
                 return @error(err) if err
-                
+
                 @_currentEvents = events
-                
+
                 @find('td').each (i, td)=>
                     td = $(td)
                     date = td.data 'date'
@@ -116,43 +116,43 @@ module.exports =
                         td.data 'event', event
 
                         @_wireEvent td, event
-                        
-                        
+
+
         ##
         ##
         ##
         _wireEvent: (td, event)->
-            
+
             td.addClass 'event'
             if event.title
                 td.attr 'title', event.title
-                        
-                    
+
+
         ##
         ##
         ##
         _getEvents: (month, fn)->
             fn null, {}
-            
-                
-            
-        
+
+
+
+
         ##
         ##
         ##
         _fill: (date, current)->
-            
+
             redraw = @_currentMonth?.getTime() isnt date.getTime()
-            
+
             ## reset the browse-links base var
             @_currentMonth = new Date date ## we make a copy because the original will be modified!
-            
+
             if (current ?= @data.current)
-                current = new Date(current).getTime()            
-            
+                current = new Date(current).getTime()
+
             today = floyd.tools.date.reset new Date()
             now = today.getTime()
-            
+
             @find('.'+@_classString(@data.browse.class)+' .'+@_classString(@data.browse.titleClass)).text (floyd.tools.date.format date, 'MMMM YYYY')
 
             (prev = new Date date).setMonth prev.getMonth() - 1
@@ -160,41 +160,40 @@ module.exports =
 
             prev = prev.getMonth()
             next = next.getMonth()
-            
+
             if (days = date.getDay() - 1) is -1
                 days = 6
-                
+
             date.setDate date.getDate() - days
-            
+
             for cell in @find 'tbody td'
-        
+
                 cell = $(cell).data 'date', time = date.getTime()
-                
+
                 day = date.getDate()
-                
+
                 if redraw
                     cell.removeAttr('class').html('')
-                
+
                     if time is now
                         cell.addClass 'today'
-                
-                    if current && time is current  
+
+                    if current && time is current
                        cell.addClass 'current'
-                
+
                     if date.getMonth() is prev
                         cell.addClass 'prev'
-                    
+
                     if date.getMonth() is next
                         cell.addClass 'next'
-                
+
                     cell.text day
-                
+
                 date.setDate day + 1
-                
+
             if (row = @find('tbody tr').last()).find('td').first().hasClass 'next'
                 row.css display: 'none'
             else
                 row.css display: 'table-row'
-            
+
             @_wireEvents()
-        
