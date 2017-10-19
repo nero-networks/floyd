@@ -2,12 +2,12 @@
     Node.js Platform setup
 */
 
-// link the coffee-script compiler into the require toolchain
+// link the coffeescript compiler into the require toolchain
 
-require('coffee-script/register');
+require('coffeescript/register');
 
 // EXPERIMENTAL coffeescript compiler cache -->
-var CoffeeScript = require('coffee-script'),
+var CoffeeScript = require('coffeescript'),
     fs = require('fs'), path = require('path'),
     cachedir = path.join('.floyd', 'coffeecache'),
     cachedbfile = path.join(cachedir, 'cachedb.json'),        

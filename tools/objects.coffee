@@ -5,6 +5,35 @@ module.exports = objects =
     ##
     ##
     ##
+    promisify: (obj, target)->
+        if floyd.tools.objects.isFunction obj
+            return (args...)->
+                new Promise (resolve, reject)->
+                    args.push (err, res...)->
+                        return reject(err) if err
+                        resolve.apply null, res
+                    obj.apply target, args
+
+        else if floyd.tools.objects.isObject obj
+            proxy = {}
+            objects.process obj,
+                each: (key, value, next)->
+                    if typeof value is 'function'
+                        proxy[key] = objects.promisify value, obj
+                    else
+                        proxy[key] = value
+
+                    next()
+
+            return proxy
+
+        else
+            return Promise.resolve obj
+
+
+    ##
+    ##
+    ##
     keys: (obj)->
         return (key for key of obj)
 
@@ -50,10 +79,25 @@ module.exports = objects =
 
         else
             _iter.push key for key, val of obj
+            ## ES6 class prototype methods
+            _iter.push key for key in objects.methods obj
 
         ##
         next()
 
+    ##
+    ##
+    ##
+    methods: (obj, list)->
+        list ?= []
+        if obj
+            proto = Object.getPrototypeOf obj
+            if proto && Object.getPrototypeOf proto
+                for key in Object.getOwnPropertyNames Object.getPrototypeOf obj
+                    if key isnt 'constructor' && list.indexOf(key) is -1
+                        list.push key
+                objects.methods proto, list
+        return list
 
     ##
     ## shuffle the order of an array randomly
@@ -529,50 +573,48 @@ _extend = (target, source)->
 
     else if objects.isArray source
 
-        for item in source
+        objects.process source,
+            each: (item, next)->
 
-            if objects.isObject(item)
+                if objects.isObject(item)
 
-                value = null
-                if item.id
-                    for _item in target
-                        if item.id is _item.id
-                            value = _item
-                            break;
-                ## removed this to prevent element merging if id attribute is not present
-                ##else
-                ##    t_index ?= 0
-                ##    if value = target[t_index++]
-                ##
-                ##        while value.id
-                ##            value = target[t_index++]
+                    value = null
+                    if item.id
+                        for _item in target
+                            if item.id is _item.id
+                                value = _item
+                                break;
 
-                if !value
-                    value = if objects.isArray(item) then [] else {}
-                    target.push value
+                    if !value
+                        value = if objects.isArray(item) then [] else {}
+                        target.push value
 
-                _extend value, item
+                    _extend value, item
 
-            else
-                target.push item
-
-    else
-
-        for key, item of source
-            if objects.isObject(item) || objects.isArray(item)
-                if typeof target?[key] isnt typeof item
-                    delete target[key]
-
-                if objects.isBuffer item
-                    target[key] = item
                 else
-                    target[key] ?= if objects.isArray(item) then [] else {}
+                    target.push item
 
-                    _extend target[key], item
+                next()
+                
+    else
+        objects.process source,
+            each: (key, item, next)=>
+                if objects.isObject(item) || objects.isArray(item)
+                    if typeof target?[key] isnt typeof item
+                        delete target[key]
 
-            else
+                    if objects.isBuffer item
+                        target[key] = item
+                    else
+                        target[key] ?= if objects.isArray(item) then [] else {}
 
-                target[key] = item
+                        _extend target[key], item
+
+                else
+
+                    target[key] = item
+
+                next()
 
 ##
 ##

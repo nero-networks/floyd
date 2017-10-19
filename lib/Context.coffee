@@ -30,9 +30,9 @@ module.exports =
         ## * children
         ## * parent
         ##
-        constructor: (@parent)->
-            super null, @parent
-
+        constructor: (parent)->
+            super null, parent
+            @parent = parent
             @_status = []
             for action in ACTIONS
                 @_status['is'+floyd.tools.strings.capitalize (ACTION_MAPPING[action] || action)] = false
@@ -83,7 +83,7 @@ module.exports =
         ##
         ##
         ##
-        error: (err)=>
+        error: (err)->
             if !@_errorHandler
                 if @parent
                     @parent.error err
@@ -159,8 +159,8 @@ module.exports =
             config = new floyd.Config config
 
             # extend context with methods from config. add @method._super for each
-            for key, value of config
-                do(key, value)=>
+            @_process config,
+                each: (key, value, next)=>
                     if typeof value is 'function'
 
                         _orig_super = @[key]
@@ -172,6 +172,8 @@ module.exports =
                             @[key]._super = (args...)=>
                                 #console.log 'calling _orig_super for', key, _orig_super.toString()
                                 _orig_super.apply @, args
+
+                    next()
 
 
             ##
@@ -480,10 +482,18 @@ module.exports =
         lookup: (name, identity, done)->
             if !done && typeof identity is 'function'
                 done = identity
-                identity = @identity
+                identity = null
+            identity ?= @identity
 
-            if !identity || !identity.id || !identity.token
+            if !identity.id || !identity.token
                 return done new Error '2. parameter is not identity'
+
+            if !done ## recurse promisifyed
+                return new Promise (resolve, reject)=>
+                    @lookup name, identity, (err, ctx)=>
+                        reject(err) if err
+                        resolve floyd.tools.objects.promisify ctx
+            ##
 
             ## myself
             if name is @id
@@ -598,7 +608,7 @@ module.exports =
         ##
         ##
         ##
-        _processLogEntry: (args)=>
+        _processLogEntry: (args)->
             if @parent
                 @parent._processLogEntry args
 

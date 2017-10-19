@@ -7,10 +7,7 @@ module.exports =
         ##
         ##
         constructor: (base)->
-            for key, value of base
-                @[key] = value
-
-            settings = @system || {}
+            settings = base.system || {}
 
             ## platform type
             settings.platform = 'remote'
@@ -32,6 +29,10 @@ module.exports =
                 settings.os = _probe
 
             super settings
+
+            for key, value of base
+                if key isnt 'system'
+                    @[key] = value
 
             window.process ?=
                 nextTick: (fn)->
@@ -82,7 +83,7 @@ module.exports =
                             _root = _root[part] ?= {}
 
 
-                    try	
+                    try
                         ## 1. collect subpackages that may already be loaded
                         pre = _root[name] || {}
 

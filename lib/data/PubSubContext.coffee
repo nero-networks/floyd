@@ -55,16 +55,17 @@ module.exports =
                                 fn()
 
                             catch err
-                                console.log err
+                                fn err
                                 @unsubscribe handler.id
 
                     next()
 
                 ##
                 done: (err)=>
-                    return done(err) if err
                     done ?= (err)=>
                         return @logger.error(err) if err
+
+                    return done(err) if err
 
                     floyd.tools.parallel threads, done
 
@@ -98,7 +99,7 @@ module.exports =
 
             for _topic, trigger of @_trigger
 
-                if _topic.match topic
+                if topic.match(_topic) || _topic.match topic
                     if !trigger.__counter
                         trigger.__counter = 0
 
@@ -138,7 +139,7 @@ module.exports =
                 @logger.fine 'unsubscribe event', topic
 
                 for _topic, trigger of @_trigger
-                    if _topic.match topic
+                    if topic.match(_topic) || _topic.match topic
                         trigger.unsubscribe?.apply @, [topic, @_pool[token]]
 
                         trigger.__counter--

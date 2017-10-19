@@ -54,7 +54,9 @@ module.exports =
 
                         ##
                         @_addRoute '/boot.js', (req, res, next)=>
-
+                            if @_status.isSuspended || @_status.isStopped
+                                return next()
+                                
                             @_createRemote req, res, (err, remote)=>
                                 return next(err) if err || !remote
 

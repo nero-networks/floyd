@@ -1,5 +1,5 @@
 
-## coffee-script and fs -less ck clone for callback usage
+## coffeescript and fs -less ck clone for callback usage
 ## no files, no raw coffee.. but it runs in the browser
 ## and it compiles js functions into kup templates
 ##
@@ -13,7 +13,7 @@
 ## MIT Licensed
 
 #[coffeekup](http://github.com/mauricemach/coffeekup) rewrite
-    
+
 doctypes =
     '1.1':        	'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">'
     '5':        	'<!DOCTYPE html>'
@@ -31,51 +31,51 @@ tagsSelfClosing = 'area base basefont br col frame hr img input link meta param'
 TEMPLATES = {}
 
 module.exports = (code, cached=true)->
-    
+
     if typeof code is 'function'
-        code = '('+code.toString()+').call(this);' 
-    
+        code = '('+code.toString()+').call(this);'
+
     if !cached || !TEMPLATES[hash = floyd.tools.strings.hash code]
 
         ##
         html    = null
         indent  = null
         newline = null
-        
+
         options = {}
-        
+
         nest = (arg) ->
             if typeof arg is 'function'
                 indent += '    ' if options.format
                 arg = arg.call options.context
                 indent = indent.slice(0, -4) if options.format
                 html += "#{newline}#{indent}"
-        
+
             if arg && !(typeof arg is 'object')
                 html += if options.autoescape then esc arg else arg
-        
-        
+
+
         compileTag = (tag, selfClosing) ->
             scope[tag] = (args...) ->
                 html += "#{newline}#{indent}<#{tag}"
-        
+
                 if typeof args[0] is 'object'
                     for key, val of args.shift()
                         if typeof val is 'boolean'
                             html += " #{key}" if val is true
                         else
                             html += " #{key}=\"#{val}\""
-        
+
                 html += ">"
-        
+
                 return if selfClosing
-        
+
                 nest arg for arg in args
-        
+
                 html += "</#{tag}>"
-        
+
                 return
-        
+
         scope =
             comment: (str) ->
                 html += "#{newline}#{indent}<!--#{str}-->"
@@ -102,38 +102,47 @@ module.exports = (code, cached=true)->
                 nest arg
                 html += "<![endif]-->"
                 return
-            
+
         for tag in tagsNormal
             compileTag tag, false # don't self close
-            
+
         for tag in tagsSelfClosing
             compileTag tag, true # self close
-        
-        
+
+
         handler = new Function 'scope', "with (scope) { #{code}; return }"
-    
+
         template = (_options, _fn) ->
-            
-            options = _options
-            fn = _fn
-            
+            options = _options # this is needed, because of some strange scoping behaviour
+            fn = _fn           # when using arguments[] (_options) directly.. dunno why :-(
+            # if you remove this and use _options directly _options.context is lost inside the
+            # template after first tag callback:
+            #
+            #   p @id               <p>ctx1</p>
+            #   div ->              <div>
+            #       p @id               <p>undefined</p>
+            #                       </div>
+
             html	= ''
             indent	= ''
             newline = if options.format then '\n' else ''
-            
+
             handler.call options.context, scope
-            
-            fn null, html.trim()
-            
-                        
-            
+
+            if fn
+                fn null, html.trim()
+            else
+                return html.trim()
+
+
+
         ##
-            
+
         if cached
             TEMPLATES[hash] = template
-            
+
         return template
-    
+
     else
-    
+
         return TEMPLATES[hash]
