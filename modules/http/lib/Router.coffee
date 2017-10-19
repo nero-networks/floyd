@@ -12,6 +12,13 @@ module.exports =
         constructor: (@ID)->
 
             @_routes = []
+            for m in ['get', 'head', 'post', 'put', 'delete', 'trace', 'connect']
+                do (m)=>
+                    @[m] = (route, handler)=>
+                        @add route, (req, res, next)=>
+                            if req.method is m.toUpperCase()
+                                handler req, res, next
+                            else next()
 
 
         ##
