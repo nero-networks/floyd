@@ -81,6 +81,8 @@ module.exports =
                     @logger.debug 'repl complete', what
                     repl.completer what, fn
 
+                id: (fn)=>
+                    fn repl.context.ctx?.ID
 
         ##
         ##

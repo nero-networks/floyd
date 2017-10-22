@@ -58,7 +58,7 @@ module.exports =
                     req.session = sess.public
 
                     _end = res.end
-                    res.end = (args)=>
+                    res.end = (args...)=>
                         @_release req, sess, (err)=>
                             return next(err) if err
 

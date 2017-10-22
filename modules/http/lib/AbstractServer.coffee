@@ -209,7 +209,7 @@ module.exports =
         ##
         _handleError: (req, res, err)->
             if !res.err
-                if err.status is 302
+                if err?.status is 302
                     return req.redirect err.message
 
                 res.ctype = 'text/plain'
