@@ -19,13 +19,16 @@ module.exports =
                 data:
                     parent: false
                     ports: []
-                    gateways: (if floyd.system.platform is 'remote' then ['remote'] else [])
+                    gateways: []
                     route: '/dnode'
 
             , config
 
             if config.data.parent
                 config.data.ports.push parent: true
+
+            if !config.data.gateways.length && floyd.system.platform is 'remote'
+                config.data.gateways.push 'origin'
 
             ## hack to delegate lookups to origin
 
@@ -101,16 +104,19 @@ module.exports =
         ##
         ##
         _createConnection: (conf, fn)->
-            if conf is 'remote'
-                @logger.info 'connecting to url:', @data.route
+            if conf is 'origin'
+                @logger.info 'connecting to origin:', @data.route
                 shoe @data.route, fn
 
             else if conf.tls
                 @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
                 require('tls').connect conf, fn
 
+            else if floyd.system.platform is 'remote'
+                @logger.info 'connecting to url:', conf
+                shoe conf, fn
             else
-                @logger.info 'connecting to gateway:', conf
+                @logger.info 'connecting to tcp-gateway:', conf
                 require('net').connect conf, fn
 
         ##
