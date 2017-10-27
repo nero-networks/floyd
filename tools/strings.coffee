@@ -129,6 +129,20 @@ module.exports = strings =
     sanitize: (str)->
         require('sanitizer').sanitize str
 
+    ##
+    ##
+    ##
+    fromStream: (stream, fn)->
+        data = ''
+
+        stream.on 'data', (chunk)->
+            data += chunk
+
+        stream.on 'error', fn
+
+        stream.on 'end', ()->
+            fn null, data, stream
+
 
     ###
     ## UUID generator

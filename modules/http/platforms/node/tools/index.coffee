@@ -101,15 +101,7 @@ module.exports = tools =
     ##
     ##
     readResponse: (res, fn)->
-        data = ''
-
-        res.on 'data', (chunk)->
-            data += chunk
-
-        res.on 'end', ()->
-            fn null, data, res
-
-        res.on 'error', fn
+        floyd.tools.strings.fromStream res, fn
 
     ##
     ##
