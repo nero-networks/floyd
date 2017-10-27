@@ -19,7 +19,9 @@ module.exports = objects =
             objects.process obj,
                 each: (key, value, next)->
                     if typeof value is 'function'
-                        proxy[key] = objects.promisify value, obj
+                        wrapper = (args...)->
+                            obj[key].apply obj, args
+                        proxy[key] = objects.promisify wrapper, obj
                     else
                         proxy[key] = value
 
@@ -595,7 +597,7 @@ _extend = (target, source)->
                     target.push item
 
                 next()
-                
+
     else
         objects.process source,
             each: (key, item, next)=>
