@@ -50,7 +50,6 @@ module.exports =
                     if topic.match handler.topic
                         threads.push (fn)=>
                             try
-                                console.log data, @identity
                                 handler null,
                                     origin: origin
                                     data: data
