@@ -41,6 +41,8 @@ module.exports =
                 data = topic
                 topic = '_LEGACY_'
 
+            origin = (@publish.identity || @identity).id
+
             threads = []
             @_process @_pool,
                 ##
@@ -48,8 +50,9 @@ module.exports =
                     if topic.match handler.topic
                         threads.push (fn)=>
                             try
+                                console.log data, @identity
                                 handler null,
-                                    origin: (@publish.identity || @identity).id
+                                    origin: origin
                                     data: data
 
                                 fn()
