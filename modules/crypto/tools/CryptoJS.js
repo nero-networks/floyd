@@ -917,7 +917,7 @@ code.google.com/p/crypto-js/wiki/License
 
 
 
-/* ./modules/sha1.js */
+/* ./hashers/sha1.js */
 
 
 /*
@@ -1059,7 +1059,7 @@ code.google.com/p/crypto-js/wiki/License
 
 
 
-/* ./modules/sha256.js */
+/* ./hashers/sha256.js */
 
 
 /*
@@ -1250,7 +1250,7 @@ code.google.com/p/crypto-js/wiki/License
 
 
 
-/* ./modules/md5.js */
+/* ./hashers/md5.js */
 
 
 /*
