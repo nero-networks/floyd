@@ -53,12 +53,16 @@ module.exports =
                         methods = []
                         for m, d of obj
                             if typeof obj[m] is 'function' && @_HIDDEN.indexOf(m) is -1
-                                args = obj[m].toString().match('.*?[(](.*)[)].*')[1].split ', '
+                                args = obj[m].toString()
+                                args = args.substr 0, args.indexOf(')') + 1
+                                args = args.replace /(\n)+/g, ''
+                                args = args.match('.*?[(](.*)[)].*')[1].split ', '
                                 args.pop()
+                                args = args.join ', '
 
                                 methods.push
                                     name: m
-                                    args: args.join ', '
+                                    args: args
                                     info: obj[m+'_']
 
                         fn null,
