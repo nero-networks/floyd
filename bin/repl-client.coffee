@@ -1,6 +1,6 @@
 #!/usr/bin/env coffee
 
-REPL = require 'floyd/node_modules/coffee-script/repl'
+REPL = require 'floyd/node_modules/coffeescript/repl'
 
 dnode = require 'floyd/node_modules/dnode'
 net = require 'net'

@@ -2,8 +2,8 @@
 
 module.exports =
 
-    Client: (ctx, brokerId, handler)->
-        new Client ctx, brokerId, handler
+    Client: (ctx, brokerId, topic, handler)->
+        new Client ctx, brokerId, topic, handler
 
 
 ##
