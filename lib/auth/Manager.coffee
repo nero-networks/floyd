@@ -115,10 +115,7 @@ module.exports = (handler)->
             return fn(err) if err
 
             __authorize __token, ()=>
-
-                if fn
-                    process.nextTick ()=>
-                        fn null, true
+                fn? null, true
 
 
 

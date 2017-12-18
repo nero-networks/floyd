@@ -63,7 +63,8 @@ module.exports =
                                 methods.push
                                     name: m
                                     args: args
-                                    info: obj[m+'_']
+                                    info: obj[m+'_']?.info || obj[m+'_']
+                                    spec: if typeof obj[m+'_'] is 'string' then info: obj[m+'_'] else obj[m+'_']
 
                         fn null,
                             module: module
@@ -85,9 +86,8 @@ module.exports =
         _createContent: (req, res, fn)->
 
             ##
-            if req.session && !(_ident = @_IDENTITIES[SID = req.session?.SID])
-                #console.log 'creating _ident'
-
+            if req.session && !!(SID = req.session?.SID) && !(_ident = @_IDENTITIES[SID = req.session.SID])
+                #console.log 'creating _ident for', SID
                 manager = new floyd.auth.Manager @_createAuthHandler()
 
                 @_IDENTITIES[SID] = _ident =
@@ -95,60 +95,69 @@ module.exports =
                     identity: manager.createIdentity @identity.id+'.'+SID
 
                 req.session.on 'destroy', ()=>
+                    #console.log 'deleting _ident', _ident.identity.id
                     _ident.manager.destroyIdentity _ident.identity
                     delete @_IDENTITIES[SID]
 
-                manager.authorize req.session.TOKEN, (err)=>
+                manager.authorize req.session.TOKEN, ()=>
                     @_createContent req, res, fn
 
             else
-                #console.log 'using _ident', _ident.identity.id
-
-                floyd.tools.http.parseData req, (err)=>
-                    return fn(err) if err
+                #console.log 'using _ident', _ident.identity?.id || 'no identity'
+                _send = (err, response)->
+                    obj =
+                        response: response
+                        error: if err then err.toString() else undefined
 
                     res.cache?.etag()
-                    ##
-                    m = req.body.m
-                    a = JSON.parse(req.body.a || '[]')
+                    res.ctype = 'application/json'
+                    res.send JSON.stringify(obj, null, 4)+'\n'
 
-                    a.push _send = (err, response)->
+                floyd.tools.http.parseData req, (err)=>
+                    return _send(err) if err
 
-                        obj =
-                            response: response
-                            error: if err then err.toString() else undefined
+                    @_exec req.body.o, req.body.m, JSON.parse(req.body.a || '[]'), _ident, _send
 
-                        res.ctype = 'application/json'
-                        res.send JSON.stringify(obj, null, 4)+'\n'
+        ##
+        ##
+        ##
+        _exec: (o, m, a, _ident, fn)->
+            if !(@_HIDDEN.indexOf(m) is -1)
+                return fn('unknown method: '+o+'.'+m)
 
-                    ## login
-                    if req.body.o is 'System' && m is 'login'
-                        _ident.manager.login a[0], a[1], _send
+            ## login
+            if o is 'System' && m is 'login'
+                _ident.manager.login a[0], a[1], fn
 
-                    ## logout
-                    else if req.body.o is 'System' && m is 'logout'
-                        _ident.manager.logout _send
+            ## logout
+            else if o is 'System' && m is 'logout'
+                _ident.manager.logout fn
 
-                    ## find method
-                    else
-                        @_getObject req.body.o, (err, o)=>
-                            return fn(err) if err
-                            try
-                                if _ident && o.forIdentity
-                                    o.forIdentity _ident.identity, (err, wrapper)=>
-                                        return fn(err) if err
+            ## find method
+            else
+                @_getObject o, (err, obj)=>
+                    return fn(err) if err
+                    try
+                        a.push fn
 
-                                        wrapper[m].apply wrapper, a
+                        if obj[m]
+                            if _ident && obj.forIdentity
+                                obj.forIdentity _ident.identity, (err, wrapper)=>
+                                    return fn(err) if err
 
-                                else if o?[m]
+                                    wrapper[m].apply wrapper, a
 
-                                    o[m].apply o, a
+                            else
+                                obj[m].apply obj, a
 
-                                else
-                                    _send 'unknown method: '+o+'.'+m
+                        else
+                            fn new Error 'unknown method: '+o+'.'+m
 
-                            catch err
-                                _send err
+                    catch err
+                        @logger.error 'exec error in '+o, err
+                        fn err.message || err
+
+
         ##
         ##
         ##
