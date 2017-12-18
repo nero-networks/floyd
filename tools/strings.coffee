@@ -133,15 +133,8 @@ module.exports = strings =
     ##
     ##
     fromStream: (stream, fn)->
-        data = ''
-
-        stream.on 'data', (chunk)->
-            data += chunk
-
-        stream.on 'error', fn
-
-        stream.on 'end', ()->
-            fn null, data, stream
+        floyd.tools.objects.stream2Buffer stream, (err, data)=>
+            fn null, data.toString(), stream
 
 
     ###

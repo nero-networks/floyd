@@ -542,6 +542,22 @@ module.exports = objects =
 
         return JSON.stringify(sort a) is JSON.stringify(sort b)
 
+    ##
+    ##
+    ##
+    stream2Buffer: (stream, fn)->
+        data = []
+        length = 0
+
+        stream.on 'data', (chunk)->
+            length += chunk.length
+            data.push chunk
+
+        stream.on 'error', fn
+
+        stream.on 'end', ()->
+            fn null, Buffer.concat(data, length), stream
+
 ##
 ##
 ##
