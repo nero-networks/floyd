@@ -90,6 +90,11 @@ module.exports =
                 ## <-- TEMPORARY DEBUGGING
 
                 each: (conf, next)=>
+                    if typeof conf is 'string'
+                        conf =
+                            url: conf
+
+                    conf.keepalive ?= 60000
 
                     reconn = require('reconnect-core') ()=>
                         c = @_createConnection conf, ()=>
@@ -104,7 +109,7 @@ module.exports =
         ##
         ##
         _createConnection: (conf, fn)->
-            if conf is 'origin'
+            if conf.url is 'origin'
                 @logger.info 'connecting to origin:', @data.route
                 shoe @data.route, fn
 
@@ -112,9 +117,9 @@ module.exports =
                 @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
                 require('tls').connect conf, fn
 
-            else if floyd.system.platform is 'remote'
-                @logger.info 'connecting to url:', conf
-                shoe conf, fn
+            else if conf.url
+                @logger.info 'connecting to url:', conf.url
+                shoe conf.url, fn
             else
                 @logger.info 'connecting to tcp-gateway:', conf
                 require('net').connect conf, fn
@@ -221,14 +226,14 @@ module.exports =
                             child.init (id: remote.id, type:'dnode.Remote'), (err)=>
                                 return fn(err) if err
 
-                            child._useProxy remote
+                            child._useProxy conf, remote
 
                             root.children.push child
 
                             fn()
 
                         else
-                            child._useProxy remote
+                            child._useProxy conf, remote
 
                         ##
                         @_emit 'connected',
@@ -257,6 +262,9 @@ module.exports =
 
                 token: (fn)=>
                     fn null, conf.token
+
+                ping: (fn)=>
+                    fn() ## pong
 
         ##
         ##
