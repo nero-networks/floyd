@@ -71,8 +71,7 @@ module.exports =
                                 pass: 'bf5d636daff3476c410f43623edaeb7c-SHA256-4-1500-453c9f2107c362678a684434dbf35e0c'
 
                             if typeof @data.admin is 'object'
-                                data = floyd.tools.objects.extend data,
-                                    @data.admin
+                                data = floyd.tools.objects.extend data, @data.admin
 
                             @has data.login, (err, has)=>
                                 if !has
@@ -140,6 +139,12 @@ module.exports =
             throw new floyd.error.NotImplemented 'http.AbstractServer._createServer'
 
 
+        ##
+        ##
+        ##
+        _createCookieJar: (req, res)->
+            throw new floyd.error.NotImplemented 'http.AbstractServer._createCookieJar'
+
 
         ##
         ##
@@ -181,9 +186,12 @@ module.exports =
                 res.ctype = 'text/plain'
                 res.send msg, code
 
+            ##
+            ## cookies
+            ##
+            req.cookies = res.cookies = @_createCookieJar req, res
+
             super req, res, done
-
-
 
         ##
         ##
