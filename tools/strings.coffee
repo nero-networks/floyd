@@ -34,7 +34,7 @@ module.exports = strings =
         if parts.length
             for i in [0..parts.length-1]
 
-                if parts[i].message && parts[i].stack
+                if parts[i] && parts[i].message && parts[i].stack
                     parts[i] = parts[i].stack
 
                 if typeof parts[i] is 'object'
