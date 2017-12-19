@@ -6,8 +6,26 @@
 
         <title>Floyd OmaRpc Proxy Example</title>
 
-        <script type="text/javascript" src="/boot.js"></script>
-        <script type="text/javascript" src="/floyd.js"></script>
+        <script type="text/javascript" src="/RpcServer/proxy.js"></script>
+
+        <script>
+            window.onload = function() {
+
+                const Test = OMARpc.createProxy('Test')
+                const button = document.querySelector('button')
+
+                let counter = 0
+                button.onclick = function() {
+                    const start = +new Date()
+
+                    Test.ping(counter++, function(err, i) {
+                        button.textContent = 'click me: '+(i + 1)+' - '+(+new Date() - start)+'ms'
+                    })
+                }
+
+            }
+
+        </script>
 
     </head>
 

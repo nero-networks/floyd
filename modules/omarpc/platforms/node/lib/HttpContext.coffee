@@ -84,6 +84,14 @@ module.exports =
         ##
         ##
         _createContent: (req, res, fn)->
+            if req.uri is '/proxy.js'
+                if !@__PROXY_FILE_CACHE
+                    coffee = require 'coffeescript'
+                    fs = require 'fs'
+                    @__PROXY_FILE_CACHE = coffee.compile fs.readFileSync(__dirname+'/../../../tools/Proxy.coffee').toString()
+
+                res.ctype = 'text/javascript'
+                return fn null, @__PROXY_FILE_CACHE
 
             ##
             if req.session && !!(SID = req.session?.SID) && !(_ident = @_IDENTITIES[SID = req.session.SID])

@@ -2,25 +2,38 @@
 ##
 ##
 ##
-module.exports = (o, options, fn)->
+Proxy = (o, options, fn)->
     if typeof options is 'function'
         fn = options
         options = {}
 
-    options = floyd.tools.objects.extend location,
+    if typeof options is 'string'
+        options =
+            url: options
+
+    options = _extend
         path: '/RpcServer'
-    , options
+    , location, options
+
+    proxy = {} ## create the described proxy-methods
 
     ## request the System.info for the API to proxy
     request options, 'System', 'info', [o], (err, res)=>
         return fn(err || new Error res.error) if err || res.error
 
-        proxy = {} ## create the described proxy-methods
         for m in res.response.methods
             proxy[m.name] = buildMethod options, o, m.name
 
-        fn null, proxy
+        fn? null, proxy
 
+    return proxy
+
+_extend = (target, srclist...)->
+    for src in srclist
+        for key, val of src
+            target[key] = val
+    return target
+    
 ##
 ## returns a function that is doing the rpc call
 ##
@@ -50,8 +63,12 @@ request = (options, o, m, a, fn)->
                 return fn null, JSON.parse req.responseText
             fn new Error req.status+' '+req.responseText
 
-        req.open 'POST', floyd.tools.strings.format '%s//%s%s',
-            options.protocol, options.host, options.path
+        req.open 'POST', options.url || "#{options.protocol}//#{options.host}#{options.path}"
 
-        req.send floyd.tools.strings.format 'o=%s&m=%s&a=%s',
-            encodeURIComponent(o), encodeURIComponent(m), encodeURIComponent JSON.stringify a
+        req.send "o=#{encodeURIComponent(o)}&m=#{encodeURIComponent(m)}&a=#{encodeURIComponent JSON.stringify a}"
+
+
+module?.exports = Proxy
+
+window?.OMARpc =
+    createProxy: Proxy
