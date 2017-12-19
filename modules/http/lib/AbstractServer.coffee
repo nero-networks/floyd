@@ -145,6 +145,13 @@ module.exports =
         _createCookieJar: (req, res)->
             throw new floyd.error.NotImplemented 'http.AbstractServer._createCookieJar'
 
+        ##
+        ##
+        ##
+        _registerInParent: ()->
+            ## don't register by default
+            if @data.registerInParent
+                super()
 
         ##
         ##
