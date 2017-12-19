@@ -75,6 +75,8 @@ module.exports =
                                 return next()
 
                             req.uri = req.uri.replace @data.route, '/'
+                            if req.uri.length >= 2 && req.uri.charAt(1) is '/'
+                                req.uri = req.uri.substr 1
                             @_handleRequest req, res, next
 
 

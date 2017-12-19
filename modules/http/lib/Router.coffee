@@ -49,10 +49,14 @@ module.exports =
 
                 #console.log 'trying', @ID, routes[0].route, req.url
 
-                routes.shift().handle req, res, (err)=>
-                    return next(err) if err
+                try
+                    routes.shift().handle req, res, (err)=>
+                        return next(err) if err
+                        
+                        _next()
 
-                    _next()
+                catch err
+                    next err
 
             _next()
 
