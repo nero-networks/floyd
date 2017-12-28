@@ -88,8 +88,14 @@ module.exports =
                 query = if location.search then qs.parse location.search.substr 1 else {}
                 @data.offset = parseInt(query[@data.search] ?= '0') * @data.limit
 
+            _done = (err)=>
+                if !done
+                    @logger.error(err) if err
+
+                else done err
+
             @_loadData @data.offset, @data.limit, (err, items, data)=>
-                return done(err) if err
+                return _done(err) if err
                 @_display items, data, done
 
 
