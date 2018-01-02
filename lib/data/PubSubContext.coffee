@@ -51,6 +51,7 @@ module.exports =
                         threads.push (fn)=>
                             try
                                 handler null,
+                                    topic: topic
                                     origin: origin
                                     data: data
 
