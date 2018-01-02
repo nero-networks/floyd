@@ -65,7 +65,7 @@ module.exports =
                         floyd.tools.objects.intercept res, 'end', (args..., end)=>
                             end.apply res, args
 
-                            req.session = res.session = null ## <-- remove references to avoid memory leaks
+                            req.session = res.session = null 
 
                         ##
                         next()
@@ -84,7 +84,7 @@ module.exports =
 
             else
                 #console.log 'create SID'
-                @createSID (err, SID)=>
+                @_registry.createSID (err, SID)=>
 
                     #console.log 'create cookie', SID
 
@@ -276,4 +276,5 @@ module.exports =
         ##
         ##
         createSID: (fn)->
+            @logger.warning 'pubic createSID is deprecated and will be removed in future'
             @_registry.createSID fn
