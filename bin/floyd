@@ -31,9 +31,16 @@ test $WORKDIR == $FLOYD_ROOT && _lib=true
 APPNAME=$(basename $WORKDIR)
 
 ##
-test $NODE_BINARY || NODE_BINARY=`which node`
+test "$1" == "start" && test "$NODE_BINARY" != "" && echo -e "\033[0;0;1musing node binary $NODE_BINARY\033[m"
+test -x "$NODE_BINARY" || NODE_BINARY=`which node`
 
-CMD="$NODE_BINARY $WORKDIR/.floyd"
+## echo TRACE_WARNINGS=true >> .floyd/env
+if [ $TRACE_WARNINGS ]
+then
+    CMD="$NODE_BINARY $WORKDIR/.floyd"
+else
+    CMD="$NODE_BINARY --trace-warnings $WORKDIR/.floyd"
+fi
 
 NODE_PATH="$WORKDIR:$WORKDIR/node_modules:$FLOYD_ROOT:$FLOYD_ROOT/node_modules"
 
@@ -53,7 +60,7 @@ fi
 ##
 ##
 function check() {
-    PID=$(ps ax|grep node|grep -v grep|grep "$CMD"|awk '{print $1}')
+    PID=$(ps ax|grep node|grep -v grep|grep "$WORKDIR/.floyd"|awk '{print $1}')
     echo $PID
 }
 
@@ -105,9 +112,16 @@ function start_app() {
         then
             SETSID=/usr/bin/setsid
         else
-            SETSID=/usr/local/bin/setsid
+            SETSID=$(which setsid)
         fi
+
+        test $TRACE_WARNINGS && echo -e "\033[0;0;1mtracing warnings!\033[m"
+
+        test -x $SETSID || echo -e "\033[0;0;1mERROR\033[m: \033[0;31msetsid binary not found!\033[m"
+        test -x $SETSID || exit 1
+
         NODE_PATH=$NODE_PATH $SETSID $CMD $@ >> .floyd/logs/stdout.log 2>&1 &
+
         disown $!
 
     fi
