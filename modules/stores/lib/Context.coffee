@@ -35,17 +35,7 @@ module.exports =
                     type: type
                     pk: @data.pk||'id'
 
-                done()
-
-
-        ##
-        ##
-        ##
-        boot: (fn)->
-            super (err)=>
-                return fn(err) if err
-
-                @_engine.init @data, fn
+                @_engine.init @data, done
 
 
 
