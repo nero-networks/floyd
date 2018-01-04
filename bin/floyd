@@ -11,13 +11,23 @@ USER=`whoami`
 
 ##
 ##
-SOURCE="${BASH_SOURCE[0]}"
+function deref_link() {
+    filename=$1
+    if [ -x /usr/bin/realpath ]
+    then
+        /usr/bin/realpath $filename
+    else
+        while [ -h "$filename" ] ; do
+            ref="$(readlink "$filename")";
+            test "${ref:0:2}" == ".." && ref=$(dirname $filename)/$ref
+            filename=$ref
+        done
+        echo $filename
+    fi
+}
 
-while [ -h "$SOURCE" ] ; do
-    ref="$(readlink "$SOURCE")";
-    test "${ref:0:2}" == ".." && ref=$(dirname $SOURCE)/$ref
-    SOURCE=$ref
-done
+SOURCE=${BASH_SOURCE[0]}
+SOURCE=$( deref_link "$SOURCE" )
 
 ##
 FLOYD_ROOT="$( cd -P "$( dirname "$SOURCE" )"; cd .. && pwd -P )"
@@ -32,6 +42,8 @@ APPNAME=$(basename $WORKDIR)
 
 ##
 test $NODE_BINARY || NODE_BINARY=`which node`
+
+NODE_BINARY=$( deref_link "$NODE_BINARY" )
 
 CMD="$NODE_BINARY $WORKDIR/.floyd"
 
