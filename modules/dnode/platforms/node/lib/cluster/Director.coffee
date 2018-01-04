@@ -83,10 +83,29 @@ module.exports =
                 
                     ORIGIN: @ID   
             
+                    booted: -> @logger.info 'starting child process'
+
                 , child
-                
+
+                ## prepare working directory
+                files = floyd.tools.files
                 ##
-                @logger.info 'spawning child %s.%s', @ID, child.id     
+                if !files.exists child.system.appdir
+                    files.mkdir child.system.appdir
+
+
+                if !files.exists child.system.tempdir
+                    files.mkdir child.system.tempdir
+
+
+                ##
+                name = child.system.appdir+'/.app.js'
+                model = floyd.tools.objects.serialize child, 4
+
+                files.write name, '// generated file... do not edit!' + new Date() + '\nrequire("floyd").init('+model+')'
+
+                ##
+                @logger.info 'spawning child %s.%s', @ID, child.id
                 @_spawnChild child, next
                 
         
@@ -95,24 +114,9 @@ module.exports =
         ##
         _spawnChild: (child, next)->
             child._spawned++
-                                        
-            files = floyd.tools.files
-            ##     
-            if !files.exists child.system.appdir
-                files.mkdir child.system.appdir
-                
-                
-            if !files.exists child.system.tempdir
-                files.mkdir child.system.tempdir
-                
+
             ##
-            name = child.system.appdir+'/.app.js'
-            model = floyd.tools.objects.serialize child, 4
-            
-            files.write name, '// generated file... do not edit!\nrequire("floyd").init('+model+')'
-            
-            ##
-            proc = @_processes[child.id] = spawn 'node', [child.system.appdir+'/.app'], 
+            proc = @_processes[child.id] = spawn process.execPath, [child.system.appdir+'/.app'],
                 cwd: child.system.appdir
         
             proc.stdout.pipe process.stdout
