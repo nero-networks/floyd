@@ -36,8 +36,26 @@ module.exports = objects =
     ##
     ##
     ##
-    keys: (obj)->
-        return (key for key of obj)
+    keys: (objs...)->
+        ## empty
+        if !objs.length
+            return []
+
+        ## only one -> return its keys
+        if objs.length = 1
+            return (key for key of objs[0])
+
+        ## many -> concat distinct
+        keys = objects.keys objs.pop()
+
+        if objs.length
+            for obj in objs
+                for key in objects.keys obj # length 1 recursion
+                    if keys.indexOf(key) is -1
+                        keys.push key
+
+        return keys
+
 
 
     ##
@@ -86,6 +104,23 @@ module.exports = objects =
 
         ##
         next()
+
+
+    ##
+    ##
+    ##
+    flatten: (obj, map, prefix)->
+        map ?= {}
+
+        if obj
+            for k, v of obj
+                key = if prefix then prefix+'.'+k else k
+                if floyd.tools.objects.isObject v
+                    objects.flatten v, map, key
+                else
+                    map[key] = v
+
+        return map
 
     ##
     ##
@@ -557,6 +592,17 @@ module.exports = objects =
 
         stream.on 'end', ()->
             fn null, Buffer.concat(data, length), stream
+
+    ##
+    ##
+    ##
+    argsLoggingCallback: (fn, logger)->
+        logger ?= console
+        return (args...)->
+
+            for arg in args
+                logger.log arg
+            fn.apply null, args
 
 ##
 ##
