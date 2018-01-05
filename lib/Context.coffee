@@ -485,7 +485,7 @@ module.exports =
                 identity = null
             identity ?= @identity
 
-            if !identity.id || !identity.token
+            if !identity?.id || !identity.token
                 return done new Error '2. parameter is not identity'
 
             if !done ## recurse promisifyed
