@@ -21,6 +21,9 @@ module.exports = files =
     path: path
 
     ##
+    sep: path.sep
+
+    ##
     ##
     appdir: (args...)->
 
