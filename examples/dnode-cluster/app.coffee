@@ -16,7 +16,7 @@ module.exports =
 
         id: 'frontend'
 
-        isWorker: true
+        isClusterWorker: true
 
         children: [
 
@@ -95,7 +95,7 @@ module.exports =
 
         id: 'backend'
 
-        isWorker: true
+        isClusterWorker: true
 
         children: [
 

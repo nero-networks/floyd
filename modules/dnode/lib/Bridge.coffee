@@ -11,6 +11,7 @@ module.exports =
         ##
         ##
         configure: (config)->
+            @_servers = []
 
             ##
             ##
@@ -61,6 +62,14 @@ module.exports =
 
             return config
 
+        ##
+        ##
+        ##
+        stop: (done)->
+            super (err)=>
+                for server in @_servers
+                    server.close()
+                done err
 
         ##
         ##
@@ -94,7 +103,8 @@ module.exports =
                         conf =
                             url: conf
 
-                    conf.keepalive ?= 60000
+                    if conf.keepalive != false
+                        conf.keepalive ?= 1000 * 60 * 5
 
                     reconn = require('reconnect-core') ()=>
                         c = @_createConnection conf, ()=>
@@ -110,18 +120,18 @@ module.exports =
         ##
         _createConnection: (conf, fn)->
             if conf.url is 'origin'
-                @logger.info 'connecting to origin:', @data.route
+                @logger.debug 'connecting to origin:', @data.route
                 shoe @data.route, fn
 
             else if conf.tls
-                @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
+                @logger.debug 'connecting to tls-gateway:', conf.host||'localhost', conf.port
                 require('tls').connect conf, fn
 
             else if conf.url
-                @logger.info 'connecting to url:', conf.url
+                @logger.debug 'connecting to url:', conf.url
                 shoe conf.url, fn
             else
-                @logger.info 'connecting to tcp-gateway:', conf
+                @logger.debug 'connecting to tcp-gateway:', conf
                 require('net').connect conf, fn
 
         ##
@@ -135,9 +145,9 @@ module.exports =
 
                 each: (conf, next)=>
                     if conf.tls
-                        @logger.info 'listening on tls-port:', conf.host||'localhost', conf.port
+                        @logger.debug 'listening on tls-port:', conf.host||'localhost', conf.port
                     else
-                        @logger.info 'listening on port:', conf
+                        @logger.debug 'listening on port:', conf
 
                     handler = (err)=>
                         fn(err) if err
@@ -161,19 +171,23 @@ module.exports =
                             @_createServerSocket conf, ctx.server, handler
 
                     else if conf.tls
-                        require('tls').createServer conf, (c)=>
+                        s = require('tls').createServer conf, (c)=>
                             #@logger.info c.getPeerCertificate().subject.CN
 
                             @_pipeLocal conf, c, handler
 
                         .listen conf
 
+                        @_servers.push s
+
                     else
-                        require('net').createServer (c)=>
+                        s = require('net').createServer (c)=>
 
                             @_pipeLocal conf, c, handler
 
                         .listen conf
+
+                        @_servers.push s
 
                     ##
                     next()
@@ -237,12 +251,14 @@ module.exports =
 
                         ##
                         @_emit 'connected',
-                            id: child.id
+                            id: remote.id
+                            ID: remote.ID
 
                         ##
                         conn.on 'end', ()=>
                             @_emit 'disconnected',
-                                id: child.id
+                                id: remote.id
+                                ID: remote.ID
 
 
                         ##
@@ -256,6 +272,7 @@ module.exports =
 
                 ## remote api
                 id: root.id
+                ID: root.ID
 
                 lookup: (args...)=>
                     child.lookup.apply child, args
@@ -265,6 +282,7 @@ module.exports =
 
                 ping: (fn)=>
                     fn() ## pong
+
 
         ##
         ##
