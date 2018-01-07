@@ -32,6 +32,8 @@ module.exports = password =
                 done null, password.verify pass, hash
 
         else
+            return false if !hash
+            
             data = hash.split '-'
 
             if data.length > 1
