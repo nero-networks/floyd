@@ -95,6 +95,11 @@ module.exports = strings =
             str = str.substr(0, len) + append
         return str
 
+    ##
+    replaceAll: (str, regex, rep)->
+        while str.indexOf(regex) isnt -1
+            str = str.replace regex, rep
+        return str
 
     ##
     ## simple string hashing function
