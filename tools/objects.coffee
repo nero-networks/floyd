@@ -73,34 +73,34 @@ module.exports = objects =
     process: (obj, {each, done})->
         done ?= (err)-> console.error(err) if err
 
-        _array = false
+        array = false
 
-        _iter = []
+        iter = []
 
         ##
         next = (err)->
             done(err) if err
 
-            return done() if !_iter.length
+            return done() if !iter.length
 
             try
-                if _array
-                    each _iter.shift(), next
+                if array
+                    each iter.shift(), next
 
                 else
-                    each (key=_iter.shift()), obj[key], next
+                    each (key=iter.shift()), obj[key], next
             catch e
                 next e
         ##
         if floyd.tools.objects.isArray obj
-            _array = true
+            array = true
 
-            _iter.push item for item in obj
+            iter.push item for item in obj
 
         else
-            _iter.push key for key, val of obj
+            iter.push key for key, val of obj
             ## ES6 class prototype methods
-            _iter.push key for key in objects.methods obj
+            iter.push key for key in objects.methods obj
 
         ##
         next()
@@ -272,11 +272,11 @@ module.exports = objects =
     ##
     traverse: (obj, handler, indent=0)->
 
-        _all = []
+        all = []
 
         ##
         _handle = (key, value)->
-            if key && floyd.tools.objects.isObject(value) && _all.indexOf(value) != -1
+            if key && floyd.tools.objects.isObject(value) && all.indexOf(value) != -1
                 console.log key, value
                 return '[Circular '+value.toString()+' ]'
 
@@ -289,7 +289,7 @@ module.exports = objects =
                 value = handler.handle type, key, value
 
             if type is 'object'
-                _all.push value
+                all.push value
 
             return value
 
@@ -604,6 +604,73 @@ module.exports = objects =
                 logger.log arg
             fn.apply null, args
 
+    ##
+    ##
+    ##
+    map: (data, map, commands)->
+        strings = floyd.tools.strings
+
+        commands = objects.extend
+            split: (chars, value)->
+                return objects.resolve(value, data)?.split chars
+
+            join: (chars, list)->
+                if typeof list is 'string'
+                    list = objects.resolve list, data
+
+                else
+                    for i in [0..list.length-1]
+                        list[i] = objects.resolve list[i], data
+
+                return list.join? chars
+
+            format: (format, args)->
+                if typeof args is 'string'
+                    args = objects.resolve args, data
+
+                for i in [0..args.length-1]
+                    format = strings.replaceAll format, '$'+i, args[i]
+                    args[i] = objects.resolve args[i], data
+
+                return strings.format format, args
+
+        , commands
+
+        if objects.isArray map
+            out = []
+            for _key in map
+                out.push objects.resolve _key, data
+        else
+            out = {}
+            for key, sub of map
+                if key.charAt(0) is '$' && cmd = commands[key.substr 1]
+                    if objects.isArray sub
+                        out = []
+                        for value in sub
+                            out.push cmd value, data, commands
+                        return out
+
+                    else if typeof sub is 'object'
+                        for chars, value of sub
+                            return cmd chars, value, data, commands
+
+                    else
+                        return cmd sub, data, commands
+
+                else if typeof sub is 'string'
+                    out[key] = objects.resolve sub, data
+
+                else if objects.isArray sub
+                    out[key] = []
+                    for _key in sub
+                        out[key].push objects.resolve _key, data
+
+                else
+                    out[key] = objects.map data, sub, commands
+
+        return out
+
+
 ##
 ##
 ##
@@ -611,20 +678,40 @@ _resolve = (item, base)->
     #console.log 'resolve', item
     return if !base
 
-    if (_i=item.indexOf '.') > -1
-        _child = item.substr 0, _i
-        _id = item.substr _i + 1
+    if (i=item.indexOf '.') > -1
+        child = item.substr 0, i
+        id = item.substr i + 1
 
-        #console.log 'base:', _child, 'child:', _id, base
+        #console.log 'base:', child, 'child:', id, base
 
-        if base[_child]
-            #console.log 'searching', _child, 'for', _id
+        index = -1
+        if match = child.match /(.*)[\[]([0-9]+)[\]]/
+            child = match[1]
+            index = parseInt match[2]
 
-            _resolve _id, base[_child]
+        if base[child]
+            #console.log 'searching', child, 'for', id, index
+
+            _child = base[child]
+            if index > -1
+                _child = _child[index]
+
+            _resolve id, _child
+
 
     else
-        base[item]
+        index = -1
+        if match = item.match /(.*)[\[]([0-9]+)[\]]/
+            item = match[1]
+            index = parseInt match[2]
 
+        _item = base[item]
+
+        if index > -1
+            #console.log id, typeof _item
+            _item = _item[index]
+
+        return _item
 
 ##
 ## private static helper to recursively merge objects
