@@ -5,8 +5,57 @@ module.exports = objects =
     ##
     ##
     ##
-    keys: (obj)->
-        return (key for key of obj)
+    promisify: (obj, target)->
+        if floyd.tools.objects.isFunction obj
+            return (args...)->
+                new Promise (resolve, reject)->
+                    args.push (err, res...)->
+                        return reject(err) if err
+                        resolve.apply null, res
+                    obj.apply target, args
+
+        else if floyd.tools.objects.isObject obj
+            proxy = {}
+            objects.process obj,
+                each: (key, value, next)->
+                    if typeof value is 'function'
+                        wrapper = (args...)->
+                            obj[key].apply obj, args
+                        proxy[key] = objects.promisify wrapper, obj
+                    else
+                        proxy[key] = value
+
+                    next()
+
+            return proxy
+
+        else
+            return Promise.resolve obj
+
+
+    ##
+    ##
+    ##
+    keys: (objs...)->
+        ## empty
+        if !objs.length
+            return []
+
+        ## only one -> return its keys
+        if objs.length = 1
+            return (key for key of objs[0])
+
+        ## many -> concat distinct
+        keys = objects.keys objs.pop()
+
+        if objs.length
+            for obj in objs
+                for key in objects.keys obj # length 1 recursion
+                    if keys.indexOf(key) is -1
+                        keys.push key
+
+        return keys
+
 
 
     ##
@@ -24,36 +73,68 @@ module.exports = objects =
     process: (obj, {each, done})->
         done ?= (err)-> console.error(err) if err
 
-        _array = false
+        array = false
 
-        _iter = []
+        iter = []
 
         ##
         next = (err)->
             done(err) if err
 
-            return done() if !_iter.length
+            return done() if !iter.length
 
             try
-                if _array
-                    each _iter.shift(), next
+                if array
+                    each iter.shift(), next
 
                 else
-                    each (key=_iter.shift()), obj[key], next
+                    each (key=iter.shift()), obj[key], next
             catch e
                 next e
         ##
         if floyd.tools.objects.isArray obj
-            _array = true
+            array = true
 
-            _iter.push item for item in obj
+            iter.push item for item in obj
 
         else
-            _iter.push key for key, val of obj
+            iter.push key for key, val of obj
+            ## ES6 class prototype methods
+            iter.push key for key in objects.methods obj
 
         ##
         next()
 
+
+    ##
+    ##
+    ##
+    flatten: (obj, map, prefix)->
+        map ?= {}
+
+        if obj
+            for k, v of obj
+                key = if prefix then prefix+'.'+k else k
+                if floyd.tools.objects.isObject v
+                    objects.flatten v, map, key
+                else
+                    map[key] = v
+
+        return map
+
+    ##
+    ##
+    ##
+    methods: (obj, list)->
+        list ?= []
+        if obj
+            proto = Object.getPrototypeOf obj
+            if proto && Object.getPrototypeOf proto
+                for key in Object.getOwnPropertyNames Object.getPrototypeOf obj
+                    if key isnt 'constructor' && list.indexOf(key) is -1
+                        list.push key
+                objects.methods proto, list
+        return list
 
     ##
     ## shuffle the order of an array randomly
@@ -191,11 +272,11 @@ module.exports = objects =
     ##
     traverse: (obj, handler, indent=0)->
 
-        _all = []
+        all = []
 
         ##
         _handle = (key, value)->
-            if key && floyd.tools.objects.isObject(value) && _all.indexOf(value) != -1
+            if key && floyd.tools.objects.isObject(value) && all.indexOf(value) != -1
                 console.log key, value
                 return '[Circular '+value.toString()+' ]'
 
@@ -208,7 +289,7 @@ module.exports = objects =
                 value = handler.handle type, key, value
 
             if type is 'object'
-                _all.push value
+                all.push value
 
             return value
 
@@ -496,6 +577,100 @@ module.exports = objects =
 
         return JSON.stringify(sort a) is JSON.stringify(sort b)
 
+    ##
+    ##
+    ##
+    stream2Buffer: (stream, fn)->
+        data = []
+        length = 0
+
+        stream.on 'data', (chunk)->
+            length += chunk.length
+            data.push chunk
+
+        stream.on 'error', fn
+
+        stream.on 'end', ()->
+            fn null, Buffer.concat(data, length), stream
+
+    ##
+    ##
+    ##
+    argsLoggingCallback: (fn, logger)->
+        logger ?= console
+        return (args...)->
+
+            for arg in args
+                logger.log arg
+            fn.apply null, args
+
+    ##
+    ##
+    ##
+    map: (data, map, commands)->
+        strings = floyd.tools.strings
+
+        commands = objects.extend
+            split: (chars, value)->
+                return objects.resolve(value, data)?.split chars
+
+            join: (chars, list)->
+                if typeof list is 'string'
+                    list = objects.resolve list, data
+
+                else
+                    for i in [0..list.length-1]
+                        list[i] = objects.resolve list[i], data
+
+                return list.join? chars
+
+            format: (format, args)->
+                if typeof args is 'string'
+                    args = objects.resolve args, data
+
+                for i in [0..args.length-1]
+                    format = strings.replaceAll format, '$'+i, args[i]
+                    args[i] = objects.resolve args[i], data
+
+                return strings.format format, args
+
+        , commands
+
+        if objects.isArray map
+            out = []
+            for _key in map
+                out.push objects.resolve _key, data
+        else
+            out = {}
+            for key, sub of map
+                if key.charAt(0) is '$' && cmd = commands[key.substr 1]
+                    if objects.isArray sub
+                        out = []
+                        for value in sub
+                            out.push cmd value, data, commands
+                        return out
+
+                    else if typeof sub is 'object'
+                        for chars, value of sub
+                            return cmd chars, value, data, commands
+
+                    else
+                        return cmd sub, data, commands
+
+                else if typeof sub is 'string'
+                    out[key] = objects.resolve sub, data
+
+                else if objects.isArray sub
+                    out[key] = []
+                    for _key in sub
+                        out[key].push objects.resolve _key, data
+
+                else
+                    out[key] = objects.map data, sub, commands
+
+        return out
+
+
 ##
 ##
 ##
@@ -503,20 +678,40 @@ _resolve = (item, base)->
     #console.log 'resolve', item
     return if !base
 
-    if (_i=item.indexOf '.') > -1
-        _child = item.substr 0, _i
-        _id = item.substr _i + 1
+    if (i=item.indexOf '.') > -1
+        child = item.substr 0, i
+        id = item.substr i + 1
 
-        #console.log 'base:', _child, 'child:', _id, base
+        #console.log 'base:', child, 'child:', id, base
 
-        if base[_child]
-            #console.log 'searching', _child, 'for', _id
+        index = -1
+        if match = child.match /(.*)[\[]([0-9]+)[\]]/
+            child = match[1]
+            index = parseInt match[2]
 
-            _resolve _id, base[_child]
+        if base[child]
+            #console.log 'searching', child, 'for', id, index
+
+            _child = base[child]
+            if index > -1
+                _child = _child[index]
+
+            _resolve id, _child
+
 
     else
-        base[item]
+        index = -1
+        if match = item.match /(.*)[\[]([0-9]+)[\]]/
+            item = match[1]
+            index = parseInt match[2]
 
+        _item = base[item]
+
+        if index > -1
+            #console.log id, typeof _item
+            _item = _item[index]
+
+        return _item
 
 ##
 ## private static helper to recursively merge objects
@@ -529,50 +724,48 @@ _extend = (target, source)->
 
     else if objects.isArray source
 
-        for item in source
+        objects.process source,
+            each: (item, next)->
 
-            if objects.isObject(item)
+                if objects.isObject(item)
 
-                value = null
-                if item.id
-                    for _item in target
-                        if item.id is _item.id
-                            value = _item
-                            break;
-                ## removed this to prevent element merging if id attribute is not present
-                ##else
-                ##    t_index ?= 0
-                ##    if value = target[t_index++]
-                ##
-                ##        while value.id
-                ##            value = target[t_index++]
+                    value = null
+                    if item.id
+                        for _item in target
+                            if item.id is _item.id
+                                value = _item
+                                break;
 
-                if !value
-                    value = if objects.isArray(item) then [] else {}
-                    target.push value
+                    if !value
+                        value = if objects.isArray(item) then [] else {}
+                        target.push value
 
-                _extend value, item
+                    _extend value, item
 
-            else
-                target.push item
+                else
+                    target.push item
+
+                next()
 
     else
+        objects.process source,
+            each: (key, item, next)=>
+                if objects.isObject(item) || objects.isArray(item)
+                    if typeof target?[key] isnt typeof item
+                        delete target[key]
 
-        for key, item of source
-            if objects.isObject(item) || objects.isArray(item)
-                if typeof target?[key] isnt typeof item
-                    delete target[key]
+                    if objects.isBuffer item
+                        target[key] = item
+                    else
+                        target[key] ?= if objects.isArray(item) then [] else {}
 
-                if objects.isBuffer item
-                    target[key] = item
+                        _extend target[key], item
+
                 else
-                    target[key] ?= if objects.isArray(item) then [] else {}
 
-                    _extend target[key], item
+                    target[key] = item
 
-            else
-
-                target[key] = item
+                next()
 
 ##
 ##

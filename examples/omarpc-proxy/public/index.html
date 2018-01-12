@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+        <title>Floyd OmaRpc Proxy Example</title>
+
+        <script type="text/javascript" src="/RpcServer/proxy.js"></script>
+
+        <script>
+            window.onload = function() {
+
+                const Test = OMARpc.createProxy('Test')
+                const button = document.querySelector('button')
+
+                let counter = 0
+                button.onclick = function() {
+                    const start = +new Date()
+
+                    Test.ping(counter++, function(err, i) {
+                        button.textContent = 'click me: '+(i + 1)+' - '+(+new Date() - start)+'ms'
+                    })
+                }
+
+            }
+
+        </script>
+
+    </head>
+
+    <body>
+
+        <h1>Floyd OmaRpc Proxy Example</h1>
+
+        <button>click me</button>
+
+    </body>
+
+</html>

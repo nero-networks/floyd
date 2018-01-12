@@ -11,6 +11,7 @@ module.exports =
         ##
         ##
         configure: (config)->
+            @_servers = []
 
             ##
             ##
@@ -19,13 +20,16 @@ module.exports =
                 data:
                     parent: false
                     ports: []
-                    gateways: (if floyd.system.platform is 'remote' then ['remote'] else [])
+                    gateways: []
                     route: '/dnode'
 
             , config
 
             if config.data.parent
                 config.data.ports.push parent: true
+
+            if !config.data.gateways.length && floyd.system.platform is 'remote'
+                config.data.gateways.push 'origin'
 
             ## hack to delegate lookups to origin
 
@@ -58,6 +62,14 @@ module.exports =
 
             return config
 
+        ##
+        ##
+        ##
+        stop: (done)->
+            super (err)=>
+                for server in @_servers
+                    server.close()
+                done err
 
         ##
         ##
@@ -87,6 +99,12 @@ module.exports =
                 ## <-- TEMPORARY DEBUGGING
 
                 each: (conf, next)=>
+                    if typeof conf is 'string'
+                        conf =
+                            url: conf
+
+                    if conf.keepalive != false
+                        conf.keepalive ?= 1000 * 60 * 5
 
                     reconn = require('reconnect-core') ()=>
                         c = @_createConnection conf, ()=>
@@ -101,16 +119,19 @@ module.exports =
         ##
         ##
         _createConnection: (conf, fn)->
-            if conf is 'remote'
-                @logger.info 'connecting to url:', @data.route
+            if conf.url is 'origin'
+                @logger.debug 'connecting to origin:', @data.route
                 shoe @data.route, fn
 
             else if conf.tls
-                @logger.info 'connecting to tls-gateway:', conf.host||'localhost', conf.port
+                @logger.debug 'connecting to tls-gateway:', conf.host||'localhost', conf.port
                 require('tls').connect conf, fn
 
+            else if conf.url
+                @logger.debug 'connecting to url:', conf.url
+                shoe conf.url, fn
             else
-                @logger.info 'connecting to gateway:', conf
+                @logger.debug 'connecting to tcp-gateway:', conf
                 require('net').connect conf, fn
 
         ##
@@ -124,9 +145,9 @@ module.exports =
 
                 each: (conf, next)=>
                     if conf.tls
-                        @logger.info 'listening on tls-port:', conf.host||'localhost', conf.port
+                        @logger.debug 'listening on tls-port:', conf.host||'localhost', conf.port
                     else
-                        @logger.info 'listening on port:', conf
+                        @logger.debug 'listening on port:', conf
 
                     handler = (err)=>
                         fn(err) if err
@@ -150,19 +171,23 @@ module.exports =
                             @_createServerSocket conf, ctx.server, handler
 
                     else if conf.tls
-                        require('tls').createServer conf, (c)=>
+                        s = require('tls').createServer conf, (c)=>
                             #@logger.info c.getPeerCertificate().subject.CN
 
                             @_pipeLocal conf, c, handler
 
-                        .listen conf.port, conf.host
+                        .listen conf
+
+                        @_servers.push s
 
                     else
-                        require('net').createServer (c)=>
+                        s = require('net').createServer (c)=>
 
                             @_pipeLocal conf, c, handler
 
-                        .listen conf.port, conf.host
+                        .listen conf
+
+                        @_servers.push s
 
                     ##
                     next()
@@ -215,23 +240,25 @@ module.exports =
                             child.init (id: remote.id, type:'dnode.Remote'), (err)=>
                                 return fn(err) if err
 
-                            child._useProxy remote
+                            child._useProxy conf, remote
 
                             root.children.push child
 
                             fn()
 
                         else
-                            child._useProxy remote
+                            child._useProxy conf, remote
 
                         ##
                         @_emit 'connected',
-                            id: child.id
+                            id: remote.id
+                            ID: remote.ID
 
                         ##
                         conn.on 'end', ()=>
                             @_emit 'disconnected',
-                                id: child.id
+                                id: remote.id
+                                ID: remote.ID
 
 
                         ##
@@ -245,12 +272,17 @@ module.exports =
 
                 ## remote api
                 id: root.id
+                ID: root.ID
 
                 lookup: (args...)=>
                     child.lookup.apply child, args
 
                 token: (fn)=>
                     fn null, conf.token
+
+                ping: (fn)=>
+                    fn() ## pong
+
 
         ##
         ##

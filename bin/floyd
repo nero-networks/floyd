@@ -11,11 +11,23 @@ USER=`whoami`
 
 ##
 ##
-SOURCE="${BASH_SOURCE[0]}"
+function deref_link() {
+    filename=$1
+    if [ -x /usr/bin/realpath ]
+    then
+        /usr/bin/realpath $filename
+    else
+        while [ -h "$filename" ] ; do
+            ref="$(readlink "$filename")";
+            test "${ref:0:2}" == ".." && ref=$(dirname $filename)/$ref
+            filename=$ref
+        done
+        echo $filename
+    fi
+}
 
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
-
-test "${SOURCE:0:2}" == ".."  && SOURCE=$(dirname ${BASH_SOURCE[0]})/$SOURCE
+SOURCE=${BASH_SOURCE[0]}
+SOURCE=$( deref_link "$SOURCE" )
 
 ##
 FLOYD_ROOT="$( cd -P "$( dirname "$SOURCE" )"; cd .. && pwd -P )"
@@ -29,9 +41,18 @@ test $WORKDIR == $FLOYD_ROOT && _lib=true
 APPNAME=$(basename $WORKDIR)
 
 ##
-test $NODE_BINARY || NODE_BINARY=`which node`
+test "$1" == "start" && test "$NODE_BINARY" != "" && echo -e "\033[0;0;1musing node binary $NODE_BINARY\033[m"
+test -x "$NODE_BINARY" || NODE_BINARY=`which node`
 
-CMD="$NODE_BINARY $WORKDIR/.floyd"
+NODE_BINARY=$( deref_link "$NODE_BINARY" )
+
+## echo TRACE_WARNINGS=true >> .floyd/env
+if [ $TRACE_WARNINGS ]
+then
+    CMD="$NODE_BINARY $WORKDIR/.floyd"
+else
+    CMD="$NODE_BINARY --trace-warnings $WORKDIR/.floyd"
+fi
 
 NODE_PATH="$WORKDIR:$WORKDIR/node_modules:$FLOYD_ROOT:$FLOYD_ROOT/node_modules"
 
@@ -51,7 +72,7 @@ fi
 ##
 ##
 function check() {
-    PID=$(ps ax|grep node|grep -v grep|grep "$CMD"|awk '{print $1}')
+    PID=$(ps ax|grep node|grep -v grep|grep "$WORKDIR/.floyd"|awk '{print $1}')
     echo $PID
 }
 
@@ -103,9 +124,16 @@ function start_app() {
         then
             SETSID=/usr/bin/setsid
         else
-            SETSID=/usr/local/bin/setsid
+            SETSID=$(which setsid)
         fi
+
+        test $TRACE_WARNINGS && echo -e "\033[0;0;1mtracing warnings!\033[m"
+
+        test -x $SETSID || echo -e "\033[0;0;1mERROR\033[m: \033[0;31msetsid binary not found!\033[m"
+        test -x $SETSID || exit 1
+
         NODE_PATH=$NODE_PATH $SETSID $CMD $@ >> .floyd/logs/stdout.log 2>&1 &
+
         disown $!
 
     fi
@@ -368,7 +396,7 @@ function log_viewer() {
 COFFEECMD=`which coffee`
 test -e "$COFFEECMD" || COFFEECMD=$FLOYD_ROOT/node_modules/coffee-script/bin/coffee
 
-if [ -x "$COFFEECMD" ] 
+if [ -x "$COFFEECMD" ]
 then
     ##
     ## http://patorjk.com/software/taag/#p=display&f=Lean&t=Floyd

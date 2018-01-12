@@ -28,8 +28,8 @@ module.exports =
         ##
         ##
         persist: (done)->
-                ## only persist if not readonly
-            if !@_options.readonly
+            ## only persist if not readonly
+            if @_options && !@_options.readonly
                 indent = if @_options.find('debug') then 4 else 0
 
                 floyd.tools.files.write @_dataFile, JSON.stringify @_memory, null, indent

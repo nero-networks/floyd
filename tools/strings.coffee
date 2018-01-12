@@ -34,7 +34,7 @@ module.exports = strings =
         if parts.length
             for i in [0..parts.length-1]
 
-                if parts[i].message && parts[i].stack
+                if parts[i] && parts[i].message && parts[i].stack
                     parts[i] = parts[i].stack
 
                 if typeof parts[i] is 'object'
@@ -95,6 +95,11 @@ module.exports = strings =
             str = str.substr(0, len) + append
         return str
 
+    ##
+    replaceAll: (str, regex, rep)->
+        while str.indexOf(regex) isnt -1
+            str = str.replace regex, rep
+        return str
 
     ##
     ## simple string hashing function
@@ -129,6 +134,60 @@ module.exports = strings =
     sanitize: (str)->
         require('sanitizer').sanitize str
 
+    ##
+    ##
+    ##
+    fromStream: (stream, fn)->
+        floyd.tools.objects.stream2Buffer stream, (err, data)=>
+            fn null, data.toString(), stream
+
+    ##
+    ##
+    ##
+    table: (conf)->
+        rows = []
+        conf ?= {}
+        conf.cols ?= []
+        conf.delimiter ?= ' | '
+        conf.tab ?= 8
+
+        conf: conf
+
+        add: (row)->
+            if typeof row is 'string'
+                row = row.split ' | '
+
+            for i in [0..row.length-1]
+                col = conf.cols[i] ?= {}
+                col.width ?= 0
+
+                part = row[i]
+                if part && part.length > col.width
+                    col.width = Math.ceil(part.length / conf.tab) * conf.tab
+
+            rows.push row
+
+        toString: ()->
+            out = ''
+
+            i=0
+            for row in rows
+                j=0
+                for part in row
+                    out += part
+
+                    if j < conf.cols.length-1
+
+                        tabs = Math.ceil((conf.cols[j].width - part.length-1 + conf.tab) / conf.tab) - 1
+
+                        out += '\t' while tabs-- > 0
+                        out += conf.delimiter
+
+                        j++
+
+                out += '\n' if ++i isnt rows.length
+
+            return out
 
     ###
     ## UUID generator

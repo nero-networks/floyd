@@ -917,122 +917,7 @@ code.google.com/p/crypto-js/wiki/License
 
 
 
-/* ./modules/enc-base64.js */
-
-
-/*
-CryptoJS v3.1.2
-code.google.com/p/crypto-js
-(c) 2009-2013 by Jeff Mott. All rights reserved.
-code.google.com/p/crypto-js/wiki/License
-*/
-(function () {
-    // Shortcuts
-    var C = CryptoJS;
-    var C_lib = C.lib;
-    var WordArray = C_lib.WordArray;
-    var C_enc = C.enc;
-
-    /**
-     * Base64 encoding strategy.
-     */
-    var Base64 = C_enc.Base64 = {
-        /**
-         * Converts a word array to a Base64 string.
-         *
-         * @param {WordArray} wordArray The word array.
-         *
-         * @return {string} The Base64 string.
-         *
-         * @static
-         *
-         * @example
-         *
-         *     var base64String = CryptoJS.enc.Base64.stringify(wordArray);
-         */
-        stringify: function (wordArray) {
-            // Shortcuts
-            var words = wordArray.words;
-            var sigBytes = wordArray.sigBytes;
-            var map = this._map;
-
-            // Clamp excess bits
-            wordArray.clamp();
-
-            // Convert
-            var base64Chars = [];
-            for (var i = 0; i < sigBytes; i += 3) {
-                var byte1 = (words[i >>> 2]       >>> (24 - (i % 4) * 8))       & 0xff;
-                var byte2 = (words[(i + 1) >>> 2] >>> (24 - ((i + 1) % 4) * 8)) & 0xff;
-                var byte3 = (words[(i + 2) >>> 2] >>> (24 - ((i + 2) % 4) * 8)) & 0xff;
-
-                var triplet = (byte1 << 16) | (byte2 << 8) | byte3;
-
-                for (var j = 0; (j < 4) && (i + j * 0.75 < sigBytes); j++) {
-                    base64Chars.push(map.charAt((triplet >>> (6 * (3 - j))) & 0x3f));
-                }
-            }
-
-            // Add padding
-            var paddingChar = map.charAt(64);
-            if (paddingChar) {
-                while (base64Chars.length % 4) {
-                    base64Chars.push(paddingChar);
-                }
-            }
-
-            return base64Chars.join('');
-        },
-
-        /**
-         * Converts a Base64 string to a word array.
-         *
-         * @param {string} base64Str The Base64 string.
-         *
-         * @return {WordArray} The word array.
-         *
-         * @static
-         *
-         * @example
-         *
-         *     var wordArray = CryptoJS.enc.Base64.parse(base64String);
-         */
-        parse: function (base64Str) {
-            // Shortcuts
-            var base64StrLength = base64Str.length;
-            var map = this._map;
-
-            // Ignore padding
-            var paddingChar = map.charAt(64);
-            if (paddingChar) {
-                var paddingIndex = base64Str.indexOf(paddingChar);
-                if (paddingIndex != -1) {
-                    base64StrLength = paddingIndex;
-                }
-            }
-
-            // Convert
-            var words = [];
-            var nBytes = 0;
-            for (var i = 0; i < base64StrLength; i++) {
-                if (i % 4) {
-                    var bits1 = map.indexOf(base64Str.charAt(i - 1)) << ((i % 4) * 2);
-                    var bits2 = map.indexOf(base64Str.charAt(i)) >>> (6 - (i % 4) * 2);
-                    words[nBytes >>> 2] |= (bits1 | bits2) << (24 - (nBytes % 4) * 8);
-                    nBytes++;
-                }
-            }
-
-            return WordArray.create(words, nBytes);
-        },
-
-        _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
-    };
-}());
-
-
-
-/* ./modules/sha1.js */
+/* ./hashers/sha1.js */
 
 
 /*
@@ -1174,131 +1059,198 @@ code.google.com/p/crypto-js/wiki/License
 
 
 
-/* ./modules/evpkdf.js */
+/* ./hashers/sha256.js */
 
 
 /*
-CryptoJS v3.0.2
+CryptoJS v3.1.2
 code.google.com/p/crypto-js
-(c) 2009-2012 by Jeff Mott. All rights reserved.
+(c) 2009-2013 by Jeff Mott. All rights reserved.
 code.google.com/p/crypto-js/wiki/License
 */
-(function () {
+(function (Math) {
     // Shortcuts
     var C = CryptoJS;
     var C_lib = C.lib;
-    var Base = C_lib.Base;
     var WordArray = C_lib.WordArray;
+    var Hasher = C_lib.Hasher;
     var C_algo = C.algo;
-    var MD5 = C_algo.MD5;
+
+    // Initialization and round constants tables
+    var H = [];
+    var K = [];
+
+    // Compute constants
+    (function () {
+        function isPrime(n) {
+            var sqrtN = Math.sqrt(n);
+            for (var factor = 2; factor <= sqrtN; factor++) {
+                if (!(n % factor)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function getFractionalBits(n) {
+            return ((n - (n | 0)) * 0x100000000) | 0;
+        }
+
+        var n = 2;
+        var nPrime = 0;
+        while (nPrime < 64) {
+            if (isPrime(n)) {
+                if (nPrime < 8) {
+                    H[nPrime] = getFractionalBits(Math.pow(n, 1 / 2));
+                }
+                K[nPrime] = getFractionalBits(Math.pow(n, 1 / 3));
+
+                nPrime++;
+            }
+
+            n++;
+        }
+    }());
+
+    // Reusable object
+    var W = [];
 
     /**
-     * This key derivation function is meant to conform with EVP_BytesToKey.
-     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+     * SHA-256 hash algorithm.
      */
-    var EvpKDF = C_algo.EvpKDF = Base.extend({
-        /**
-         * Configuration options.
-         *
-         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
-         * @property {Hasher} hasher The hash algorithm to use. Default: CryptoJS.algo.MD5
-         * @property {number} iterations The number of iterations to perform. Default: 1
-         */
-        cfg: Base.extend({
-            keySize: 128/32,
-            hasher: MD5,
-            iterations: 1
-        }),
-
-        /**
-         * Initializes a newly created key derivation function.
-         *
-         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
-         *
-         * @example
-         *
-         *     var kdf = CryptoJS.algo.EvpKDF.create();
-         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
-         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
-         */
-        init: function (cfg) {
-            this.cfg = this.cfg.extend(cfg);
+    var SHA256 = C_algo.SHA256 = Hasher.extend({
+        _doReset: function () {
+            this._hash = new WordArray.init(H.slice(0));
         },
 
-        /**
-         * Derives a key from a password.
-         *
-         * @param {WordArray|string} password The password.
-         * @param {WordArray|string} salt A salt.
-         *
-         * @return {WordArray} The derived key.
-         *
-         * @example
-         *
-         *     var key = kdf.compute(password, salt);
-         */
-        compute: function (password, salt) {
+        _doProcessBlock: function (M, offset) {
             // Shortcut
-            var cfg = this.cfg;
+            var H = this._hash.words;
 
-            // Init hasher
-            var hasher = cfg.hasher.create();
+            // Working variables
+            var a = H[0];
+            var b = H[1];
+            var c = H[2];
+            var d = H[3];
+            var e = H[4];
+            var f = H[5];
+            var g = H[6];
+            var h = H[7];
 
-            // Initial values
-            var derivedKey = WordArray.create();
+            // Computation
+            for (var i = 0; i < 64; i++) {
+                if (i < 16) {
+                    W[i] = M[offset + i] | 0;
+                } else {
+                    var gamma0x = W[i - 15];
+                    var gamma0  = ((gamma0x << 25) | (gamma0x >>> 7))  ^
+                                  ((gamma0x << 14) | (gamma0x >>> 18)) ^
+                                   (gamma0x >>> 3);
 
-            // Shortcuts
-            var derivedKeyWords = derivedKey.words;
-            var keySize = cfg.keySize;
-            var iterations = cfg.iterations;
+                    var gamma1x = W[i - 2];
+                    var gamma1  = ((gamma1x << 15) | (gamma1x >>> 17)) ^
+                                  ((gamma1x << 13) | (gamma1x >>> 19)) ^
+                                   (gamma1x >>> 10);
 
-            // Generate key
-            while (derivedKeyWords.length < keySize) {
-                if (block) {
-                    hasher.update(block);
+                    W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16];
                 }
-                var block = hasher.update(password).finalize(salt);
-                hasher.reset();
 
-                // Iterations
-                for (var i = 1; i < iterations; i++) {
-                    block = hasher.finalize(block);
-                    hasher.reset();
-                }
+                var ch  = (e & f) ^ (~e & g);
+                var maj = (a & b) ^ (a & c) ^ (b & c);
 
-                derivedKey.concat(block);
+                var sigma0 = ((a << 30) | (a >>> 2)) ^ ((a << 19) | (a >>> 13)) ^ ((a << 10) | (a >>> 22));
+                var sigma1 = ((e << 26) | (e >>> 6)) ^ ((e << 21) | (e >>> 11)) ^ ((e << 7)  | (e >>> 25));
+
+                var t1 = h + sigma1 + ch + K[i] + W[i];
+                var t2 = sigma0 + maj;
+
+                h = g;
+                g = f;
+                f = e;
+                e = (d + t1) | 0;
+                d = c;
+                c = b;
+                b = a;
+                a = (t1 + t2) | 0;
             }
-            derivedKey.sigBytes = keySize * 4;
 
-            return derivedKey;
+            // Intermediate hash value
+            H[0] = (H[0] + a) | 0;
+            H[1] = (H[1] + b) | 0;
+            H[2] = (H[2] + c) | 0;
+            H[3] = (H[3] + d) | 0;
+            H[4] = (H[4] + e) | 0;
+            H[5] = (H[5] + f) | 0;
+            H[6] = (H[6] + g) | 0;
+            H[7] = (H[7] + h) | 0;
+        },
+
+        _doFinalize: function () {
+            // Shortcuts
+            var data = this._data;
+            var dataWords = data.words;
+
+            var nBitsTotal = this._nDataBytes * 8;
+            var nBitsLeft = data.sigBytes * 8;
+
+            // Add padding
+            dataWords[nBitsLeft >>> 5] |= 0x80 << (24 - nBitsLeft % 32);
+            dataWords[(((nBitsLeft + 64) >>> 9) << 4) + 14] = Math.floor(nBitsTotal / 0x100000000);
+            dataWords[(((nBitsLeft + 64) >>> 9) << 4) + 15] = nBitsTotal;
+            data.sigBytes = dataWords.length * 4;
+
+            // Hash final blocks
+            this._process();
+
+            // Return final computed hash
+            return this._hash;
+        },
+
+        clone: function () {
+            var clone = Hasher.clone.call(this);
+            clone._hash = this._hash.clone();
+
+            return clone;
         }
     });
 
     /**
-     * Derives a key from a password.
+     * Shortcut function to the hasher's object interface.
      *
-     * @param {WordArray|string} password The password.
-     * @param {WordArray|string} salt A salt.
-     * @param {Object} cfg (Optional) The configuration options to use for this computation.
+     * @param {WordArray|string} message The message to hash.
      *
-     * @return {WordArray} The derived key.
+     * @return {WordArray} The hash.
      *
      * @static
      *
      * @example
      *
-     *     var key = CryptoJS.EvpKDF(password, salt);
-     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
-     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+     *     var hash = CryptoJS.SHA256('message');
+     *     var hash = CryptoJS.SHA256(wordArray);
      */
-    C.EvpKDF = function (password, salt, cfg) {
-        return EvpKDF.create(cfg).compute(password, salt);
-    };
-}());
+    C.SHA256 = Hasher._createHelper(SHA256);
+
+    /**
+     * Shortcut function to the HMAC's object interface.
+     *
+     * @param {WordArray|string} message The message to hash.
+     * @param {WordArray|string} key The secret key.
+     *
+     * @return {WordArray} The HMAC.
+     *
+     * @static
+     *
+     * @example
+     *
+     *     var hmac = CryptoJS.HmacSHA256(message, key);
+     */
+    C.HmacSHA256 = Hasher._createHmacHelper(SHA256);
+}(Math));
 
 
 
-/* ./modules/md5.js */
+/* ./hashers/md5.js */
 
 
 /*
@@ -1558,7 +1510,131 @@ code.google.com/p/crypto-js/wiki/License
 
 
 
-/* ./modules/sha256.js */
+/* ./modules/evpkdf.js */
+
+
+/*
+CryptoJS v3.0.2
+code.google.com/p/crypto-js
+(c) 2009-2012 by Jeff Mott. All rights reserved.
+code.google.com/p/crypto-js/wiki/License
+*/
+(function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var WordArray = C_lib.WordArray;
+    var C_algo = C.algo;
+    var MD5 = C_algo.MD5;
+
+    /**
+     * This key derivation function is meant to conform with EVP_BytesToKey.
+     * www.openssl.org/docs/crypto/EVP_BytesToKey.html
+     */
+    var EvpKDF = C_algo.EvpKDF = Base.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+         * @property {Hasher} hasher The hash algorithm to use. Default: CryptoJS.algo.MD5
+         * @property {number} iterations The number of iterations to perform. Default: 1
+         */
+        cfg: Base.extend({
+            keySize: 128/32,
+            hasher: MD5,
+            iterations: 1
+        }),
+
+        /**
+         * Initializes a newly created key derivation function.
+         *
+         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+         *
+         * @example
+         *
+         *     var kdf = CryptoJS.algo.EvpKDF.create();
+         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8 });
+         *     var kdf = CryptoJS.algo.EvpKDF.create({ keySize: 8, iterations: 1000 });
+         */
+        init: function (cfg) {
+            this.cfg = this.cfg.extend(cfg);
+        },
+
+        /**
+         * Derives a key from a password.
+         *
+         * @param {WordArray|string} password The password.
+         * @param {WordArray|string} salt A salt.
+         *
+         * @return {WordArray} The derived key.
+         *
+         * @example
+         *
+         *     var key = kdf.compute(password, salt);
+         */
+        compute: function (password, salt) {
+            // Shortcut
+            var cfg = this.cfg;
+
+            // Init hasher
+            var hasher = cfg.hasher.create();
+
+            // Initial values
+            var derivedKey = WordArray.create();
+
+            // Shortcuts
+            var derivedKeyWords = derivedKey.words;
+            var keySize = cfg.keySize;
+            var iterations = cfg.iterations;
+
+            // Generate key
+            while (derivedKeyWords.length < keySize) {
+                if (block) {
+                    hasher.update(block);
+                }
+                var block = hasher.update(password).finalize(salt);
+                hasher.reset();
+
+                // Iterations
+                for (var i = 1; i < iterations; i++) {
+                    block = hasher.finalize(block);
+                    hasher.reset();
+                }
+
+                derivedKey.concat(block);
+            }
+            derivedKey.sigBytes = keySize * 4;
+
+            return derivedKey;
+        }
+    });
+
+    /**
+     * Derives a key from a password.
+     *
+     * @param {WordArray|string} password The password.
+     * @param {WordArray|string} salt A salt.
+     * @param {Object} cfg (Optional) The configuration options to use for this computation.
+     *
+     * @return {WordArray} The derived key.
+     *
+     * @static
+     *
+     * @example
+     *
+     *     var key = CryptoJS.EvpKDF(password, salt);
+     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8 });
+     *     var key = CryptoJS.EvpKDF(password, salt, { keySize: 8, iterations: 1000 });
+     */
+    C.EvpKDF = function (password, salt, cfg) {
+        return EvpKDF.create(cfg).compute(password, salt);
+    };
+}());
+
+
+
+/* ./modules/enc-base64.js */
 
 
 /*
@@ -1567,185 +1643,109 @@ code.google.com/p/crypto-js
 (c) 2009-2013 by Jeff Mott. All rights reserved.
 code.google.com/p/crypto-js/wiki/License
 */
-(function (Math) {
+(function () {
     // Shortcuts
     var C = CryptoJS;
     var C_lib = C.lib;
     var WordArray = C_lib.WordArray;
-    var Hasher = C_lib.Hasher;
-    var C_algo = C.algo;
-
-    // Initialization and round constants tables
-    var H = [];
-    var K = [];
-
-    // Compute constants
-    (function () {
-        function isPrime(n) {
-            var sqrtN = Math.sqrt(n);
-            for (var factor = 2; factor <= sqrtN; factor++) {
-                if (!(n % factor)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        function getFractionalBits(n) {
-            return ((n - (n | 0)) * 0x100000000) | 0;
-        }
-
-        var n = 2;
-        var nPrime = 0;
-        while (nPrime < 64) {
-            if (isPrime(n)) {
-                if (nPrime < 8) {
-                    H[nPrime] = getFractionalBits(Math.pow(n, 1 / 2));
-                }
-                K[nPrime] = getFractionalBits(Math.pow(n, 1 / 3));
-
-                nPrime++;
-            }
-
-            n++;
-        }
-    }());
-
-    // Reusable object
-    var W = [];
+    var C_enc = C.enc;
 
     /**
-     * SHA-256 hash algorithm.
+     * Base64 encoding strategy.
      */
-    var SHA256 = C_algo.SHA256 = Hasher.extend({
-        _doReset: function () {
-            this._hash = new WordArray.init(H.slice(0));
-        },
-
-        _doProcessBlock: function (M, offset) {
-            // Shortcut
-            var H = this._hash.words;
-
-            // Working variables
-            var a = H[0];
-            var b = H[1];
-            var c = H[2];
-            var d = H[3];
-            var e = H[4];
-            var f = H[5];
-            var g = H[6];
-            var h = H[7];
-
-            // Computation
-            for (var i = 0; i < 64; i++) {
-                if (i < 16) {
-                    W[i] = M[offset + i] | 0;
-                } else {
-                    var gamma0x = W[i - 15];
-                    var gamma0  = ((gamma0x << 25) | (gamma0x >>> 7))  ^
-                                  ((gamma0x << 14) | (gamma0x >>> 18)) ^
-                                   (gamma0x >>> 3);
-
-                    var gamma1x = W[i - 2];
-                    var gamma1  = ((gamma1x << 15) | (gamma1x >>> 17)) ^
-                                  ((gamma1x << 13) | (gamma1x >>> 19)) ^
-                                   (gamma1x >>> 10);
-
-                    W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16];
-                }
-
-                var ch  = (e & f) ^ (~e & g);
-                var maj = (a & b) ^ (a & c) ^ (b & c);
-
-                var sigma0 = ((a << 30) | (a >>> 2)) ^ ((a << 19) | (a >>> 13)) ^ ((a << 10) | (a >>> 22));
-                var sigma1 = ((e << 26) | (e >>> 6)) ^ ((e << 21) | (e >>> 11)) ^ ((e << 7)  | (e >>> 25));
-
-                var t1 = h + sigma1 + ch + K[i] + W[i];
-                var t2 = sigma0 + maj;
-
-                h = g;
-                g = f;
-                f = e;
-                e = (d + t1) | 0;
-                d = c;
-                c = b;
-                b = a;
-                a = (t1 + t2) | 0;
-            }
-
-            // Intermediate hash value
-            H[0] = (H[0] + a) | 0;
-            H[1] = (H[1] + b) | 0;
-            H[2] = (H[2] + c) | 0;
-            H[3] = (H[3] + d) | 0;
-            H[4] = (H[4] + e) | 0;
-            H[5] = (H[5] + f) | 0;
-            H[6] = (H[6] + g) | 0;
-            H[7] = (H[7] + h) | 0;
-        },
-
-        _doFinalize: function () {
+    var Base64 = C_enc.Base64 = {
+        /**
+         * Converts a word array to a Base64 string.
+         *
+         * @param {WordArray} wordArray The word array.
+         *
+         * @return {string} The Base64 string.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var base64String = CryptoJS.enc.Base64.stringify(wordArray);
+         */
+        stringify: function (wordArray) {
             // Shortcuts
-            var data = this._data;
-            var dataWords = data.words;
+            var words = wordArray.words;
+            var sigBytes = wordArray.sigBytes;
+            var map = this._map;
 
-            var nBitsTotal = this._nDataBytes * 8;
-            var nBitsLeft = data.sigBytes * 8;
+            // Clamp excess bits
+            wordArray.clamp();
+
+            // Convert
+            var base64Chars = [];
+            for (var i = 0; i < sigBytes; i += 3) {
+                var byte1 = (words[i >>> 2]       >>> (24 - (i % 4) * 8))       & 0xff;
+                var byte2 = (words[(i + 1) >>> 2] >>> (24 - ((i + 1) % 4) * 8)) & 0xff;
+                var byte3 = (words[(i + 2) >>> 2] >>> (24 - ((i + 2) % 4) * 8)) & 0xff;
+
+                var triplet = (byte1 << 16) | (byte2 << 8) | byte3;
+
+                for (var j = 0; (j < 4) && (i + j * 0.75 < sigBytes); j++) {
+                    base64Chars.push(map.charAt((triplet >>> (6 * (3 - j))) & 0x3f));
+                }
+            }
 
             // Add padding
-            dataWords[nBitsLeft >>> 5] |= 0x80 << (24 - nBitsLeft % 32);
-            dataWords[(((nBitsLeft + 64) >>> 9) << 4) + 14] = Math.floor(nBitsTotal / 0x100000000);
-            dataWords[(((nBitsLeft + 64) >>> 9) << 4) + 15] = nBitsTotal;
-            data.sigBytes = dataWords.length * 4;
+            var paddingChar = map.charAt(64);
+            if (paddingChar) {
+                while (base64Chars.length % 4) {
+                    base64Chars.push(paddingChar);
+                }
+            }
 
-            // Hash final blocks
-            this._process();
-
-            // Return final computed hash
-            return this._hash;
+            return base64Chars.join('');
         },
 
-        clone: function () {
-            var clone = Hasher.clone.call(this);
-            clone._hash = this._hash.clone();
+        /**
+         * Converts a Base64 string to a word array.
+         *
+         * @param {string} base64Str The Base64 string.
+         *
+         * @return {WordArray} The word array.
+         *
+         * @static
+         *
+         * @example
+         *
+         *     var wordArray = CryptoJS.enc.Base64.parse(base64String);
+         */
+        parse: function (base64Str) {
+            // Shortcuts
+            var base64StrLength = base64Str.length;
+            var map = this._map;
 
-            return clone;
-        }
-    });
+            // Ignore padding
+            var paddingChar = map.charAt(64);
+            if (paddingChar) {
+                var paddingIndex = base64Str.indexOf(paddingChar);
+                if (paddingIndex != -1) {
+                    base64StrLength = paddingIndex;
+                }
+            }
 
-    /**
-     * Shortcut function to the hasher's object interface.
-     *
-     * @param {WordArray|string} message The message to hash.
-     *
-     * @return {WordArray} The hash.
-     *
-     * @static
-     *
-     * @example
-     *
-     *     var hash = CryptoJS.SHA256('message');
-     *     var hash = CryptoJS.SHA256(wordArray);
-     */
-    C.SHA256 = Hasher._createHelper(SHA256);
+            // Convert
+            var words = [];
+            var nBytes = 0;
+            for (var i = 0; i < base64StrLength; i++) {
+                if (i % 4) {
+                    var bits1 = map.indexOf(base64Str.charAt(i - 1)) << ((i % 4) * 2);
+                    var bits2 = map.indexOf(base64Str.charAt(i)) >>> (6 - (i % 4) * 2);
+                    words[nBytes >>> 2] |= (bits1 | bits2) << (24 - (nBytes % 4) * 8);
+                    nBytes++;
+                }
+            }
 
-    /**
-     * Shortcut function to the HMAC's object interface.
-     *
-     * @param {WordArray|string} message The message to hash.
-     * @param {WordArray|string} key The secret key.
-     *
-     * @return {WordArray} The HMAC.
-     *
-     * @static
-     *
-     * @example
-     *
-     *     var hmac = CryptoJS.HmacSHA256(message, key);
-     */
-    C.HmacSHA256 = Hasher._createHmacHelper(SHA256);
-}(Math));
+            return WordArray.create(words, nBytes);
+        },
+
+        _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+    };
+}());
 /*
 CryptoJS v3.1.2
 code.google.com/p/crypto-js
@@ -2612,6 +2612,143 @@ CryptoJS.lib.Cipher || (function (undefined) {
 
 
 
+/* ./cipher/pbkdf2.js */
+
+
+/*
+CryptoJS v3.1.2
+code.google.com/p/crypto-js
+(c) 2009-2013 by Jeff Mott. All rights reserved.
+code.google.com/p/crypto-js/wiki/License
+*/
+(function () {
+    // Shortcuts
+    var C = CryptoJS;
+    var C_lib = C.lib;
+    var Base = C_lib.Base;
+    var WordArray = C_lib.WordArray;
+    var C_algo = C.algo;
+    var SHA1 = C_algo.SHA1;
+    var HMAC = C_algo.HMAC;
+
+    /**
+     * Password-Based Key Derivation Function 2 algorithm.
+     */
+    var PBKDF2 = C_algo.PBKDF2 = Base.extend({
+        /**
+         * Configuration options.
+         *
+         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
+         * @property {Hasher} hasher The hasher to use. Default: SHA1
+         * @property {number} iterations The number of iterations to perform. Default: 1
+         */
+        cfg: Base.extend({
+            keySize: 128/32,
+            hasher: SHA1,
+            iterations: 1
+        }),
+
+        /**
+         * Initializes a newly created key derivation function.
+         *
+         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
+         *
+         * @example
+         *
+         *     var kdf = CryptoJS.algo.PBKDF2.create();
+         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8 });
+         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8, iterations: 1000 });
+         */
+        init: function (cfg) {
+            this.cfg = this.cfg.extend(cfg);
+        },
+
+        /**
+         * Computes the Password-Based Key Derivation Function 2.
+         *
+         * @param {WordArray|string} password The password.
+         * @param {WordArray|string} salt A salt.
+         *
+         * @return {WordArray} The derived key.
+         *
+         * @example
+         *
+         *     var key = kdf.compute(password, salt);
+         */
+        compute: function (password, salt) {
+            // Shortcut
+            var cfg = this.cfg;
+
+            // Init HMAC
+            var hmac = HMAC.create(cfg.hasher, password);
+
+            // Initial values
+            var derivedKey = WordArray.create();
+            var blockIndex = WordArray.create([0x00000001]);
+
+            // Shortcuts
+            var derivedKeyWords = derivedKey.words;
+            var blockIndexWords = blockIndex.words;
+            var keySize = cfg.keySize;
+            var iterations = cfg.iterations;
+
+            // Generate key
+            while (derivedKeyWords.length < keySize) {
+                var block = hmac.update(salt).finalize(blockIndex);
+                hmac.reset();
+
+                // Shortcuts
+                var blockWords = block.words;
+                var blockWordsLength = blockWords.length;
+
+                // Iterations
+                var intermediate = block;
+                for (var i = 1; i < iterations; i++) {
+                    intermediate = hmac.finalize(intermediate);
+                    hmac.reset();
+
+                    // Shortcut
+                    var intermediateWords = intermediate.words;
+
+                    // XOR intermediate with block
+                    for (var j = 0; j < blockWordsLength; j++) {
+                        blockWords[j] ^= intermediateWords[j];
+                    }
+                }
+
+                derivedKey.concat(block);
+                blockIndexWords[0]++;
+            }
+            derivedKey.sigBytes = keySize * 4;
+
+            return derivedKey;
+        }
+    });
+
+    /**
+     * Computes the Password-Based Key Derivation Function 2.
+     *
+     * @param {WordArray|string} password The password.
+     * @param {WordArray|string} salt A salt.
+     * @param {Object} cfg (Optional) The configuration options to use for this computation.
+     *
+     * @return {WordArray} The derived key.
+     *
+     * @static
+     *
+     * @example
+     *
+     *     var key = CryptoJS.PBKDF2(password, salt);
+     *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8 });
+     *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8, iterations: 1000 });
+     */
+    C.PBKDF2 = function (password, salt, cfg) {
+        return PBKDF2.create(cfg).compute(password, salt);
+    };
+}());
+
+
+
 /* ./cipher/aes.js */
 
 
@@ -2827,143 +2964,6 @@ code.google.com/p/crypto-js/wiki/License
      *     var plaintext  = CryptoJS.AES.decrypt(ciphertext, key, cfg);
      */
     C.AES = BlockCipher._createHelper(AES);
-}());
-
-
-
-/* ./cipher/pbkdf2.js */
-
-
-/*
-CryptoJS v3.1.2
-code.google.com/p/crypto-js
-(c) 2009-2013 by Jeff Mott. All rights reserved.
-code.google.com/p/crypto-js/wiki/License
-*/
-(function () {
-    // Shortcuts
-    var C = CryptoJS;
-    var C_lib = C.lib;
-    var Base = C_lib.Base;
-    var WordArray = C_lib.WordArray;
-    var C_algo = C.algo;
-    var SHA1 = C_algo.SHA1;
-    var HMAC = C_algo.HMAC;
-
-    /**
-     * Password-Based Key Derivation Function 2 algorithm.
-     */
-    var PBKDF2 = C_algo.PBKDF2 = Base.extend({
-        /**
-         * Configuration options.
-         *
-         * @property {number} keySize The key size in words to generate. Default: 4 (128 bits)
-         * @property {Hasher} hasher The hasher to use. Default: SHA1
-         * @property {number} iterations The number of iterations to perform. Default: 1
-         */
-        cfg: Base.extend({
-            keySize: 128/32,
-            hasher: SHA1,
-            iterations: 1
-        }),
-
-        /**
-         * Initializes a newly created key derivation function.
-         *
-         * @param {Object} cfg (Optional) The configuration options to use for the derivation.
-         *
-         * @example
-         *
-         *     var kdf = CryptoJS.algo.PBKDF2.create();
-         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8 });
-         *     var kdf = CryptoJS.algo.PBKDF2.create({ keySize: 8, iterations: 1000 });
-         */
-        init: function (cfg) {
-            this.cfg = this.cfg.extend(cfg);
-        },
-
-        /**
-         * Computes the Password-Based Key Derivation Function 2.
-         *
-         * @param {WordArray|string} password The password.
-         * @param {WordArray|string} salt A salt.
-         *
-         * @return {WordArray} The derived key.
-         *
-         * @example
-         *
-         *     var key = kdf.compute(password, salt);
-         */
-        compute: function (password, salt) {
-            // Shortcut
-            var cfg = this.cfg;
-
-            // Init HMAC
-            var hmac = HMAC.create(cfg.hasher, password);
-
-            // Initial values
-            var derivedKey = WordArray.create();
-            var blockIndex = WordArray.create([0x00000001]);
-
-            // Shortcuts
-            var derivedKeyWords = derivedKey.words;
-            var blockIndexWords = blockIndex.words;
-            var keySize = cfg.keySize;
-            var iterations = cfg.iterations;
-
-            // Generate key
-            while (derivedKeyWords.length < keySize) {
-                var block = hmac.update(salt).finalize(blockIndex);
-                hmac.reset();
-
-                // Shortcuts
-                var blockWords = block.words;
-                var blockWordsLength = blockWords.length;
-
-                // Iterations
-                var intermediate = block;
-                for (var i = 1; i < iterations; i++) {
-                    intermediate = hmac.finalize(intermediate);
-                    hmac.reset();
-
-                    // Shortcut
-                    var intermediateWords = intermediate.words;
-
-                    // XOR intermediate with block
-                    for (var j = 0; j < blockWordsLength; j++) {
-                        blockWords[j] ^= intermediateWords[j];
-                    }
-                }
-
-                derivedKey.concat(block);
-                blockIndexWords[0]++;
-            }
-            derivedKey.sigBytes = keySize * 4;
-
-            return derivedKey;
-        }
-    });
-
-    /**
-     * Computes the Password-Based Key Derivation Function 2.
-     *
-     * @param {WordArray|string} password The password.
-     * @param {WordArray|string} salt A salt.
-     * @param {Object} cfg (Optional) The configuration options to use for this computation.
-     *
-     * @return {WordArray} The derived key.
-     *
-     * @static
-     *
-     * @example
-     *
-     *     var key = CryptoJS.PBKDF2(password, salt);
-     *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8 });
-     *     var key = CryptoJS.PBKDF2(password, salt, { keySize: 8, iterations: 1000 });
-     */
-    C.PBKDF2 = function (password, salt, cfg) {
-        return PBKDF2.create(cfg).compute(password, salt);
-    };
 }());
 
 

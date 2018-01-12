@@ -2,8 +2,8 @@
 
 module.exports =
 
-    Client: (ctx, brokerId, handler)->
-        new Client ctx, brokerId, handler
+    Client: (ctx, brokerId, topic, handler)->
+        new Client ctx, brokerId, topic, handler
 
 
 ##
@@ -29,7 +29,7 @@ class Client
     ##
     ##
     publish: (topic, data, done)->
-        done ?= ()=>
+        done ?= (err)=>
             @_ctx.logger.error(err) if err
 
         @_getBroker (err, broker)=>
@@ -83,7 +83,7 @@ class Client
     ##
     ##
     ##
-    _getBroker: (fn)=>
+    _getBroker: (fn)->
         return fn(null, @_broker) if @_broker
 
         @_ctx.lookup @_brokerId, @_ctx.identity, (err, broker)=>

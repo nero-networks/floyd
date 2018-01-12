@@ -1,6 +1,6 @@
 
 net = require 'net'
-REPL = require 'coffee-script/repl'
+REPL = require 'coffeescript/repl'
 through = require 'through'
 
 dnode = require 'dnode'
@@ -81,6 +81,8 @@ module.exports =
                     @logger.debug 'repl complete', what
                     repl.completer what, fn
 
+                id: (fn)=>
+                    fn repl.context.ctx?.ID
 
         ##
         ##

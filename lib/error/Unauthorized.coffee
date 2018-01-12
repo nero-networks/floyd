@@ -13,5 +13,6 @@ module.exports =
         name: 'floyd.error.Unauthorized'
         title: 'Autorisierung erforderlich'
 
-        constructor: (@realm)->
-            super floyd.tools.strings.sprintf(message, @realm), 401
+        constructor: (realm)->
+            super floyd.tools.strings.sprintf(message, realm), 401
+            @realm = realm

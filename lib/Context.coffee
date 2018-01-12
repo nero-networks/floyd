@@ -30,9 +30,9 @@ module.exports =
         ## * children
         ## * parent
         ##
-        constructor: (@parent)->
-            super null, @parent
-
+        constructor: (parent)->
+            super null, parent
+            @parent = parent
             @_status = []
             for action in ACTIONS
                 @_status['is'+floyd.tools.strings.capitalize (ACTION_MAPPING[action] || action)] = false
@@ -48,7 +48,7 @@ module.exports =
             config = @configure config
             @id = config.id
 
-            @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
+            @ID = config.ID || if !@parent?.ID then @id else @parent.ID+'.'+@id
 
             if typeof (@type = config.type) is 'function'
                 @type = @ID+'.'+(@type.name || 'DynContext')
@@ -83,7 +83,7 @@ module.exports =
         ##
         ##
         ##
-        error: (err)=>
+        error: (err)->
             if !@_errorHandler
                 if @parent
                     @parent.error err
@@ -159,8 +159,8 @@ module.exports =
             config = new floyd.Config config
 
             # extend context with methods from config. add @method._super for each
-            for key, value of config
-                do(key, value)=>
+            @_process config,
+                each: (key, value, next)=>
                     if typeof value is 'function'
 
                         _orig_super = @[key]
@@ -172,6 +172,8 @@ module.exports =
                             @[key]._super = (args...)=>
                                 #console.log 'calling _orig_super for', key, _orig_super.toString()
                                 _orig_super.apply @, args
+
+                    next()
 
 
             ##
@@ -389,7 +391,7 @@ module.exports =
                         if level is 'stop' || level is 'destroy'
                             child[level] next
 
-                        else process.nextTick ()->
+                        else setImmediate ()->
                             child[level] next
 
                     else next()
@@ -480,10 +482,18 @@ module.exports =
         lookup: (name, identity, done)->
             if !done && typeof identity is 'function'
                 done = identity
-                identity = @identity
+                identity = null
+            identity ?= @identity
 
-            if !identity || !identity.id || !identity.token
+            if !identity?.id || !identity.token
                 return done new Error '2. parameter is not identity'
+
+            if !done ## recurse promisifyed
+                return new Promise (resolve, reject)=>
+                    @lookup name, identity, (err, ctx)=>
+                        reject(err) if err
+                        resolve floyd.tools.objects.promisify ctx
+            ##
 
             ## myself
             if name is @id
@@ -578,9 +588,11 @@ module.exports =
         ##
         _createLogger: (id)->
 
-            type = @type
+            if !(ID = @data.logger?.ID)
+                type = @type
+                ID = "#{id} - (#{type})"
 
-            logger = new floyd.logger.Logger "#{id} - (#{type})"
+            logger = new floyd.logger.Logger ID
 
             if @parent
                 logger.console = false
@@ -598,7 +610,7 @@ module.exports =
         ##
         ##
         ##
-        _processLogEntry: (args)=>
+        _processLogEntry: (args)->
             if @parent
                 @parent._processLogEntry args
 

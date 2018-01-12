@@ -1,4 +1,6 @@
 
+vm = require 'vm'
+
 ##
 
 module.exports =
@@ -172,7 +174,7 @@ module.exports =
 
 
                     ##
-                    ctx.run "(#{__boot_cheerio__})(#{model})"
+                    vm.runInContext "(#{__boot_cheerio__})(#{model})", ctx
 
 
 
@@ -180,16 +182,15 @@ module.exports =
         ##
         ##
         _createContext: (fn)->
-
             ctx =
                 window: {}
                 console: console
                 setTimeout: (args...)-> setTimeout.apply null, args
                 clearTimeout: (args...)-> clearTimeout.apply null, args
 
-            require('contextify') ctx
+            vm.createContext ctx
 
-            ctx.run @__SCRIPT+"var floyd = require('floyd');"
+            vm.runInContext @__SCRIPT+"\nvar floyd = require('floyd');", ctx
 
             ctx.floyd.system.platform = 'cheerio'
             ctx.floyd.system.os = floyd.system.os
@@ -220,12 +221,13 @@ module.exports =
         ##
         ##
         _releaseContext: (ctx)->
+
             persistentKeys = ['run', 'getGlobal', 'dispose', 'process', 'console', 'setTimeout', 'setImmediate', 'clearTimeout', 'clearImmediate', 'floyd', 'require', '_modules']
 
             if @__POOL__.length < @data.poolsize
                 for key, value of ctx
-                    if persistentKeys.indexOf(key) is -1
-                        delete ctx[key]
+                    if ctx[key] && persistentKeys.indexOf(key) is -1
+                        vm.runInContext "delete "+key+";", ctx
 
                 @__POOL__.push ctx
 
@@ -253,7 +255,7 @@ module.exports =
                 cookie: 'FSID='+req.session.SID+'; path=/; httponly'
 
             ##
-            ctx.window = ctx.getGlobal()
+            ctx.window = ctx
 
             ctx.window.setImmediate = setImmediate
             ctx.window.clearImmediate = clearImmediate

@@ -30,22 +30,22 @@ module.exports =
         ##
         boot: ()->
             files = floyd.tools.files
+            _exists = (path, dir)-> files.fs.existsSync files.path.join path, dir
 
-            _dirs = [@system.libdir]
+            _dirs = []
 
-            if @system.appdir isnt @system.libdir
-                _dirs.push @system.appdir
+            ## recurse parents of appdir and add relevant dirs from root to appdir
+            parts = @system.appdir.split files.sep
+            while parts.length > 1
+                path = parts.join files.sep
+                if _exists(path, 'modules') || _exists(path, '.floyd')
+                    _dirs.unshift path
+                parts.pop()
 
-            (parts = @system.appdir.split '/').pop()
-            path = parts.join '/'
-            if files.fs.existsSync files.path.join path, 'modules'
-                _dirs.push path
+            ## load libdir first
+            _dirs.unshift @system.libdir
 
-            #console.log _dirs
-
-            ## load lib
-
-            #console.log 'loading lib', _dirs, @
+            #console.log 'loading lib from dirs', _dirs
             floyd.tools.libloader _dirs, @,
 
                 ##
@@ -140,7 +140,7 @@ module.exports =
             ##
             ## extend floyd.system with settings from config
             if config.system
-            	floyd.tools.objects.extend floyd.system, config.system
+                floyd.tools.objects.extend floyd.system, config.system
 
             files = floyd.tools.files
             ## create tmp folder and remove on exit

@@ -98,7 +98,6 @@ module.exports =
 
                     ##
                     each: (key, value, next)=>
-
                         if key.charAt(0) isnt '_' && @_hiddenKeys.indexOf(key) is -1
 
                             if typeof value is 'function'

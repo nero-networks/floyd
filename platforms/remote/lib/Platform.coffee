@@ -7,10 +7,7 @@ module.exports =
         ##
         ##
         constructor: (base)->
-            for key, value of base
-                @[key] = value
-
-            settings = @system || {}
+            settings = base.system || {}
 
             ## platform type
             settings.platform = 'remote'
@@ -33,6 +30,10 @@ module.exports =
 
             super settings
 
+            for key, value of base
+                if key isnt 'system'
+                    @[key] = value
+
             window.process ?=
                 nextTick: (fn)->
                     setTimeout fn, 1
@@ -40,24 +41,32 @@ module.exports =
 
             ## setImmediate emulation
             if !window.setImmediate
-                pending = []
+                pending = {}
+                TRIGGERID = 0
 
-                triggerID = null
                 if window.postMessage
                     window.addEventListener 'message', (e)->
-                        if e.origin is location.origin && triggerID && e.data is triggerID
-                            if pending.length
-                                pending.shift()()
+                        triggerID = e.data
+                        if e.origin is location.origin && pending[triggerID]
+                            pending[triggerID]()
+                            window.clearImmediate triggerID
 
                 window.setImmediate = (fn)->
-                    if !window.postMessage
-                        triggerID = 'floyd-exec-pending-immediate-trigger-'+floyd.tools.strings.uuid()
-                        pending.push fn
+                    if window.postMessage
+                        triggerID = TRIGGERID++
+                        pending[triggerID] = fn
                         window.postMessage triggerID, location.origin
 
                     else ## fallback
-                        setTimeout fn, 1
+                        triggerID = setTimeout fn, 1
 
+                    return triggerID
+
+                window.clearImmediate = (triggerID)->
+                    if window.postMessage
+                        delete pending[triggerID] if pending[triggerID]
+                    else
+                        clearTimeout triggerID
 
         ##
         ##
@@ -82,7 +91,7 @@ module.exports =
                             _root = _root[part] ?= {}
 
 
-                    try	
+                    try
                         ## 1. collect subpackages that may already be loaded
                         pre = _root[name] || {}
 

@@ -31,14 +31,20 @@ module.exports = tools =
     ##
     ##
     post: (options, data, fn)->
-        if typeof data is 'object'
-            data = qs.stringify data
 
         tools.parseOptions options, (err, options)->
 
             options.method ?= 'POST'
             options.headers ?= {}
-            options.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            options.headers['Content-Type'] ?= 'application/json'
+
+            if typeof data isnt 'string'
+                if options.headers['Content-Type'].toLowerCase().match 'json'
+                    data = JSON.stringify data
+                else
+                    data = qs.stringify data
+
+            data = new Buffer data
             options.headers['Content-Length'] = data.length
 
             #console.log options
@@ -101,16 +107,13 @@ module.exports = tools =
     ##
     ##
     readResponse: (res, fn)->
-        data = ''
+        floyd.tools.strings.fromStream res, fn
 
-        res.on 'data', (chunk)->
-            data += chunk
-
-        res.on 'end', ()->
-            fn null, data, res
-
-        res.on 'error', fn
-
+    ##
+    ##
+    ##
+    readData: (req, fn)->
+        tools.readResponse req, fn
 
     ##
     ##

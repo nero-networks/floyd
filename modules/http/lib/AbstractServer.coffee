@@ -10,16 +10,11 @@ module.exports =
     ##
     class AbstractHttpServer extends floyd.http.Context
 
-        constructor: (parent)->
-            super parent
-
-            @_hiddenKeys.push 'server'
-
-
         ##
         ##
         ## @override
         configure: (config)->
+            @_hiddenKeys.push 'server'
 
             super new floyd.Config
                 data:
@@ -76,8 +71,7 @@ module.exports =
                                 pass: 'bf5d636daff3476c410f43623edaeb7c-SHA256-4-1500-453c9f2107c362678a684434dbf35e0c'
 
                             if typeof @data.admin is 'object'
-                                data = floyd.tools.objects.extend data,
-                                    @data.admin
+                                data = floyd.tools.objects.extend data, @data.admin
 
                             @has data.login, (err, has)=>
                                 if !has
@@ -117,9 +111,16 @@ module.exports =
                 ## log a small "i'm alive" message
                 @logger.info '%s is now listening on %s:%s', @_loginfo(), (@data.host||''), @data.port
 
-                @_emit 'listening', @data.port, @data.host
+                @_emit 'listening', port: @data.port, host: @data.host
 
                 done()
+
+        ##
+        ##
+        ##
+        stop: (done)->
+            @server?.close()
+            super done
 
 
         ##
@@ -138,6 +139,19 @@ module.exports =
             throw new floyd.error.NotImplemented 'http.AbstractServer._createServer'
 
 
+        ##
+        ##
+        ##
+        _createCookieJar: (req, res)->
+            throw new floyd.error.NotImplemented 'http.AbstractServer._createCookieJar'
+
+        ##
+        ##
+        ##
+        _registerInParent: ()->
+            ## don't register by default
+            if @data.registerInParent
+                super()
 
         ##
         ##
@@ -179,9 +193,12 @@ module.exports =
                 res.ctype = 'text/plain'
                 res.send msg, code
 
+            ##
+            ## cookies
+            ##
+            req.cookies = res.cookies = @_createCookieJar req, res
+
             super req, res, done
-
-
 
         ##
         ##
@@ -207,7 +224,7 @@ module.exports =
         ##
         _handleError: (req, res, err)->
             if !res.err
-                if err.status is 302
+                if err?.status is 302
                     return req.redirect err.message
 
                 res.ctype = 'text/plain'

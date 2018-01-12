@@ -54,6 +54,8 @@ module.exports =
 
                         ##
                         @_addRoute '/boot.js', (req, res, next)=>
+                            if @_status.isSuspended || @_status.isStopped
+                                return next()
 
                             @_createRemote req, res, (err, remote)=>
                                 return next(err) if err || !remote
@@ -68,14 +70,20 @@ module.exports =
 
                     ##
                     if @data.route
-                        @delegate '_addRoute', @data.route, (req, res, next)=>
-                            if @_status.isSuspended || @_status.isStopped
-                                return next()
+                        @_registerInParent()
 
-                            req.uri = req.uri.replace @data.route, '/'
-                            @_handleRequest req, res, next
+        ##
+        ##
+        ##
+        _registerInParent: ()->
+            @delegate '_addRoute', @data.route, (req, res, next)=>
+                if @_status.isSuspended || @_status.isStopped
+                    return next()
 
-
+                req.uri = req.uri.replace @data.route, '/'
+                if req.uri.length >= 2 && req.uri.charAt(1) is '/'
+                    req.uri = req.uri.substr 1
+                @_handleRequest req, res, next
 
         ##
         ## TODO: connect.use has the signature route, handler

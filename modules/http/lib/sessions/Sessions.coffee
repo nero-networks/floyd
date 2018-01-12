@@ -6,13 +6,10 @@ module.exports =
     ##
     ##
     ##
-    class HttpSessions extends floyd.auth.AuthContext
+    class SessionsManager extends floyd.auth.AuthContext
 
         configure: (config)->
-
-            @_hiddenKeys.push 'Registry', 'Session'
             super new floyd.Config
-
                 data:
                     cookie:
                         name: 'FSID'
@@ -36,43 +33,64 @@ module.exports =
 
             super done
 
+
         ##
         ##
         ##
         start: (done)->
+            super done
 
             exclude = @data.find 'no-session-routes', []
 
             ## use the next HttpContext (idealy our parent) to connect req handler
             @delegate '_addMiddleware', (req, res, next)=>
+                #console.log 'sessions init'
                 return next() if @data.disabled
 
                 for expr in exclude
                     return next() if req.url.match expr
 
-                @_load @_getSID(req), (err, sess)=>
+                #console.log 'sessions getSID'
+                @_getSID req, (err, SID)=>
                     return next(err) if err
+                    #console.log 'sessions', SID
+                    @_load SID, (err, sess)=>
+                        #console.log 'sessions', sess, err
+                        return next(err) if err
 
-                    #console.log 'session', sess.public
+                        #console.log 'session', sess.public
 
-                    req.session = sess.public
+                        req.session = res.session = sess.public
 
-                    _end = res.end
-                    res.end = (args)=>
-                        @_release req, sess, (err)=>
-                            return next(err) if err
+                        floyd.tools.objects.intercept res, 'end', (args..., end)=>
+                            end.apply res, args
 
-                            req.session = null 		## <-- remove references to avoid memory leaks
+                            req.session = res.session = null 
 
-                            _end.apply res, args
-
-                    ##
-                    next()
+                        ##
+                        next()
 
 
-            ##
-            super done
 
+        ##
+        ##
+        ##
+        _getSID: (req, fn)->
+
+            #console.log 'search cookie', @data.cookie.name, req.url, req.headers.cookie
+
+            if SID = req.cookies.get @data.cookie.name
+                fn null, SID
+
+            else
+                #console.log 'create SID'
+                @_registry.createSID (err, SID)=>
+
+                    #console.log 'create cookie', SID
+
+                    req.cookies.set @data.cookie.name, SID
+
+                    fn null, SID
 
         ##
         ##
@@ -172,12 +190,10 @@ module.exports =
                 #console.log 'found session', sess, sess.public.user?.login
 
                 ## initialize destroy hook on the fly
-                if !sess.destroyHook
-                    sess.on 'destroy', ()=>
-                        sess.destroyHook new Error 'session destroyed'
-
-                ## register the current callback as the destroy hook
                 sess.destroyHook = fn
+
+                sess.on 'destroy', ()=>
+                    sess.destroyHook new Error 'session destroyed'
 
                 ## authorize loggedin session
                 if user = sess.public.user?.login
@@ -250,7 +266,7 @@ module.exports =
 
                 @_registry.add sess = new (floyd.tools.objects.resolve @data.registry.sessions.type) sid, @data.registry.sessions
 
-            sess.resume()
+            sess.touch()
 
             ## deliver
             fn null, sess
@@ -259,36 +275,6 @@ module.exports =
         ##
         ##
         ##
-        _release: (req, sess, fn)->
-
-            sess.suspend()
-
-            fn()
-
-
-        ##
-        ##
-        ##
-        _getSID: (req)->
-
-            #console.log 'search cookie', @data.cookie.name, req.url, req.headers.cookie
-
-            if !(sid = req.cookies.get @data.cookie.name)
-
-                sid = @_createSID()
-
-                #console.log 'create cookie', sid
-
-                req.cookies.set @data.cookie.name, sid
-
-            #console.log 'sid', sid
-
-            ##
-            return sid
-
-
-        ##
-        ##
-        ##
-        _createSID: ()->
-            @_registry.createSID()
+        createSID: (fn)->
+            @logger.warning 'pubic createSID is deprecated and will be removed in future'
+            @_registry.createSID fn
