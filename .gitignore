@@ -24,3 +24,4 @@ tmp/
 .nide
 
 *.komodoproject
+*.iml
