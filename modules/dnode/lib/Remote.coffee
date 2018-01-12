@@ -25,6 +25,20 @@ module.exports =
                 ## recreate the logger
                 @logger = @_createLogger @ID
 
+                ##
+                ##
+                if conf.keepalive && proxy.ping
+                    clearInterval(@_interval) if @_interval
+
+                    @logger.debug 'setting keep-alive interval to', conf.keepalive
+
+                    @_interval = setInterval ()=>
+                        @logger.fine 'sending keep-alive ping'
+                        @_proxy.ping ()=>
+                            @logger.fine 'pong'
+                    , conf.keepalive
+
+
             ##
             ## subsequent calls on reconnect
             else
@@ -42,20 +56,6 @@ module.exports =
                                 @lookup name, wrapper.identity, (err, ctx)=>
                                     wrapper.error(err) if err
 
-            ##
-            ##
-            if conf.keepalive && proxy.ping
-                clearInterval(@_interval) if @_interval
-
-                @logger.debug 'setting keep-alive interval to', conf.keepalive
-
-                @_interval = setInterval ()=>
-                    @logger.fine 'sending keep-alive ping'
-                    @_proxy.ping ()=>
-                        @logger.fine 'pong'
-                , conf.keepalive
-
-
         ##
         ##
         ##
@@ -64,7 +64,7 @@ module.exports =
                 @logger.debug 'stopping keep-alive interval'
                 clearInterval(@_interval) if @_interval
             super done
-            
+
         ##
         ##
         ##

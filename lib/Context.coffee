@@ -48,7 +48,7 @@ module.exports =
             config = @configure config
             @id = config.id
 
-            @ID = if !(@parent?.ID) then @id else @parent.ID+'.'+@id
+            @ID = config.ID || if !@parent?.ID then @id else @parent.ID+'.'+@id
 
             if typeof (@type = config.type) is 'function'
                 @type = @ID+'.'+(@type.name || 'DynContext')
@@ -391,7 +391,7 @@ module.exports =
                         if level is 'stop' || level is 'destroy'
                             child[level] next
 
-                        else process.nextTick ()->
+                        else setImmediate ()->
                             child[level] next
 
                     else next()
@@ -485,7 +485,7 @@ module.exports =
                 identity = null
             identity ?= @identity
 
-            if !identity.id || !identity.token
+            if !identity?.id || !identity.token
                 return done new Error '2. parameter is not identity'
 
             if !done ## recurse promisifyed
@@ -588,9 +588,11 @@ module.exports =
         ##
         _createLogger: (id)->
 
-            type = @type
+            if !(ID = @data.logger?.ID)
+                type = @type
+                ID = "#{id} - (#{type})"
 
-            logger = new floyd.logger.Logger "#{id} - (#{type})"
+            logger = new floyd.logger.Logger ID
 
             if @parent
                 logger.console = false
