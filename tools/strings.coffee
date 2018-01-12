@@ -136,6 +136,53 @@ module.exports = strings =
         floyd.tools.objects.stream2Buffer stream, (err, data)=>
             fn null, data.toString(), stream
 
+    ##
+    ##
+    ##
+    table: (conf)->
+        rows = []
+        conf ?= {}
+        conf.cols ?= []
+        conf.delimiter ?= ' | '
+        conf.tab ?= 8
+
+        conf: conf
+
+        add: (row)->
+            if typeof row is 'string'
+                row = row.split ' | '
+
+            for i in [0..row.length-1]
+                col = conf.cols[i] ?= {}
+                col.width ?= 0
+
+                part = row[i]
+                if part && part.length > col.width
+                    col.width = Math.ceil(part.length / conf.tab) * conf.tab
+
+            rows.push row
+
+        toString: ()->
+            out = ''
+
+            i=0
+            for row in rows
+                j=0
+                for part in row
+                    out += part
+
+                    if j < conf.cols.length-1
+
+                        tabs = Math.ceil((conf.cols[j].width - part.length-1 + conf.tab) / conf.tab) - 1
+
+                        out += '\t' while tabs-- > 0
+                        out += conf.delimiter
+
+                        j++
+
+                out += '\n' if ++i isnt rows.length
+
+            return out
 
     ###
     ## UUID generator
