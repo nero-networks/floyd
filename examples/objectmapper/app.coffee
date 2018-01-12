@@ -29,7 +29,7 @@ module.exports =
                     wo:
                         rt: 42
 
-        ## define a mapping object referencing the data structures keys as dotted path to the value
+        ## define a mapping object referencing the data structure's keys as dotted path to the value
         map =
             foo:
                 XofAB: ['a.b[0].x', 'a.b[1].x', 'a.b[2].x']
@@ -63,8 +63,6 @@ module.exports =
 
         ## execute
         mapped = floyd.tools.objects.map data, map, commands
-
-        console.log floyd.tools.objects.flatten mapped
 
         ## dump mapped object
         console.log JSON.stringify mapped, null, 2
