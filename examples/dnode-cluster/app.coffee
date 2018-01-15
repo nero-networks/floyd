@@ -3,6 +3,8 @@
 ##
 module.exports =
 
+    UID: 0
+    GID: 0
     type: 'dnode.cluster.Director'
 
     #data:
@@ -36,6 +38,8 @@ module.exports =
                 children: [
 
                     id: 'users'
+                    data:
+                        type: 'object'
 
                     memory:
                         test:

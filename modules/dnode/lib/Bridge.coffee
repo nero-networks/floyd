@@ -31,24 +31,6 @@ module.exports =
             if !config.data.gateways.length && floyd.system.platform is 'remote'
                 config.data.gateways.push 'origin'
 
-            ## hack to delegate lookups to origin
-
-            if origin = config.ORIGIN
-
-                floyd.tools.objects.intercept @, 'lookup', (name, identity, fn, lookup)=>
-
-                    #console.log 'lookup', name
-
-                    lookup name, identity, (err, ctx)=>
-                        if ctx
-                            fn(null, ctx)
-
-                        else
-                            #console.log 'retry lookup', origin+'.'+name, err.message
-                            lookup origin+'.'+name, identity, fn
-
-
-
             ## hack to connect us before our root-parent gets booted
             _parent = _parent.parent while (_parent ?= @parent || @).parent
             floyd.tools.objects.intercept _parent, 'boot', (done, boot)=>
@@ -235,7 +217,7 @@ module.exports =
                             return sock.end()
 
                         if !(child = root.children[remote.id])
-                            child = new floyd.dnode.Remote root
+                            api.remote = child = new floyd.dnode.Remote root
 
                             child.init (id: remote.id, type:'dnode.Remote'), (err)=>
                                 return fn(err) if err
@@ -271,17 +253,28 @@ module.exports =
 
 
                 ## remote api
+                api = @_createProxy root, conf, sock, proxy, conn
+
+        ##
+        ##
+        ##
+        _createProxy: (root, conf, sock, proxy, conn)->
+            api =
+                remote: null # to be set after remote is created
                 id: root.id
                 ID: root.ID
 
-                lookup: (args...)=>
-                    child.lookup.apply child, args
+                lookup: (args...)->
+                    api.remote.lookup.apply api.remote, args
 
-                token: (fn)=>
+                token: (fn)->
                     fn null, conf.token
 
-                ping: (fn)=>
+                ping: (fn)->
                     fn() ## pong
+
+                processLogEntry: (args)->
+                    root._processLogEntry args
 
 
         ##

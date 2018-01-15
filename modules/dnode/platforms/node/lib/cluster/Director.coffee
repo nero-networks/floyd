@@ -25,31 +25,12 @@ module.exports =
                     floyd.tools.files.chown config.data.workers_dir, config.UID, (config.GID || config.UID)
                 floyd.tools.files.chmod config.data.workers_dir, '2755'
 
-            if !(socket = config.data?.socket)
-                socket = floyd.tools.files.tmp 'dnode.cluster.Director-'+config.id, 'sock'
-
-            if floyd.tools.files.exists socket
-                floyd.tools.files.rm socket
-
-
-            #floyd.system.GID = floyd.system.UID = 0
-
+            ##
             super new floyd.Config
-
-                data:
-                    socket: socket
-
                 children: [
-
                     id: 'bridge'
-
-                    type: 'dnode.Bridge'
-
-                    data:
-                        ports: [path: socket]
-
+                    type: 'dnode.cluster.DirectorBridge'
                 ]
-
             , config
 
 
@@ -71,27 +52,32 @@ module.exports =
                     _spawned: 0
 
                     children: [
-                        type: 'repl.Context'
-                    ,
                         id: 'bridge'
-                        type: 'dnode.Bridge'
+                        type: 'dnode.cluster.DirectorBridge'
 
                         data:
-                            gateways: [
-                                path: @data.socket
-                                keepalive: false
-                            ]
-
                             logger:
                                 level: @data.find 'logger.level'
+
+                        _connect: (fn)->
+                            @_wireMessageQueue process, null, fn
+
                     ]
                     system:
                         appdir: floyd.system.appdir+'/'+@data.workers_dir+'/'+child.id
                         tempdir: floyd.system.appdir+'/'+@data.workers_dir+'/'+child.id+'/.floyd/tmp'
 
                     ORIGIN: @ID
+                    #data:
+                    #    ORIGIN: @ID
 
                     booted: -> @logger.debug 'starting child process'
+
+                    #lookup: (id, identity, fn)->
+                    #    @lookup._super id, identity, (err, ctx)=>
+                    #        if !ctx
+                    #            return @lookup @data.ORIGIN+'.'+id, identity, fn
+                    #        fn null, ctx
 
                 , child
 
@@ -126,10 +112,7 @@ module.exports =
             ##
             proc = @_processes[child.id] = spawn process.execPath, [child.system.appdir+'/.app'],
                 cwd: child.system.appdir
-
-            proc.stdout.pipe process.stdout
-
-            proc.stderr.pipe process.stderr
+                stdio: ['inherit', 'inherit', 'inherit', 'ipc']
 
             proc.on 'close', ()=>
                 if @_status.indexOf('shutdown') is -1
@@ -139,8 +122,12 @@ module.exports =
                     else
                         @logger.warning 'respawning FAILED for %s.%s (%s)', @ID, child.id, child._spawned
 
-            ##
+            proc.once 'message', (msg)=>
+                @children.bridge._wireMessageQueue proc, msg, (err)=>
+                    return done(err) if err
+
             done?()
+
 
 
 
