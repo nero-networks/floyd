@@ -102,6 +102,14 @@ module.exports = strings =
         return str
 
     ##
+    begins: (str, begin)->
+        str && begin && str.length > begin.length && str.substr(0, begin.length) is begin
+
+    ##
+    ends: (str, end)->
+        str && end && str.length > end.length && str.substr(end.length-1) is end
+
+    ##
     ## simple string hashing function
     ##
     ## nice algorithm designed to implement Java's String.hashCode() method
