@@ -45,15 +45,9 @@ module.exports =
 
                 @__POOL__ = []
 
-                @lookup @data.libloader, @identity, (err, ctx)=>
-                    return done(err) if err
-
-                    ctx.getCompiledCode (err, script)=>
-                        return done(err) if err
-
-                        @__SCRIPT = script
-
-                        done()
+                @_createContext (err, ctx)=>
+                    @_releaseContext(ctx) if ctx
+                    done err
 
         ##
         ##
@@ -181,7 +175,21 @@ module.exports =
         ##
         ##
         ##
-        _createContext: (fn)->
+        _createContext: (fn, _retry)->
+            ##
+            if !@__SCRIPT
+                return @lookup @data.libloader, @identity, (err, ctx)=>
+                    return done(err) if err
+                    setImmediate ()=>
+                        ctx.getCompiledCode (err, script)=>
+                            return done(err) if err
+
+                            if _retry && !(@__SCRIPT = script)
+                                return fn new Error 'libloader problem'
+                                
+                            @_createContext fn, true
+
+            ##
             ctx =
                 window: {}
                 console: console
@@ -190,7 +198,10 @@ module.exports =
 
             vm.createContext ctx
 
-            vm.runInContext @__SCRIPT+"\nvar floyd = require('floyd');", ctx
+            try
+                vm.runInContext @__SCRIPT+"\nvar floyd = require('floyd');", ctx
+            catch err
+                console.log 'error while cheerio floyd require', @__SCRIPT
 
             ctx.floyd.system.platform = 'cheerio'
             ctx.floyd.system.os = floyd.system.os
