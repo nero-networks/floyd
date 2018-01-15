@@ -20,8 +20,6 @@ module.exports =
                 # instantiate store engine
                 if (type = @data.type || 'Store') is 'Store'
                     @_engine = new floyd.stores.Store()
-                    if config.memory
-                        @_engine._memory = config.memory
 
                 else
                     type = floyd.tools.strings.capitalize(type)+'Store'
@@ -30,6 +28,9 @@ module.exports =
                         return @logger.error new floyd.error.Exception 'Invalid store type '+type
 
                     @_engine = new floyd.stores.engines[type]()
+
+                if config.memory
+                    @_engine._memory = config.memory
 
                 @_settings =
                     type: type

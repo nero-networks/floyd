@@ -20,9 +20,10 @@ module.exports =
 
                 @_dataFile = floyd.tools.files.path.join _dir, options.name+'.data'
                 if floyd.tools.files.exists @_dataFile
-                    @_memory = JSON.parse floyd.tools.files.read @_dataFile, 'utf-8',
-
-                done()
+                    floyd.tools.files.read @_dataFile, (err, json)=>
+                        return done(err) if err
+                        @_memory = JSON.parse json
+                        done()
 
         ##
         ##
