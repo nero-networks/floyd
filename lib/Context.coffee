@@ -44,8 +44,10 @@ module.exports =
         ##
         ##
         init: (config={}, done)->
-
             config = @configure config
+
+            @_checkDeprecation config
+
             @id = config.id
 
             @ID = config.ID || if !@parent?.ID then @id else @parent.ID+'.'+@id
@@ -57,10 +59,6 @@ module.exports =
 
             @logger = @_createLogger @ID
 
-            if @data.permissions || @data.permissions is false
-                @logger.warning '@data.permissions is deprecated use config.permissions instead'
-                config.permissions = @data.permissions
-
             @permissions = config.permissions
 
             @identity = @_createIdentity()
@@ -68,6 +66,13 @@ module.exports =
             @_emitter = @_createEmitter config
 
             @children = new floyd.data.MappedCollection()
+
+            if origin = config.ORIGIN
+                floyd.tools.objects.intercept @, 'lookup', (name, identity, fn, lookup)=>
+                    lookup name, identity, (err, ctx)=>
+                        return fn(null, ctx) if ctx
+                        @logger.debug 'forwarding lookup %s to %s for %s', name, origin, identity.id
+                        lookup origin+'.'+name, identity, fn
 
             @_changeStatus 'configured'
 
@@ -79,6 +84,14 @@ module.exports =
                         @_createChild child, next
 
                     done: done
+
+        ##
+        ##
+        ##
+        _checkDeprecation: (config)->
+            if config.data?.permissions || config.data.permissions is false
+                @logger.warning '@data.permissions is deprecated use config.permissions instead'
+                config.permissions = @data.permissions
 
         ##
         ##

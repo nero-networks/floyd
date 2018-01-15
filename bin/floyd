@@ -72,7 +72,7 @@ fi
 ##
 ##
 function check() {
-    PID=$(ps ax|grep node|grep -v grep|grep "$WORKDIR/.floyd"|awk '{print $1}')
+    PID=$(echo `ps ax|grep node|grep -v grep|grep "$WORKDIR/.floyd"|awk '{print $1}'`|awk '{print $1}')
     echo $PID
 }
 
