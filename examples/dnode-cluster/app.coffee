@@ -13,8 +13,8 @@ module.exports =
 
     children: [
 
-        UID: 65534
-        GID: 65534
+        UID: 33
+        GID: 33
 
         id: 'frontend'
 
@@ -94,8 +94,8 @@ module.exports =
 
     ,
 
-        UID: 33
-        GID: 33
+        UID: 65534
+        GID: 65534
 
         id: 'backend'
 

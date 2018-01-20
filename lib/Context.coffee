@@ -399,7 +399,11 @@ module.exports =
             @_process @children,
 
                 ##
-                each: (child, next)->
+                each: (child, _next)->
+                    next = (err)=>
+                        @logger.error(err) if err
+                        _next()
+
                     if child[level]
                         if level is 'stop' || level is 'destroy'
                             child[level] next
