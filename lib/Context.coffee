@@ -399,16 +399,19 @@ module.exports =
             @_process @children,
 
                 ##
-                each: (child, _next)->
+                each: (child, _next)=>
                     next = (err)=>
-                        @logger.error(err) if err
+                        if err && !@logger
+                            console.error err
+                        else if err
+                            @logger.error err
                         _next()
 
                     if child[level]
                         if level is 'stop' || level is 'destroy'
                             child[level] next
 
-                        else setImmediate ()->
+                        else setImmediate ()=>
                             child[level] next
 
                     else next()
