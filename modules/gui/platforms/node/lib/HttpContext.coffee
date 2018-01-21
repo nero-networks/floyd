@@ -182,11 +182,11 @@ module.exports =
                     return done(err) if err
                     setImmediate ()=>
                         ctx.getCompiledCode (err, script)=>
-                            return done(err) if err
+                            return fn(err) if err
 
                             if _retry && !(@__SCRIPT = script)
                                 return fn new Error 'libloader problem'
-                                
+
                             @_createContext fn, true
 
             ##
