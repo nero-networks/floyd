@@ -1,7 +1,7 @@
 FROM node:6
 
 # floyd resides unobstructive in /opt/floyd
-RUN mkdir -p /opt/floyd
+RUN mkdir /opt/floyd
 
 # put the floyd command into $PATH
 ENV PATH="/opt/floyd/bin:${PATH}"
