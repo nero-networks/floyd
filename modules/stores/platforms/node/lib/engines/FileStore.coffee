@@ -24,6 +24,7 @@ module.exports =
                         return done(err) if err
                         @_memory = JSON.parse json
                         done()
+                else done()                    
 
         ##
         ##
