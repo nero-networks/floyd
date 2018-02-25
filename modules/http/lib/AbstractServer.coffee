@@ -52,7 +52,7 @@ module.exports =
 
                     type: 'http.Cache'
 
-                    data: config?.data?.sessions || {}
+                    data: config?.data?.cache || {}
                 ,
 
                     id: 'users'
