@@ -29,6 +29,15 @@ module.exports =
             fn null, sid
 
         ##
+        destroy: (id)->
+            if(@_pool[id])
+                try
+                    @_pool[id].destroy()
+                catch e
+                    console.warn e.message
+                delete @_pool[id]
+
+        ##
         _observe: ()->
 
             @_running = setInterval ()=>
@@ -49,11 +58,6 @@ module.exports =
                         #console.log 'check session', (sess.touched + @_config.timeout * 1000) < now, sess
 
                         if (sess.touched + @_config.timeout * 1000) < now
-                            try
-                                sess.destroy()
-                            catch e
-                                console.warn e.message
-
-                            delete @_pool[sid]
+                            @destroy sid
 
             , @_config.interval * 1000
