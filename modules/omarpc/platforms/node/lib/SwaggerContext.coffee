@@ -104,8 +104,16 @@ module.exports =
         ##
         ##
         _sendResult: (req, res, result)->
-            res.ctype = req.swagger.operation.produces?[0] || 'application/json'
-            res.send JSON.stringify(result), 200
+            ctype = req.swagger.operation.produces?[0]
+            if typeof result is 'object'
+                ctype ?= 'application/json'
+            else ctype ?= 'text/plain'
+
+            if ctype is 'application/json'
+                result = JSON.stringify result
+
+            res.ctype = ctype
+            res.send result, 200
 
 
         ##
