@@ -1,0 +1,105 @@
+swagger: '2.0'
+
+info:
+  description: ''
+  version: 0.0.1
+  title: floyd! OMARpc Swagger
+
+basePath: /api
+
+tags:
+  - name: system
+    description: System operations
+  - name: test
+    description: Test operations
+
+schemes:
+  - http
+
+paths:
+
+  /login:
+    get:
+      tags:
+        - system
+      summary: Logs user into the system
+      description: ''
+      operationId: login
+      produces:
+        - text/plain
+      parameters:
+        - name: id
+          in: query
+          description: The user id for login
+          required: true
+          type: string
+        - name: pass
+          in: query
+          description: The password for login
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: string
+        '401':
+          description: Invalid username/password supplied
+
+  /logout:
+    get:
+      tags:
+        - system
+      summary: Logs out current logged in user
+      operationId: logout
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+
+  /echo:
+    get:
+      tags:
+        - test
+      operationId: echo
+      summary: echo
+      produces:
+        - text/plain
+      parameters:
+        - name: in
+          in: query
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: string
+
+  /secret:
+    get:
+      tags:
+        - test
+      summary: Get the protected secret
+      description: ''
+      operationId: secret
+      produces:
+        - text/plain
+      security:
+        - authKey: []
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: string
+        '401':
+          description: unauthorized user
+
+securityDefinitions:
+  authKey:
+    type: apiKey
+    name: X-FLOYD-AUTH
+    in: header
+
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
