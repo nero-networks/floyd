@@ -50,7 +50,8 @@ module.exports = (handler)->
             ## second handler call, session destroy
             if err?.message is 'session destroyed'
 
-                emitter.emit 'logout'
+                if emitter.emit
+                    emitter.emit 'logout'
                 #console.log 'logout hook triggered'
                 return __user = null
 
