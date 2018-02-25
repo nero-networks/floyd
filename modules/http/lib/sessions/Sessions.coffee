@@ -132,7 +132,7 @@ module.exports =
                     @_checkPasswordHash user, pass, data, (err, data)=>
                         return fn(err) if err
 
-                        @parent.children.users.set data.id, data, (err)=>
+                        @parent.children.users.set (data.id||user), data, (err)=>
 
                             data = floyd.tools.objects.clone data,
                                 login: user
@@ -148,13 +148,16 @@ module.exports =
         ##
         ##
         _loadUser: (id, fn)->
-            query = {}
-            query[@data.login.id] = id
+            if @data.login.id is 'id'
+                @parent.children.users.get id, fn
 
-            @parent.children.users.find query,
-                limit: 1
-            , null, (err, items)=>
-                fn err, items?[0]
+            else
+                query = {}
+                query[@data.login.id] = id
+                @parent.children.users.find query,
+                    limit: 1
+                , null, (err, items)=>
+                    fn err, items?[0]
 
 
         ##
