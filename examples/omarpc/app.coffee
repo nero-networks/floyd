@@ -44,10 +44,9 @@ module.exports =
         ## setup a simple Context with a protected method
         id: 'test'
 
-        data:
-            permissions:
-                secret:
-                    roles: 'tester'
+        permissions:
+            secret:
+                roles: 'tester'
 
         ## this method is public for everyone
         echo: (str, fn)->
