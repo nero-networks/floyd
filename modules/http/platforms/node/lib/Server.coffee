@@ -27,29 +27,21 @@ module.exports =
 
                     authManager: 'sessions'
 
-                children: [
+                    users:
+                        type: 'file'
+                        name: 'users'
 
-                    id: 'sessions'
-
-                    data:
+                    sessions:
                         registry:
                             type: 'http.sessions.PersistedRegistry'
 
-                ,
+                children: [
 
                     id: 'lib'
 
                     type: 'http.LibLoader'
 
                     data: config?.data?.lib || {}
-
-                ,
-
-                    id: 'users'
-
-                    data:
-                        type: 'file'
-                        name: 'users'
 
                 ]
 

@@ -14,6 +14,10 @@ module.exports =
                     cookie:
                         name: 'FSID'
 
+                    login:
+                        id: 'id'
+                        pass: 'pass'
+
                     registry:
                         type: 'http.sessions.Registry'
                         interval: 60
@@ -45,7 +49,9 @@ module.exports =
             ## use the next HttpContext (idealy our parent) to connect req handler
             @delegate '_addMiddleware', (req, res, next)=>
                 #console.log 'sessions init'
-                return next() if @data.disabled
+                if @data.disabled
+                    @logger.warning 'DEPRECATED: use data.cookie = false'
+                return next() if @data.disabled || @data.cookie is false
 
                 for expr in exclude
                     return next() if req.url.match expr
@@ -65,7 +71,7 @@ module.exports =
                         floyd.tools.objects.intercept res, 'end', (args..., end)=>
                             end.apply res, args
 
-                            req.session = res.session = null 
+                            req.session = res.session = null
 
                         ##
                         next()
@@ -109,18 +115,16 @@ module.exports =
 
             sess = @_registry.get(sid)
 
-            return fn(new Error 'login failed') if !sess || !user || !pass
+            return fn(new floyd.error.Unauthorized 'login') if !sess || !user || !pass
 
-            users = @parent.children.users
+            @_loadUser user, (err, data)=>
 
-            users.get user, (err, data)=>
+                return fn(err || new floyd.error.Unauthorized 'login') if err || !data
 
-                return fn(err || new Error 'login failed') if err || !data
+                if data.active is false || !floyd.tools.crypto.password.verify pass, data[@data.login.pass]
+                    @logger.warning 'access denied for %s@%s', user, sid
 
-                if data.active is false || !floyd.tools.crypto.password.verify pass, data.pass
-                    console.warn 'access denied for %s@%s', user, sid
-
-                    fn new Error 'login failed'
+                    fn new floyd.error.Unauthorized 'login'
 
                 else
                     data.lastlogin = +new Date()
@@ -128,17 +132,29 @@ module.exports =
                     @_checkPasswordHash user, pass, data, (err, data)=>
                         return fn(err) if err
 
-                        users.set user, data, (err)=>
+                        @parent.children.users.set data.id, data, (err)=>
 
                             data = floyd.tools.objects.clone data,
                                 login: user
 
-                            delete data.pass
+                            delete data[@data.login.pass]
 
                             sess.public.user = data
 
                             ##
                             fn null, data
+
+        ##
+        ##
+        ##
+        _loadUser: (id, fn)->
+            query = {}
+            query[@data.login.id] = id
+
+            @parent.children.users.find query,
+                limit: 1
+            , null, (err, items)=>
+                fn err, items?[0]
 
 
         ##
@@ -148,16 +164,16 @@ module.exports =
 
             cfg = floyd.tools.objects.extend floyd.config.crypto.password, @data.password
 
-            parts = data.pass.split '-'
+            parts = data[@data.login.pass].split '-'
 
             if parts.length is 1 \          ## check for old-style password hash
             or cfg.hasher isnt parts[1] \   ## check for new hash config
             or cfg.keySize isnt (parseInt parts[2]) \
             or cfg.iterations isnt (parseInt parts[3])
 
-                data.pass = floyd.tools.crypto.password.create pass
+                data[@data.login.pass] = floyd.tools.crypto.password.create pass
 
-                console.warn 'replacing password hash', data.pass
+                @logger.warning 'replacing password hash', data[@data.login.pass]
 
 
             ##
@@ -198,13 +214,13 @@ module.exports =
                 ## authorize loggedin session
                 if user = sess.public.user?.login
 
-                    @parent.children.users.get user, (err, data)=>
+                    @_loadUser user, (err, data)=>
                         return fn(err) if err
 
                         data = floyd.tools.objects.clone data,
                             login: user
 
-                        delete data.pass
+                        delete data[@data.login.pass]
 
                         fn null, sess.public.user = data
 
@@ -221,7 +237,7 @@ module.exports =
         ##
         authenticate: (identity, fn)->
 
-            @logger.debug 'session authenticate identity %s', identity.id
+            @logger.finer 'session authenticate identity %s', identity.id
 
             super identity, (err)=>
                 return fn() if !err ## successfully authenticated
@@ -243,7 +259,7 @@ module.exports =
 
                         if token is sess.token
 
-                            @logger.debug 'session authenticate SUCCESS', identity.id
+                            @logger.fine 'session authenticate SUCCESS', identity.id
 
                             fn()
 
