@@ -58,7 +58,7 @@ module.exports =
             @logger = @_createLogger @ID
 
             @_checkDeprecation config
-            
+
             @permissions = config.permissions
 
             @identity = @_createIdentity()
@@ -377,7 +377,7 @@ module.exports =
                 permit = (ok)=>
                     if !ok
                         @logger.warning 'access to %s denied to %s', key, identity.id
-                        return fn new floyd.error.Forbidden @ID+'.'+key
+                        return fn new floyd.error.Unauthorized @ID+'.'+key
 
                     if check = checks.shift()
                         check permit
