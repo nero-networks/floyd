@@ -123,7 +123,7 @@ module.exports =
             code = err.status || 500
             msg = req.swagger.operation.responses[code]?.description || err.message || 'Internal Server Error'
 
-            @logger.error err
+            @logger.error if code != 500 then err.message else err
 
             res.ctype = 'text/plain'
             res.send msg, code
