@@ -130,7 +130,7 @@ module.exports =
         ##
         ##
         _exec: (o, m, a, _ident, fn)->
-            if !(@_HIDDEN.indexOf(m) is -1)
+            if @_HIDDEN.indexOf(m) > -1
                 return fn('unknown method: '+o+'.'+m)
 
             ## login
@@ -148,7 +148,7 @@ module.exports =
                     try
                         a.push fn
 
-                        if obj[m]
+                        if obj[m] && (!obj._HIDDEN || obj._HIDDEN.indexOf(m) is -1)
                             if _ident && obj.forIdentity
                                 obj.forIdentity _ident.identity, (err, wrapper)=>
                                     return fn(err) if err
@@ -177,4 +177,7 @@ module.exports =
             else if typeof obj is 'function'
                 obj fn
 
-            else fn null, obj
+            else if obj
+                fn null, obj
+
+            else fn new Error 'unknown object: '+o
