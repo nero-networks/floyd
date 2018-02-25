@@ -46,8 +46,6 @@ module.exports =
         init: (config={}, done)->
             config = @configure config
 
-            @_checkDeprecation config
-
             @id = config.id
 
             @ID = config.ID || if !@parent?.ID then @id else @parent.ID+'.'+@id
@@ -59,6 +57,8 @@ module.exports =
 
             @logger = @_createLogger @ID
 
+            @_checkDeprecation config
+            
             @permissions = config.permissions
 
             @identity = @_createIdentity()
