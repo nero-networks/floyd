@@ -80,6 +80,11 @@ module.exports =
             , ->
 
                 if config.add
+                    console.warning 'DEPRECATED: config.add is deprecated, use config.buttons.add instead'
+                    config.buttons ?= {}
+                    config.buttons.add = config.add
+
+                if config.buttons
                     @children.push
 
                         type: 'gui.editor.Editor'
@@ -89,8 +94,7 @@ module.exports =
                             events:
                                 delegate: true
 
-                        buttons:
-                            add: config.add
+                        buttons: config.buttons
 
             , config
 
