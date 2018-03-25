@@ -130,7 +130,7 @@ module.exports = objects =
         if obj
             proto = Object.getPrototypeOf obj
             if proto && Object.getPrototypeOf proto
-                for key in Object.getOwnPropertyNames Object.getPrototypeOf obj
+                for key in Object.getOwnPropertyNames proto
                     if key isnt 'constructor' && list.indexOf(key) is -1
                         list.push key
                 objects.methods proto, list
