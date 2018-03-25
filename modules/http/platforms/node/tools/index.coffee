@@ -1,5 +1,6 @@
 
 http = require 'http'
+https = require 'https'
 url = require 'url'
 
 qs = require 'querystring'
@@ -49,13 +50,22 @@ module.exports = tools =
 
             #console.log options
 
-            req = http.request options, (res)->
+            req = tools._findModule(options).request options, (res)->
 
                 tools.readResponse res, fn
 
             req.on 'error', fn
 
             req.write data
+
+    ##
+    ##
+    ##
+    _findModule: (options)->
+        #console.log 'find module for protocol', options.protocol
+        if options.protocol is 'https:'
+            return https
+        return http
 
     ##
     ##
@@ -67,9 +77,10 @@ module.exports = tools =
 
         if options.url
             #console.log url.parse options.url
-            {auth, hostname, port, path} = url.parse options.url
+            {auth, hostname, port, path, protocol} = url.parse options.url
             if auth
                 options.auth = auth
+            options.protocol = protocol
             options.host = hostname
             options.port = port
             options.path = path
