@@ -46,13 +46,15 @@ test -x "$NODE_BINARY" || NODE_BINARY=`which node`
 
 NODE_BINARY=$( deref_link "$NODE_BINARY" )
 
+CMD="$NODE_BINARY"
+
 ## echo TRACE_WARNINGS=true >> .floyd/env
-if [ $TRACE_WARNINGS ]
-then
-    CMD="$NODE_BINARY $WORKDIR/.floyd"
-else
-    CMD="$NODE_BINARY --trace-warnings $WORKDIR/.floyd"
-fi
+test $TRACE_WARNINGS && CMD="$CMD --trace-warnings"
+
+## echo INSPECT=true >> .floyd/env
+test $INSPECT && CMD="$CMD --inspect"
+
+CMD="$CMD $WORKDIR/.floyd"
 
 NODE_PATH="$WORKDIR:$WORKDIR/node_modules:$FLOYD_ROOT:$FLOYD_ROOT/node_modules"
 
