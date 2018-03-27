@@ -277,7 +277,7 @@ module.exports = objects =
         ##
         _handle = (key, value)->
             if key && floyd.tools.objects.isObject(value) && all.indexOf(value) != -1
-                console.log key, value
+                #console.log key, value
                 return '[Circular '+value.toString()+' ]'
 
             type = objects.type value
@@ -457,6 +457,7 @@ module.exports = objects =
                 item.call target
 
             else
+                #console.log 'extend', target, item
                 _extend target, item
 
         return target
@@ -742,8 +743,9 @@ _extend = (target, source)->
 
                     _extend value, item
 
-                else
-                    target.push item
+                else if objects.isArray target
+                    if target.indexOf(item) is -1
+                        target.push item
 
                 next()
 
