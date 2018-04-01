@@ -77,7 +77,7 @@ module.exports =
 
         find: (query, options, fields, fn)->
 
-            console.log 'query', query, options, fields
+            #console.log 'query', query, options, fields
             q = @_client.find(query)
             q.count (err, size)=>
                 return fn?(err) if err
@@ -96,7 +96,7 @@ module.exports =
 
                 for method in __OPTIONS
                     if options[method] && q[method]
-                        console.log options[method] , q[method]
+                        #console.log options[method] , q[method]
                         q[method] options[method]
 
                 for method, value of options
