@@ -80,7 +80,7 @@ module.exports =
             , ->
 
                 if config.add
-                    console.warning 'DEPRECATED: config.add is deprecated, use config.buttons.add instead'
+                    console.warn 'DEPRECATED: config.add is deprecated, use config.buttons.add instead'
                     config.buttons ?= {}
                     config.buttons.add = config.add
 

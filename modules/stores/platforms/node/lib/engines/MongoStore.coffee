@@ -77,7 +77,7 @@ module.exports =
 
         find: (query, options, fields, fn)->
 
-            #console.log 'query', query, options, fields
+            console.log 'query', query, options, fields
             q = @_client.find(query)
             q.count (err, size)=>
                 return fn?(err) if err
@@ -91,11 +91,12 @@ module.exports =
                     return fn null, [], options, fields
 
                 for method in __NUMOPTIONS
-                    if q[method] && typeof q[method] isnt 'number'
-                        q[method] = floyd.tools.numbers.parse q[method]
+                    if options[method] && typeof options[method] isnt 'number'
+                        options[method] = floyd.tools.numbers.parse options[method]
 
                 for method in __OPTIONS
                     if options[method] && q[method]
+                        console.log options[method] , q[method]
                         q[method] options[method]
 
                 for method, value of options
