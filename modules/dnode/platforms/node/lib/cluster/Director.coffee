@@ -21,7 +21,7 @@ module.exports =
 
             if !floyd.tools.files.exists config.data.workers_dir
                 floyd.tools.files.mkdir config.data.workers_dir
-                if floyd.system.UID == 0 && config UID
+                if floyd.system.UID == 0 && config.UID
                     floyd.tools.files.chown config.data.workers_dir, config.UID, (config.GID || config.UID)
                 floyd.tools.files.chmod config.data.workers_dir, '2755'
 
