@@ -78,9 +78,9 @@ module.exports =
         find: (query, options, fields, fn)->
 
             #console.log 'query', query, options, fields
-            q = @_client.find(query)
-            q.count (err, size)=>
+            @_client.count {}, {}, (err, size)=>
                 return fn?(err) if err
+                q = @_client.find(query)
 
                 #console.log 'size', size
                 options ?= {}
@@ -96,12 +96,14 @@ module.exports =
 
                 for method in __OPTIONS
                     if options[method] && q[method]
-                        #console.log options[method] , q[method]
-                        q[method] options[method]
+                        #console.log 'phase 1 method', method, options[method]
+                        q = _q if _q = q[method] options[method]
+
 
                 for method, value of options
                     if __OPTIONS.indexOf(method) is -1 && q[method]
-                        q[method] value
+                        #console.log 'phase 2 method', method, value
+                        q = _q if _q = q[method] value
 
                 if fn
                     setImmediate ()=>
