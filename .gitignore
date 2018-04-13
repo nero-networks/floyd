@@ -23,6 +23,7 @@ tmp/
 
 .nide
 .idea
+*.sln
 
 *.komodoproject
 *.iml
