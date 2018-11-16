@@ -17,6 +17,8 @@ examples/dnode-cluster/workers/*/.app.js
 .project
 .floyd
 
+modules/crypto/tools/CryptoJS.js
+
 node_modules/
 
 tmp/
