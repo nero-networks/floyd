@@ -2,7 +2,7 @@
   "name": "floyd",
   "author": "Roman De Meo",
   "description": "Floyd! - hierarchical app containers",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "MIT",
   "main": "./index",
   "maintainer": {

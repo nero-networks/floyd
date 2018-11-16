@@ -1,6 +1,6 @@
 # Floyd!
 
-hierarchical app containers - v0.5.1
+hierarchical app containers - v0.5.2
 
 ## Installation
 
@@ -26,7 +26,7 @@ Install with [npm](http://github.com/isaacs/npm):
 
 #### Prepare your System for the git/zip installation
 
-* You'll need the [node](http://nodejs.org/) engine **>= 4.4.2 ** to run floyd.
+* You'll need the [node](http://nodejs.org/) engine **>= 4.4.2 < 10.0.0** to run floyd.
 
 * Put a symbolic link to `~/projects/floyd/bin/floyd` into your execution PATH.  
   I simply symlinked it into `~/bin` (which is in my $PATH variable)
