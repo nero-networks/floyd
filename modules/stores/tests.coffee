@@ -111,7 +111,7 @@ class MongoTestStoresContext extends TestStoresContext
 
     ##
     cleanupTests: (fn)->
-        @_engine._db?.dropDatabase()
+        @_engine._db.dropDatabase ->
         @_engine.close fn
 
 ##
