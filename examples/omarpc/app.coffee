@@ -29,7 +29,7 @@ module.exports =
         memory:
             test:
                 roles: ["tester"]
-                pass: 'd6b09dd822468d9dcc3fbe6f1497bf83-SHA256-4-1000-360c87fe1ee6cc80c1afcded5079056e'
+                pass: '8e19a8e1ab8ee4ec4686a558b0bb221d-SHA256-4-1500-999126a0c5af65781f9b72f4e538d2d8'
 
     ,
 
