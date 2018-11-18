@@ -119,7 +119,7 @@ module.exports =
         ##
         ##
         stop: (done)->
-            @server?.close()
+            @server?.close?()
             super done
 
 

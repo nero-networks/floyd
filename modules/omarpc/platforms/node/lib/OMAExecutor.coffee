@@ -18,7 +18,6 @@ module.exports =
         execute: (SID, o, m, a, fn)->
             if @HIDDEN.indexOf(m) > -1
                 return fn('unknown method: '+o+'.'+m)
-
             @getIdentity SID, (err, ident)=>
                 return fn(err) if err
 
@@ -43,7 +42,6 @@ module.exports =
             ## try to delegate system call.
             ## context must return true when consumed
             if !@context._executeSystem SID, ident, o, m, a, fn
-
                 ## login
                 if m is 'login'
                     user = a[0]
@@ -62,6 +60,7 @@ module.exports =
 
                 ## logout
                 else if m is 'logout'
+                    return fn() if !ident?.manager?.logout
                     ident.manager.logout ()=>
                         @_sessions._registry.destroy SID
                         fn()
@@ -96,7 +95,6 @@ module.exports =
                     session: session.public
 
                 session.on 'destroy', ()=>
-                    console.log 'session.destroy', SID
                     delete @IDENTITIES[SID]
                     ident.manager.destroyIdentity ident.identity
 

@@ -1,0 +1,13 @@
+{
+  "description": "connect example",
+  "license": "MIT",
+  "repository": {
+    "type": "http",
+    "url": "https://github.com/nero-networks/floyd.git"
+  },
+  "dependencies": {
+    "connect": "^3.6.6",
+    "response-time": "^2.3.2",
+    "serve-static": "^1.13.2"
+  }
+}

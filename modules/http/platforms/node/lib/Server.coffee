@@ -1,6 +1,6 @@
 
 ##
-mime = require 'mime'
+mime = require 'mime-types'
 
 ##
 CookieJar = require 'cookies'
@@ -59,7 +59,7 @@ module.exports =
         ##
         ##
         _createServer: (handler)->
-            @_module.createServer(handler)
+            (@_module.createServer || @_module) handler
 
 
         ##
