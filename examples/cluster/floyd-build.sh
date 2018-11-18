@@ -2,5 +2,15 @@
 
 cd $1
 
-chmod o-rw secrets.json */app.coffee
+for dir in frontend backend
+do
+    if [ -d $dir ]
+    then
+        floyd create $dir
+        cd $dir
+        floyd build
+        cd ..
+    fi
+done
 
+chmod o-rw secrets.json */app.coffee

@@ -1,6 +1,6 @@
 # Floyd!
 
-hierarchical app containers - v0.5.2
+hierarchical app containers - v0.6.0
 
 ## Installation
 
@@ -26,7 +26,7 @@ Install with [npm](http://github.com/isaacs/npm):
 
 #### Prepare your System for the git/zip installation
 
-* You'll need the [node](http://nodejs.org/) engine **>= 4.4.2 < 10.0.0** to run floyd.
+* You'll need the [node](http://nodejs.org/) engine **>= 10.0.0** to run floyd.
 
 * Put a symbolic link to `~/projects/floyd/bin/floyd` into your execution PATH.  
   I simply symlinked it into `~/bin` (which is in my $PATH variable)
@@ -62,12 +62,11 @@ Install with [npm](http://github.com/isaacs/npm):
         [U]pdate                      _/        _/    _/_/      _/_/_/    _/_/_/    
                         [Q]uit           (c) 2012 Nero Networks    _/               
                                                                 _/_/
+floyd - basics is not running
 
 * then press `s` and you'll get something like this:
 
         starting basics
-        WARNING: <Ctrl-c> will terminate the child-process!
-                 use [Q]uit to quit this log-viewer session...
         basics - (floyd.Context)
         2014-04-04 12:09:38.644 - status changed to configured
         2014-04-04 12:09:38.777 - status changed to booting

@@ -28,13 +28,13 @@ module.exports =
         ## (you just need the id relative to the common parent to do this from anywhere)
         ##
 
-        @lookup 'demostore', (err, store)=>
+        @lookupLocal 'demostore', (err, store)=>
             return @logger.error(err) if err
 
             ## store a new item
 
             store.set 'key3',
-                id: 'key3', count: 7, text: 'text1', price: 19.95
+                id: 'key3', count: 7, text: 'value3', price: 3.95
 
             ## read an item
 

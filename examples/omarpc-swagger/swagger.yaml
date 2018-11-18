@@ -19,7 +19,7 @@ schemes:
 paths:
 
   /login:
-    get:
+    post:
       tags:
         - system
       summary: Logs user into the system
@@ -53,8 +53,10 @@ paths:
       summary: Logs out current logged in user
       operationId: logout
       parameters: []
+      security:
+        - authKey: []
       responses:
-        default:
+        '200':
           description: successful operation
 
   /echo:
