@@ -30,12 +30,15 @@ tagsSelfClosing = 'area base basefont br col frame hr img input link meta param'
 
 TEMPLATES = {}
 
-module.exports = (code, cached=true)->
+module.exports = (code, config=true)->
+    if typeof cached is 'boolean'
+        config =
+            cached: config || config isnt false
 
     if typeof code is 'function'
         code = '('+code.toString()+').call(this);'
 
-    if !cached || !TEMPLATES[hash = floyd.tools.strings.hash code]
+    if !config.cached || !TEMPLATES[hash = floyd.tools.strings.hash code]
 
         ##
         html    = null
@@ -103,6 +106,14 @@ module.exports = (code, cached=true)->
                 html += "<![endif]-->"
                 return
 
+        if config.tags
+            for tag in config.tags
+                compileTag tag, false # don't self close
+
+        if config.tagsSelfClosing
+            for tag in tagsSelfClosing
+                compileTag tag, true # self close
+
         for tag in tagsNormal
             compileTag tag, false # don't self close
 
@@ -138,7 +149,7 @@ module.exports = (code, cached=true)->
 
         ##
 
-        if cached
+        if config.cached
             TEMPLATES[hash] = template
 
         return template
