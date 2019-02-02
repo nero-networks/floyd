@@ -11,6 +11,7 @@ module.exports =
             @token = floyd.tools.crypto.hash(floyd.tools.strings.uuid()+@SID)+@SID
 
             emitter = new events.EventEmitter()
+            emitter.setMaxListeners 31
 
             @emit = (args...)=> emitter.emit.apply emitter, args
             @on = @addListener = (args...)=> emitter.addListener.apply emitter, args

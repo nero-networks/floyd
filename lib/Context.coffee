@@ -196,6 +196,9 @@ module.exports =
                 if @stop && @_status.indexOf('stopped') is -1
                     @logger.warning 'context not stopped!'
 
+                if config.TOKEN
+                    @_getAuthManager().unauthorize config.TOKEN
+
                 @_init 'destroy', null, (err)=>
                     done?(err) if err
 
@@ -254,6 +257,12 @@ module.exports =
                             _auth (err, auth)=>
                                 return fn(err) if err
                                 auth.authorize token, fn
+
+                        ##
+                        unauthorize: (token)=>
+                            _auth (err, auth)=>
+                                return @logger.error(err) if err
+                                auth.unauthorize token
 
                         ##
                         authenticate: (identity, fn)=>

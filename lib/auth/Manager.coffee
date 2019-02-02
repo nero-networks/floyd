@@ -77,6 +77,12 @@ module.exports = (handler)->
     ##
     ##
     ##
+    unauthorize: (token)->
+        handler.unauthorize token
+
+    ##
+    ##
+    ##
     createIdentity: (id)->
         #console.log floyd.tools.objects.keys(pool).length, 'create', id
 

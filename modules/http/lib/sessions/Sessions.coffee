@@ -209,10 +209,10 @@ module.exports =
                 #console.log 'found session', sess, sess.public.user?.login
 
                 ## initialize destroy hook on the fly
-                sess.destroyHook = fn
+                sess.destroyHook = ()=>
+                    fn new Error 'session destroyed'
 
-                sess.on 'destroy', ()=>
-                    sess.destroyHook new Error 'session destroyed'
+                sess.on 'destroy', sess.destroyHook
 
                 ## authorize loggedin session
                 if user = sess.public.user?.login
@@ -234,6 +234,11 @@ module.exports =
 
             else
                 super token, fn
+
+        ##
+        unauthorize: (token)->
+            if token && (sess = @_registry?.get (sid = token.substr 40)) && typeof sess.destroyHook is 'function'
+                sess.off 'destroy', sess.destroyHook
 
         ##
         ##
