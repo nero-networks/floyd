@@ -107,7 +107,7 @@ module.exports = strings =
 
     ##
     ends: (str, end)->
-        str && end && str.length > end.length && str.substr(end.length-1) is end
+        str && end && str.length > end.length && str.substr(str.length-end.length) is end
 
     ##
     ## simple string hashing function

@@ -87,6 +87,9 @@ module.exports =
                         @route req, uri
 
                     else
+                        if @route.charAt(0) isnt '^'
+                            @route = '^'+@route
+
                         uri.match @route
 
 

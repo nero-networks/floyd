@@ -16,6 +16,7 @@ module.exports =
         ##
         configure: (config)->
             @_template ?= config.template
+            @__POOL__ = []
 
             super new floyd.Config
 
@@ -42,8 +43,6 @@ module.exports =
                 if @_model.local
                     @_model.local.data ?= {}
                     @_model.local.data.origin = @ID
-
-                @__POOL__ = []
 
                 @_createContext (err, ctx)=>
                     @_releaseContext(ctx) if ctx
@@ -201,7 +200,7 @@ module.exports =
             try
                 vm.runInContext @__SCRIPT+"\nvar floyd = require('floyd');", ctx
             catch err
-                console.log 'error while cheerio floyd require', @__SCRIPT
+                console.log 'error while cheerio floyd require', err
 
             ctx.floyd.system.platform = 'cheerio'
             ctx.floyd.system.os = floyd.system.os

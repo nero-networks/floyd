@@ -75,5 +75,5 @@ module.exports =
         ##
         _getNavi: (fn)->
             @lookup @data.find('origin'), @identity, (err, ctx)=>
-                return done(err) if err
+                return fn(err) if err
                 ctx.getNavi fn

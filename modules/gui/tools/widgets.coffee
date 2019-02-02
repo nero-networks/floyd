@@ -53,7 +53,7 @@ module.exports = tools =
                 ele.children().each (i, option)=>
                     option = $ option
                     if values.indexOf(option.val()) != -1
-                        option.attr selected: true
+                        option.attr selected: 'selected'
 
 
     ##
@@ -73,7 +73,7 @@ module.exports = tools =
                 return !!ele.attr 'checked'
 
             else if value
-                ele.attr checked: true
+                ele.attr checked: 'checked'
 
             else
                 ele.removeAttr 'checked'

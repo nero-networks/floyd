@@ -27,16 +27,17 @@ module.exports =
     ##
     ##
     read: (key, file='.floyd/default-store.json')->
+        if !_CACHE[file] && floyd.tools.files.exists file
+            _CACHE[file] = JSON.parse floyd.tools.files.read file
 
-        floyd.tools.objects.resolve key, _read(file) || {}
-
+        floyd.tools.objects.resolve key, _CACHE[file] || {}
 
 
     ##
     ##
     ##
     write: (key, value, file='.floyd/default-store.json')->
-        _data = data = _read(file) || {}
+        _data = data = _CACHE[file] || {}
 
         keys = key.split '.'
         while keys.length > 1 && _data[keys[0]]
@@ -44,25 +45,6 @@ module.exports =
 
         _data[keys.shift()] = value
 
-        _write file, data
+        floyd.tools.files.write file, JSON.stringify data, null, 4
 
-
-
-##
-##
-##
-_read = (file)->
-
-    if floyd.tools.files.fs.existsSync file
-
-        JSON.parse floyd.tools.files.fs.readFileSync file, 'utf-8'
-
-
-##
-##
-##
-_write = (file, data)->
-
-    json = JSON.stringify data, null, 4
-
-    floyd.tools.files.fs.writeFileSync file, json, 'utf-8'
+_CACHE = {}

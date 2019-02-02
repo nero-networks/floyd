@@ -265,7 +265,7 @@ module.exports =
                 ID: root.ID
 
                 lookup: (args...)->
-                    api.remote.lookup.apply api.remote, args
+                    api.remote?.lookup.apply api.remote, args
 
                 token: (fn)->
                     fn null, conf.token
