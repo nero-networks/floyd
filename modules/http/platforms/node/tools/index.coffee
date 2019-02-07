@@ -45,7 +45,7 @@ module.exports = tools =
                 else
                     data = qs.stringify data
 
-            data = new Buffer data
+            data = Buffer.from data
             options.headers['Content-Length'] = data.length
 
             #console.log options

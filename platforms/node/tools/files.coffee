@@ -106,7 +106,7 @@ module.exports = files =
     ##
     ##
     cp: (srcFile, destFile) ->
-        buff = new Buffer BUF_LENGTH = 64*1024
+        buff = Buffer.alloc BUF_LENGTH = 64*1024
 
         fdr = fs.openSync srcFile, 'r'
         fdw = fs.openSync destFile, 'w'
