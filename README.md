@@ -1,6 +1,6 @@
 # Floyd!
 
-hierarchical app containers - v0.6.0
+hierarchical app containers - v0.6.1
 
 ## Installation
 
