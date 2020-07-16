@@ -33,7 +33,7 @@
     "mime-types": "^2.1.21",
     "moment": "^2.22.2",
     "mongodb": "~2.1.16",
-    "mongoose": "^4.13.17",
+    "mongoose": "^5.7.5",
     "morgan": "^1.9.1",
     "nodemailer": "^4.6.8",
     "qs": "^6.5.2",
