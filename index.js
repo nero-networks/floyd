@@ -42,6 +42,26 @@ if(fs.existsSync(cachedir)) {
 }
 // EXPERIMENTAL coffeescript compiler cache <--
 
+const babel = require("@babel/core");
+
+function jsxLoader(loaderExt) {
+    return function(module, filename) {
+        const load = require.extensions[loaderExt],
+            compile = module._compile;
+
+        module._compile = function(jsx, filename) {
+            const js = babel.transform(jsx, {
+                presets: ["floyd/node_modules/@babel/preset-react"]});
+            return compile.apply(module, [js.code, filename]);
+        }
+
+        return load(module, filename);
+    }
+}
+
+require.extensions['.jsx'] = jsxLoader('.js');
+require.extensions['.coffeex'] = jsxLoader('.coffee');
+
 // Catch uncaught errors
 process.on('uncaughtException', function(err) {                    
     console.error(err.stack||err);

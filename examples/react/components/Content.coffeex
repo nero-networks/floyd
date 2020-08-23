@@ -1,0 +1,29 @@
+React = require 'react'
+
+module.exports =
+
+    class Content extends React.Component
+
+        ##
+        constructor: (props)->
+            super props
+            @state = {}
+
+        ##
+        componentDidMount: ->
+            @toggle true
+
+        ##
+        render: ->
+            <div>
+                <h1>{@state.h1}</h1>
+                <h2>{@state.h2 || ''}</h2>
+                {if @state.h2
+                    <a href='#' onClick={()=> @toggle()}>reset</a>
+                else
+                    <button onClick={()=> @toggle()}>click me!</button>}
+            </div>
+
+        ##
+        toggle: (reset)->
+            @setState await @props.context.updateText reset || !!@state.h2

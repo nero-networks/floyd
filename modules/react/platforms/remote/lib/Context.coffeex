@@ -1,0 +1,58 @@
+
+window.React = require 'react'
+ReactDOM = require 'react-dom'
+
+module.exports =
+
+    class ReactContext extends floyd.Context
+
+        ##
+        ##
+        ##
+        configure: (config)->
+            c = super new floyd.Config
+                data:
+                    container: 'content'
+
+                component:
+                    _class: ->
+                        window.React = require 'react'
+
+                        class ReactComponent extends React.Component
+                            render: ->
+                                <div>{@props.context.ID}</div>
+
+            , config
+
+            if typeof (@_component = c.component) is 'string'
+                @_component = require @_component
+
+            if @_component._class
+                @_component = @_component._class()
+
+            return c
+
+        ##
+        ##
+        ##
+        start: (done)->
+            super (err)=>
+                return done(err) if err
+
+                if @data.container
+                    @_root = document.querySelector @data.container
+
+                if !@_root
+                    @_root = document.createElement 'div'
+                    document.body.appendChild @_root
+
+                @_component = ReactDOM.render @render(), @_root
+
+                done()
+
+        ##
+        ##
+        ##
+        render: ->
+            Content = @_component
+            <Content context={floyd.tools.objects.promisify @} />

@@ -1,0 +1,17 @@
+
+module.exports = new floyd.Config 'config.react.server',
+
+    remote:
+        data:
+            text:
+                h1: 'hallo'
+                h2: 'the button was clicked...'
+
+        component: './components/Content'
+
+        updateText: (reset, fn)->
+            setTimeout =>
+                fn null,
+                    h1: @data.text.h1
+                    h2: if reset then null else @data.text.h2
+            , 300

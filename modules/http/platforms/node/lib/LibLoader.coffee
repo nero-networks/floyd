@@ -1,6 +1,9 @@
 
 coffee = require 'coffeescript'
 browserify = require 'browserify'
+babel = require '@babel/core'
+glob = require 'glob'
+through = require 'through'
 
 __PACKAGE =  '''
 /* floyd core */
@@ -50,6 +53,7 @@ module.exports =
                     append:			[]
 
                     modules:		[]
+                    files:          []
 
                     node_modules:	['url', 'floyd/node_modules/sprintf']
 
@@ -145,6 +149,20 @@ module.exports =
 
 
 
+        ##
+        ##
+        ##
+        _processFile: (file, ext, path)->
+            if ext is 'coffee' or ext is 'coffeex'
+                file = coffee.compile file,
+                    filename: path
+
+                if ext is 'coffeex'
+                    file = babel.transform file,
+                        presets: ["floyd/node_modules/@babel/preset-react"]
+                    .code
+
+            return file
 
         ##
         ##
@@ -155,17 +173,8 @@ module.exports =
 
             ## reads file content and compiles coffeescript on-the-fly
             ##
-            __read__ = (path)->
-
-                _file = floyd.tools.files.fs.readFileSync(path, 'utf-8')
-
-                if (_type = path.split('.').pop()) is 'coffee'
-                    _file = coffee.compile _file,
-                        filename: path
-
-                return _file
-
-
+            __read__ = (path)=>
+                @_processFile floyd.tools.files.fs.readFileSync(path, 'utf-8'), path.split('.').pop(), path
 
             ##
             bundle = floyd.tools.strings.sprintf '/*!\n * floyd %s | (c) 2012 - https://github.com/nero-networks/floyd/LICENSE | compiled on %s\n */\n', floyd.system.version, new Date()
@@ -190,6 +199,11 @@ module.exports =
             handler = browserify
                 path: process.env.NODE_PATH
                 cache: floyd.tools.files.tmp 'browserify.cache'
+                transform: (file)=>
+                    data = ''
+                    stream = through ((buf)-> data += buf), ()=>
+                        stream.queue @_processFile data, file.substr(file.lastIndexOf('.')+1), file
+                        stream.queue null
 
             ##
             ## include node_modules
@@ -208,6 +222,16 @@ module.exports =
                         expose: name
                 catch err
                     return fn err
+
+            ##
+            ## include files (glob)
+            for pattern in @data.files
+                for file in glob.sync pattern, nodir: true
+                    try
+                        handler.require file,
+                            expose: file.substr 0, file.lastIndexOf('.')
+                    catch err
+                        return fn err
 
             @_buildFloyd __read__, (err, tmpfile)=>
                 try
