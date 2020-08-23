@@ -1,7 +1,4 @@
-FROM node:6
-
-# floyd resides unobstructive in /opt/floyd
-RUN mkdir /opt/floyd
+FROM node:13
 
 # put the floyd command into $PATH
 ENV PATH="/opt/floyd/bin:${PATH}"
@@ -9,12 +6,9 @@ ENV PATH="/opt/floyd/bin:${PATH}"
 # prepare NODE_PATH so floyd apps find floyd/node_modules/something
 ENV NODE_PATH=/opt/floyd/node_modules
 
-# cd to dir and use as base from now on
-WORKDIR /opt/floyd
-
-# copy everything from floyd to /home/floyd.
-COPY . .
+# copy everything from floyd to /opt/floyd.
+COPY . /opt/floyd
 
 # run initial build. takes care of npm
-RUN floyd build
+RUN cd /opt/floyd && floyd build && mkdir /node_modules && cd /node_modules && ln -s /opt/floyd && cd / &&  floyd create app && useradd -d /app -U app && chown -R app:app /app
 
