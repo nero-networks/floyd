@@ -3,7 +3,7 @@
 LOGLEVEL = 'INFO' 	
 
 ## disabeling the debug mode triggers uglify-ing /floyd.js... 
-## this takes serveral seconds on the very first reguest after app restart
+## this takes serveral seconds on the very first request after app restart
 DEBUG = true		
 
 ##

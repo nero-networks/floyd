@@ -1,10 +1,5 @@
 #!/bin/bash
 
-##
-## TODO implement as floyd app --> ./bin/floyd.sh + ./bin/floyd.bat
-##
-
-## read .floyd/env
 test -e .floyd/env && . .floyd/env
 
 USER=`whoami`
@@ -270,9 +265,6 @@ function start_refresh_loop() {
 }
 
 
-##
-## TODO: suppress Ctrl-c is killing re[S]tarted processes.
-##
 function log_viewer() {
     clear
 
@@ -396,7 +388,7 @@ function log_viewer() {
 
 
 COFFEECMD=`which coffee`
-test -e "$COFFEECMD" || COFFEECMD=$FLOYD_ROOT/node_modules/coffee-script/bin/coffee
+test -e "$COFFEECMD" || COFFEECMD=$FLOYD_ROOT/node_modules/coffeescript/bin/coffee
 
 if [ -x "$COFFEECMD" ]
 then

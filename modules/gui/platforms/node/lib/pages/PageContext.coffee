@@ -103,7 +103,7 @@ module.exports =
 
             path = []
 
-            if filepath=@data.find 'filepath'
+            if filepath = @data.find 'filepath'
                 path.push(filepath)
 
             _parent = @parent
